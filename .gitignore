@@ -4,3 +4,4 @@ dist
 *.egg*
 *.sublime*
 /assets/node_modules/*
+/unixterm/static/bundle
