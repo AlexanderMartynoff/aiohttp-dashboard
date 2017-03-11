@@ -1,5 +1,7 @@
 <template>
-    <div>404</div>
+    <div>
+        <b-alert :show="true" state="success" dismissible> This is an alert </b-alert>
+    </div>
 </template>
 
 <script>

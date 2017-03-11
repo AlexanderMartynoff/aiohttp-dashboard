@@ -1,29 +1,19 @@
 <template>
     <div>
         <top-menu></top-menu>
-        <router-view></router-view>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col">
+                    <router-view></router-view>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 
 <script>
-import TopMenu from '@/component/menu/top';
-import IndexGrid from '@/component/index/grid';
-
-
-export default {
-    components: {
-        'top-menu': TopMenu,
-        'index-grid': IndexGrid
-    },
-    data: () => ({
-        dropdownSelectList: [
-            {text: "Один"},
-            {text: "Два"},
-            {text: "Три"}
-        ]
-    })
-}
+export default {}
 </script>
 
 

@@ -2,18 +2,26 @@ import Vue from 'vue';
 import BootstrapVue from 'bootstrap-vue';
 import VueRouter from 'vue-router'
 
-import Layout from '@/component/layout/layout';
-import {router} from '@/route'
+import topMenu from '@/component/menu/top';
+import indexGrid from '@/component/index/grid';
+import clock from '@/component/clock/clock';
+import dropdpownArea from '@/component/widget/dropdpown-area';
+import layout from '@/component/layout/layout';
+
+import {router} from '@/route';
 
 Vue.use(VueRouter);
 // register boostrap as global components 
 Vue.use(BootstrapVue);
 
-const application = new Vue({
-    router,
-    components: {"layout": Layout}
-}).$mount("#mount");
+const components = {
+    topMenu,
+    indexGrid,
+    clock,
+    dropdpownArea,
+    layout
+}
 
+for (const key in components) Vue.component(key, components[key]);
 
-
-
+const application = new Vue({router, el: "#mount"});
