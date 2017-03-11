@@ -17,8 +17,9 @@ export default {}
 </script>
 
 
-<style>
-    .sorting {
-        cursor: pointer;
-    }
+<style lang="stylus">
+    html, body
+        min-height 100%
+        position absolute
+        width 100%
 </style>

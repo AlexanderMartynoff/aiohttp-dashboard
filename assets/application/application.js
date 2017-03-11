@@ -5,7 +5,7 @@ import VueRouter from 'vue-router'
 import topMenu from '@/component/menu/top';
 import indexGrid from '@/component/index/grid';
 import clock from '@/component/clock/clock';
-import dropdpownArea from '@/component/widget/dropdpown-area';
+import dropdpownPane from '@/component/widget/dropdpown-pane';
 import layout from '@/component/layout/layout';
 
 import {router} from '@/route';
@@ -18,7 +18,7 @@ const components = {
     topMenu,
     indexGrid,
     clock,
-    dropdpownArea,
+    dropdpownPane,
     layout
 }
 

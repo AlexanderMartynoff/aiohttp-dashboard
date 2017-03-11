@@ -7,6 +7,7 @@
     "watch": "./node_modules/.bin/webpack --watch"
   },
   "dependencies": {
+    "axios": "^0.15.3",
     "bootstrap": "^4.0.0-alpha.6",
     "bootstrap-vue": "^0.9.5",
     "tether": "^1.4.0",
@@ -24,6 +25,8 @@
     "webpack": "^2.2.1",
     "copy-webpack-plugin": "^4.0.1",
     "vue-loader": "^11.1.4",
+    "font-awesome": "^4.7.0",
+    "stylus-loader": "^3.0.1",
     "vue-style-loader": "^2.0.0",
     "vue-template-compiler": "^2.2.1"
   },

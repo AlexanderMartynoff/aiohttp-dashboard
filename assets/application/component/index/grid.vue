@@ -66,8 +66,7 @@
 </script>
 
 
-<style type="text/css">
-    .sorting {
-        cursor: pointer;
-    }
+<style lang="stylus">
+    .sorting
+        cursor pointer
 </style>

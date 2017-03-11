@@ -4,27 +4,22 @@
             <div class="col">
                 <ul class="nav">
                     <li class="nav-item">
-                        <router-link class="nav-link active" to="/">Главная</router-link>
-                    </li>
-                    <li class="nav-item">
-                        <router-link class="nav-link dropdown-toggle" to="/docs">Меню</router-link>
-                    </li>
-                    <li class="nav-item">
-                        <router-link class="nav-link" to="/help">Справка</router-link>
-                    </li>
-                    <li class="nav-item">
-                        <dropdpown-area>
-                            <a slot="trigger" class="nav-link dropdown-toggle">Менюшка</a>
+                        <dropdpown-pane>
+                            <a slot="trigger" class="nav-link dropdown-toggle" href="javascript: void(null)">
+                                <i class="fa fa-bars" aria-hidden="true"></i>
+                            </a>
                             <div slot="content">
                                 <div class="card" style="width: 20rem;">
-                                  <div class="card-block">
-                                    <h4 class="card-title">Card title</h4>
-                                    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                                    <a href="#" class="btn btn-primary">Go somewhere</a>
-                                  </div>
+                                    <div class="card-block">
+                                        <h4 class="card-title">Главное меню</h4>
+                                        <div class="list-group">
+                                                <router-link to="/" class="list-group-item list-group-item-action">Главная</router-link>
+                                                <router-link to="/help" class="list-group-item list-group-item-action">Справка</router-link>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </dropdpown-area>
+                        </dropdpown-pane>
                     </li>
                 </ul>
             </div>
@@ -34,12 +29,11 @@
 
 
 <script type="text/javascript">
-    export default {}
+export default {}
 </script>
 
 
-<style type="text/css" scoped>
-    .dropdown {
-        display: inline-flex !important;
-    }
+<style lang="stylus" scoped>
+    .dropdown
+        display inline-flex !important
 </style>

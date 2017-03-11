@@ -38,6 +38,8 @@ module.exports = {
     plugins: [
         new CopyWebpackPlugin([
             {from: resolve('node_modules/bootstrap/dist/css/bootstrap.css')},
+            {from: resolve('node_modules/font-awesome/css'), to: "font-awesome/css", ignore: ["*.map"]},
+            {from: resolve('node_modules/font-awesome/fonts'), to: "font-awesome/fonts"},
         ])
     ]
 }
