@@ -4,7 +4,7 @@ from subprocess import Popen
 
 
 class Npm(Command):
-    user_options = [('npm', None, None)]
+    user_options = [('static', None, None)]
 
     def run(self):
         with Popen(args=['npm', 'run', 'build'], cwd=r'./assets') as process:
@@ -24,5 +24,5 @@ setup(
     packages=['aiohttp_debugger'],
     package_data=dict(aiohttp_debugger=['static/*', 'static/bundle/*']),
     include_package_data=True,
-    cmdclass=dict(npm=Npm)
+    cmdclass=dict(static=Npm)
 )

@@ -11,10 +11,10 @@
                             <div slot="content">
                                 <div class="card" style="width: 20rem;">
                                     <div class="card-block">
-                                        <h4 class="card-title">Главное меню</h4>
+                                        <h4 class="card-title">AiohttpDebbuger</h4>
                                         <div class="list-group">
-                                                <router-link to="/" class="list-group-item list-group-item-action">Главная</router-link>
-                                                <router-link to="/help" class="list-group-item list-group-item-action">Справка</router-link>
+                                            <router-link to="/" class="list-group-item list-group-item-action">Requests</router-link>
+                                            <router-link to="/help" class="list-group-item list-group-item-action">Logs</router-link>
                                         </div>
                                     </div>
                                 </div>
