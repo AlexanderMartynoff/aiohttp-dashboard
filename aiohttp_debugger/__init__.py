@@ -15,6 +15,7 @@ aiohttp_jinja2.setup(application, loader=jinja2.FileSystemLoader(f"{dir}/static"
 def index(request):
     return {}
 
+
 def grid_data(request):
     return Response(body=str())
 
