@@ -4,4 +4,4 @@ dist
 *.egg*
 *.sublime*
 /assets/node_modules/*
-/unixterm/static/bundle
+/aiohttp_debugger/static/bundle
