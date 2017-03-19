@@ -4,12 +4,13 @@ import os
 import aiohttp_jinja2
 import jinja2
 from . import controller
-from . import debugger
+from .debugger import Debugger
 
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 application = Application()
-debugger.Debugger.instance(application)
+
+Debugger.instance(application)
 
 
 aiohttp_jinja2.setup(

@@ -1,5 +1,5 @@
 {
-  "name": "unixterm",
+  "name": "aiohttp_debug",
   "version": "1.0.0",
   "author": "Мартынов Александр <triplustri@mail.ru>",
   "scripts": {

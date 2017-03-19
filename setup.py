@@ -11,6 +11,7 @@ class Npm(Command):
             process.wait()
 
     def initialize_options(self): pass
+
     def finalize_options(self): pass
 
 

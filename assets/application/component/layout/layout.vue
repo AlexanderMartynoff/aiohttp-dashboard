@@ -22,4 +22,10 @@ export default {}
         min-height 100%
         position absolute
         width 100%
+        
+    table .sorting, table tr
+        cursor pointer
+        
+    table tr td
+        font-size: 12px
 </style>
