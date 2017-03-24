@@ -19,7 +19,7 @@ setup(
     name='aiohttp_debugger',
     version='0.0.1',
     install_requires=[
-        'aiohttp',
+        'aiohttp>=2.0',
         'aiohttp_jinja2'
     ],
     packages=['aiohttp_debugger'],

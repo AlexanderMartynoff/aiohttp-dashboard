@@ -1,6 +1,6 @@
 import VueRouter from 'vue-router';
 
-import IndexGrid from '@/component/index/grid';
+import IndexGrid from '@/component/requests/grid';
 import NotFound from '@/component/special/404';
 
 

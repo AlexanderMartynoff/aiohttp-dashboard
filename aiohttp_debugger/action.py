@@ -4,11 +4,12 @@ from aiohttp.web import Response, WebSocketResponse
 from asyncio import ensure_future, sleep
 from .helper import WsResponseHelper
 from . import api
+from uuid import uuid4
 
 
 @template("index.html")
 async def dashboard(request):
-    return {}
+    return dict(nocache=hash(uuid4()))
 
 
 async def websocket(request):
@@ -24,4 +25,8 @@ async def websocket(request):
 routes = (
     (hdrs.METH_GET, "/_debugger/ws/api", websocket),
     (hdrs.METH_GET, "/_debugger/dashboard", dashboard)
+)
+
+static_routes = (
+    "/_debugger/static", f"{this_dir}/static"
 )

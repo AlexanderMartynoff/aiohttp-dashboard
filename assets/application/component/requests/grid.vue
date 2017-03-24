@@ -14,7 +14,7 @@
             </div>
         </div>
         <div class="col" v-if="editmode == true">
-            <edit></edit>
+            <edit @request:edit:close="stopEdit" :record="record.item"></edit>
         </div>
     </div>
 </template>
@@ -23,17 +23,17 @@
 <script type="text/javascript">
     
     import {WebSocketService} from '@/websocket';
-    import EditComponent from '@/component/index/edit';
+    import EditComponent from '@/component/requests/edit';
 
     export default {
         components: {edit: EditComponent},
         data: () => ({
+            record: {path: "hello"},
             editmode: false,
             fullModeFields: {
-                scheme: {label: 'Scheme'},
                 host: {label: 'Host'},
-                method: {label: 'Method'},
                 path: {label: 'Path'},
+                method: {label: 'Method'},
                 begintime: {label: 'Begin time'},
                 donetime: {label: 'Done time'},
                 open: {label: String()},
@@ -49,11 +49,8 @@
             filter: null
         }),
         methods: {
-            openModal: function(arg){
-                this.$refs.modal.show();
-            },
-
-            details: function(item) {
+            details: function(record) {
+                this.record = record;
                 this.startEdit();
             },
 
@@ -63,14 +60,18 @@
             },
 
             stopEdit: function() {
+                this.editmode = false;
                 this.fields = this.fullModeFields;
             }
         },
         created: function () {
-            WebSocketService.instance.send({endpoint: "fetch.requests"}, msg => {
+            WebSocketService.instance.send({endpoint: "sibsribe.requests"}, msg => {
                 this.items = msg.data;
             });
+
             this.fields = this.fullModeFields;
+
+            setInterval(() => WebSocketService.instance.send({endpoint: "fetch.requests"}, msg => {}), 2000);
         }
     }
 </script>
