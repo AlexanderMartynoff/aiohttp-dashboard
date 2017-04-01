@@ -2,31 +2,39 @@ from datetime import datetime
 from asyncio import ensure_future
 from aiohttp.web import WebSocketResponse
 from .helper import PubSubSupport
+import sys
 
 
 class Debugger(PubSubSupport):
     self = None
 
     @classmethod
-    def instance(cls, application):
+    def instance(cls, application) -> 'Debugger':
         from . import action
+        import aiohttp_jinja2
+        import jinja2
 
         if cls.self is None:
             cls.self = cls(application, action.routes, action.static_routes)
-
+            aiohttp_jinja2.setup(
+                application,
+                loader=jinja2.FileSystemLoader(f"{action.debugger_dir}/static")
+            )
         return cls.self
 
     def __init__(self, application, routes, static_routes):
-        self._application = self._configure_application(application, routes, static_routes)
+        self._application = self._configure_application(
+            application, routes, static_routes)
         self._state = self._State()
         self._api = self._Api(self._state)
 
     async def __call__(self, *args, **kwargs):
         return await self._middleware_factory(*args, **kwargs)
 
-    def _configure_application(self, application, routes):
+    def _configure_application(self, application, routes, static_routes):
         self._add_middlewares(application)
         self._add_routes(application, routes)
+        self._add_static_routes(application, static_routes)
         application.on_response_prepare.append(self._on_response_prepare)
         return application
 
@@ -34,7 +42,8 @@ class Debugger(PubSubSupport):
         application.middlewares.append(self)
 
     def _add_static_routes(self, application, static_routes):
-        application.add_static("/static", f"{this_dir}/static")
+        for url, path in static_routes:
+            application.router.add_static(url, path)
 
     def _add_routes(self, application, routes):
         for method, path, handler in routes:
@@ -54,8 +63,10 @@ class Debugger(PubSubSupport):
             if rid in self._state.requests.keys():
                 self._state.requests[rid].update(
                     donetime=self._state.now,
-                    done=True
+                    done=True,
+                    resheaders=dict(response.headers)
                 )
+            self.fire(HttpResponse())
 
             if isinstance(response, WebSocketResponse):
                 self._overload_ws_response(request, response)
@@ -96,6 +107,7 @@ class Debugger(PubSubSupport):
 
         def send_bytes_overload(data):
             """ for catch outbound message """
+
             self._handle_ws_msg(
                 "ws_response_msg",
                 request, data, self._out_msg_mapper, WsMsgOutbound())
@@ -106,6 +118,7 @@ class Debugger(PubSubSupport):
 
         def send_json_overload(data):
             """ for catch outbound message """
+
             self._handle_ws_msg(
                 "ws_response_msg",
                 request, data, self._out_msg_mapper, WsMsgOutbound())
@@ -136,17 +149,28 @@ class Debugger(PubSubSupport):
 
     def _handle_ws_msg(self, key_name, req, msg, msg_mapper, event):
         if self._is_sutable_req(req):
-            idreq = id(req)
+            rid = id(req)
+            mid = id(msg)
 
-            if idreq in self._state.requests.keys():
-                if key_name not in self._state.requests[idreq].keys():
-                    self._state.requests[idreq][key_name] = []
+            if rid in self._state.requests.keys():
+                if key_name not in self._state.requests[rid].keys():
+                    self._state.requests[rid][key_name] = []
 
-                self._state.requests[idreq][key_name] += [msg_mapper(msg)]
+                msg = msg_mapper(msg)
+                msgsize = sys.getsizeof(msg)
+
+                self._state.requests[rid][key_name] += dict(
+                    id=mid,
+                    msg=msg,
+                    time=self._state.now,
+                    size=msgsize
+                ),
+
                 self.fire(event)
 
     def _handle_request(self, request):
         self._state.put_request(request)
+        self.fire(HttpRequest())
 
     @property
     def api(self):
@@ -167,17 +191,20 @@ class Debugger(PubSubSupport):
             self._requests = dict()
 
         def put_request(self, request):
-            id, record = self._make_request_log(request)
-            self.requests[id] = record
+            rid, record = self._make_request_log(request)
+            self.requests[rid] = record
 
         def _make_request_log(self, request) -> (int, dict):
-            return id(request), dict(
+            rid = id(request)
+            return rid, dict(
+                id=rid,
                 scheme=request.scheme,
                 host=request.host,
                 path=request.raw_path,
                 method=request.method,
                 begintime=self.now,
-                done=False
+                done=False,
+                reqheaders=dict(request.headers)
             )
 
         @property
@@ -187,6 +214,16 @@ class Debugger(PubSubSupport):
         @property
         def requests(self):
             return self._requests
+
+
+class HttpRequest(PubSubSupport.Event):
+    def __init__(self):
+        super().__init__(HttpRequest.__name__)
+
+
+class HttpResponse(PubSubSupport.Event):
+    def __init__(self):
+        super().__init__(HttpResponse.__name__)
 
 
 class WsMsgIncoming(PubSubSupport.Event):

@@ -1,20 +1,19 @@
 <template>
     <div class="row">
         <div class="col">
-            <b-table striped hover :items="items" :fields="fields" :current-page="currentPage" :per-page="perPage" :filter="filter">
+            <b-table striped :items="items" :fields="fields" :current-page="currentPage" :per-page="perPage" :filter="filter">
                 <template slot="open" scope="item">
-                    <b-btn size="sm" @click="details(item)">
-                        <i class="fa fa-eye" aria-hidden="true"></i>
-                    </b-btn>
+                    <div class="text-right">
+                        <b-btn size="sm" @click="details(item.item.id)">
+                            <i class="fa fa-eye" aria-hidden="true"></i>
+                        </b-btn>
+                    </div>
                 </template>
             </b-table>
             
             <div class="justify-content-center row">
                 <b-pagination size="sm" :total-rows="this.items.length" :per-page="perPage" v-model="currentPage"/>
             </div>
-        </div>
-        <div class="col" v-if="editmode == true">
-            <edit @request:edit:close="stopEdit" :record="record.item"></edit>
         </div>
     </div>
 </template>
@@ -23,14 +22,11 @@
 <script type="text/javascript">
     
     import {WebSocketService} from '@/websocket';
-    import EditComponent from '@/component/requests/edit';
+    import {router} from '@/router';
 
     export default {
-        components: {edit: EditComponent},
         data: () => ({
-            record: {path: "hello"},
-            editmode: false,
-            fullModeFields: {
+            fields: {
                 host: {label: 'Host'},
                 path: {label: 'Path'},
                 method: {label: 'Method'},
@@ -38,40 +34,26 @@
                 donetime: {label: 'Done time'},
                 open: {label: String()},
             },
-            editModeFields: {
-                host: {label: 'Host'},
-                path: {label: 'Path'}
-            },
-            fields: {},
             items: [],
             currentPage: 1,
             perPage: 5,
             filter: null
         }),
         methods: {
-            details: function(record) {
-                this.record = record;
-                this.startEdit();
-            },
-
-            startEdit: function() {
-                this.editmode = true;
-                this.fields = this.editModeFields;
-            },
-
-            stopEdit: function() {
-                this.editmode = false;
-                this.fields = this.fullModeFields;
+            details: function(id) {
+                router.push({path: `/request/detail/${id}`})
             }
         },
         created: function () {
             WebSocketService.instance.send({endpoint: "sibsribe.requests"}, msg => {
                 this.items = msg.data;
-            });
-
-            this.fields = this.fullModeFields;
-
-            setInterval(() => WebSocketService.instance.send({endpoint: "fetch.requests"}, msg => {}), 2000);
+            }, true);
         }
     }
 </script>
+
+
+<style lang="stylus" scoped>
+    button
+        cursor: pointer
+</style>

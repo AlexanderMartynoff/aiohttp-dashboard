@@ -1,4 +1,7 @@
 from aiohttp.web import WebSocketResponse
+from collections import defaultdict
+from uuid import uuid4
+from functools import lru_cache
 
 
 class WsResponseHelper(WebSocketResponse):
@@ -14,17 +17,23 @@ class WsResponseHelper(WebSocketResponse):
     async def __anext__(self):
         return self._Msg(await super().__anext__())
 
+    @property
+    @lru_cache()
+    def id(self):
+        return id(self)
+
     class _Msg:
         def __init__(self, msg):
             self._original = msg
             self._dict = self._original.json()
 
         @property
+        def data(self):
+            return self._dict.get('data', defaultdict(lambda: None))
+
+        @property
         def uid(self):
-            try:
-                return self._dict['uid']
-            except KeyError:
-                return None
+            return self._dict.get('uid', None)
 
         @property
         def original(self):
@@ -32,10 +41,7 @@ class WsResponseHelper(WebSocketResponse):
 
         @property
         def endpoint(self):
-            try:
-                return self._dict['endpoint']
-            except KeyError:
-                return None
+            return self._dict.get('endpoint', None)
 
 
 class casemethod:
@@ -101,7 +107,6 @@ class casemethod:
         return lambda catcher: self._register_exception(ExceptionClass, catcher)
 
 
-
 class PubSubSupport:
     """
     Use as mixin. Example:
@@ -110,13 +115,16 @@ class PubSubSupport:
 
     def __init_subclass__(self):
         self.__listeners = []
+        self.__handlers = defaultdict(list)
 
-    def on(self, etype, handler):
-        self.__listeners += [(etype, handler)]
+    def on(self, etype, handler, group=uuid4()):
+        self.__listeners += [(etype, handler, group)]
         return self
 
+    def off(sefl, group): ...
+
     def fire(self, event):
-        return list(handler(event) for etype, handler
+        return list(handler(event) for etype, handler, group
                     in self.__listeners if isinstance(event, etype))
 
     class Event:

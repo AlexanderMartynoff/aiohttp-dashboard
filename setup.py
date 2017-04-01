@@ -17,13 +17,18 @@ class Npm(Command):
 
 setup(
     name='aiohttp_debugger',
-    version='0.0.1',
+    version='0.0.2.2.7',
     install_requires=[
-        'aiohttp>=2.0',
+        'aiohttp>=2.0.0',
         'aiohttp_jinja2'
     ],
     packages=['aiohttp_debugger'],
-    package_data=dict(aiohttp_debugger=['static/*', 'static/bundle/*']),
+    package_data=dict(aiohttp_debugger=[
+        'static/*',
+        'static/bundle/*',
+        'static/bundle/font-awesome/css/*',
+        'static/bundle/font-awesome/fonts/*',
+    ]),
     include_package_data=True,
     cmdclass=dict(static=Npm)
 )

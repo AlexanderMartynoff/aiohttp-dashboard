@@ -1,9 +1,11 @@
-from .debugger import Debugger, WsMsgIncoming, WsMsgOutbound
+from .debugger import (Debugger, WsMsgIncoming, WsMsgOutbound,
+                       HttpRequest, HttpResponse)
 from .helper import casemethod
+from operator import itemgetter
 
 
-def _prepare_ws_response(res_type, res, msg):
-    return dict(data=res, uid=msg.uid, type=res_type)
+def _prepare_ws_response(res, msg):
+    return dict(data=res, uid=msg.uid, endpoint=msg.endpoint)
 
 
 class WsMsgDispatcherProxy:
@@ -12,22 +14,14 @@ class WsMsgDispatcherProxy:
         self._dispatcher = dispatcher
 
     async def recive(self, msg):
-        res_type, res = await self._dispatcher.recive(msg)
-        self._socket.send_json(_prepare_ws_response(
-            res_type, res, msg))
+        self._socket.send_json(
+            _prepare_ws_response(await self._dispatcher.recive(msg), msg))
+
+    def close(self):
+        return self._dispatcher.close()
 
 
 class WsMsgDispatcher:
-    """
-
-    Answers types:
-        - fetch
-        - subscribe
-        - fire
-        - undefined
-
-        Recive methods must return tuple: (res_type: string, payload: any)
-    """
 
     def __init__(self, socket):
         self._debugger = Debugger.self
@@ -37,26 +31,36 @@ class WsMsgDispatcher:
     def recive(msg):
         return msg.endpoint
 
+    @recive.case('fetch.request')
+    async def recive(self, msg):
+        mid = int(msg.data['id'])
+        return next((record for record in self._debugger.api.requests
+                     if record['id'] == mid), None)
+
     @recive.case('fetch.requests')
     async def recive(self, msg):
-        return "fetch", self._debugger.api.requests
+        return self._debugger.api.requests
 
     @recive.case('sibsribe.requests')
     async def recive(self, msg):
 
         def listener(event):
-            self._send_json(
-                "fire.WsMsgIncoming", self._debugger.api.requests, msg)
+            self._send_json(self._debugger.api.requests, msg)
 
-        self._debugger.on(WsMsgIncoming, listener)
-        self._debugger.on(WsMsgOutbound, listener)
+        self._debugger.on(WsMsgIncoming, listener, self._socket.id)
+        self._debugger.on(WsMsgOutbound, listener, self._socket.id)
+        self._debugger.on(HttpRequest, listener, self._socket.id)
+        self._debugger.on(HttpResponse, listener, self._socket.id)
 
-        return "sibsribe", self._debugger.api.requests
+        return self._debugger.api.requests
 
     @recive.default
     async def recive(self, msg):
-        return "undefined", {}
+        return {}
 
-    def _send_json(self, res_type, json, msg):
+    def close(self):
+        self._debugger.off(self._socket.id)
+
+    def _send_json(self, json, msg):
         if not self._socket.closed:
-            self._socket.send_json(_prepare_ws_response(res_type, json, msg))
+            self._socket.send_json(_prepare_ws_response(json, msg))

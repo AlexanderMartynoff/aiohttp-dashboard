@@ -43,7 +43,6 @@ class WebSocketService {
             if (!callbackObject.persistent) {
                 delete this._responseHandlres[msg.uid];
             }
-
         };
 
         this._ws.onerror = response => {};
@@ -98,9 +97,8 @@ class WebSocketService {
 
     subcribe(endpoint, callback) {
         return this.send({
-            endpoint: endpoint,
-            persistent: true
-        }, callback);
+            endpoint: endpoint
+        }, callback, true);
     }
 
     unsibscribe(uid) {}

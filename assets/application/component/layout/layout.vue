@@ -23,9 +23,12 @@ export default {}
         position absolute
         width 100%
         
-    table .sorting, table tr
+    table .sorting
         cursor pointer
         
     table tr td
         font-size: 12px
+        
+    .pointer
+        cursor: pointer
 </style>
