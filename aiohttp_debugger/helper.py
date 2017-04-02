@@ -53,7 +53,6 @@ class casemethod:
         self._default_case = self._not_implemented_noop
 
     def __get__(self, instance, owner):
-
         def getter(*args, **kwargs):
             try:
                 return self._resolve_method(*args, **kwargs)(instance, *args)
@@ -114,18 +113,27 @@ class PubSubSupport:
     """
 
     def __init_subclass__(self):
-        self.__listeners = []
         self.__handlers = defaultdict(list)
 
-    def on(self, etype, handler, group=uuid4()):
-        self.__listeners += [(etype, handler, group)]
+    def on(self, etype, handler, *, group=uuid4(), hid=uuid4()):
+        self.__handlers[group] += (etype, handler, hid),
         return self
 
-    def off(sefl, group): ...
+    def off(self, *, group=None, hid=None):
+        if group:
+            del self.__handlers[group]
+
+        if hid:
+            for _group, handlers in self.__handlers.items():
+                for etype, handler, _hid in handlers[:]:
+                    if _hid == hid:
+                        handlers.remove((etype, handler, _hid))
 
     def fire(self, event):
-        return list(handler(event) for etype, handler, group
-                    in self.__listeners if isinstance(event, etype))
+        for handlers in self.__handlers.values():
+            for etype, handler, hid in handlers:
+                if isinstance(event, etype):
+                    handler(event)
 
     class Event:
         def __init__(self, name):

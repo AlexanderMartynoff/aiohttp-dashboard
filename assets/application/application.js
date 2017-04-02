@@ -14,12 +14,11 @@ import dropdpownPane from '@/component/widget/dropdpown-pane';
 import layout from '@/component/layout/layout';
 
 
-
 Vue.use(VueRouter);
 // register boostrap as global components
 Vue.use(BootstrapVue);
 
-WebSocketService.instance = new WebSocketService(`ws://127.0.0.1:${port}/_debugger/ws/api`);
+WebSocketService.instance = new WebSocketService(`ws://${window.location.hostname}:${port}/_debugger/ws/api`);
 
 const components = {
     topMenu,
@@ -30,4 +29,6 @@ const components = {
 }
 
 for (const key in components) Vue.component(key, components[key]);
-const application = new Vue({router, el: "#mount"});
+const application = new Vue({
+    router, el: ".enterpoint"
+});

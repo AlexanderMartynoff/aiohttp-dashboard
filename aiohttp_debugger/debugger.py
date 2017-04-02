@@ -64,7 +64,9 @@ class Debugger(PubSubSupport):
                 self._state.requests[rid].update(
                     donetime=self._state.now,
                     done=True,
-                    resheaders=dict(response.headers)
+                    resheaders=dict(response.headers),
+                    status=response.status,
+                    reason=response.reason
                 )
             self.fire(HttpResponse())
 
@@ -120,7 +122,7 @@ class Debugger(PubSubSupport):
             """ for catch outbound message """
 
             self._handle_ws_msg(
-                "ws_response_msg",
+                "incoming",
                 request, data, self._out_msg_mapper, WsMsgOutbound())
             return response.__aiohttp_debugger_send_json__(data)
 
@@ -132,7 +134,7 @@ class Debugger(PubSubSupport):
 
             msg = await response.__aiohttp_debugger_receive__()
             self._handle_ws_msg(
-                "ws_request_msg",
+                "outbound",
                 request, msg, self._in_msg_mapper, WsMsgIncoming())
             return msg
 
@@ -147,23 +149,24 @@ class Debugger(PubSubSupport):
     def _out_msg_mapper(self, msg):
         return msg
 
-    def _handle_ws_msg(self, key_name, req, msg, msg_mapper, event):
+    def _handle_ws_msg(self, direction, req, msg, msg_mapper, event):
         if self._is_sutable_req(req):
             rid = id(req)
             mid = id(msg)
 
             if rid in self._state.requests.keys():
-                if key_name not in self._state.requests[rid].keys():
-                    self._state.requests[rid][key_name] = []
+                if "ws_messages" not in self._state.requests[rid].keys():
+                    self._state.requests[rid]["ws_messages"] = []
 
                 msg = msg_mapper(msg)
                 msgsize = sys.getsizeof(msg)
 
-                self._state.requests[rid][key_name] += dict(
+                self._state.requests[rid]["ws_messages"] += dict(
                     id=mid,
                     msg=msg,
                     time=self._state.now,
-                    size=msgsize
+                    size=msgsize,
+                    direction=direction
                 ),
 
                 self.fire(event)
@@ -185,6 +188,10 @@ class Debugger(PubSubSupport):
         def requests(self):
             return list(self._state.requests.values())
 
+        def request(self, rid):
+            return next((request for request in self.requests
+                         if request['id'] == rid), None)
+
     class _State:
 
         def __init__(self):
@@ -196,6 +203,7 @@ class Debugger(PubSubSupport):
 
         def _make_request_log(self, request) -> (int, dict):
             rid = id(request)
+            ip, _ = request.transport.get_extra_info('peername')
             return rid, dict(
                 id=rid,
                 scheme=request.scheme,
@@ -204,7 +212,8 @@ class Debugger(PubSubSupport):
                 method=request.method,
                 begintime=self.now,
                 done=False,
-                reqheaders=dict(request.headers)
+                reqheaders=dict(request.headers),
+                ip=ip
             )
 
         @property

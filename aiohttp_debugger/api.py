@@ -33,9 +33,15 @@ class WsMsgDispatcher:
 
     @recive.case('fetch.request')
     async def recive(self, msg):
-        mid = int(msg.data['id'])
-        return next((record for record in self._debugger.api.requests
-                     if record['id'] == mid), None)
+        rid = int(msg.data['id'])
+
+        def on(event):
+            self._send_json(self._debugger.api.request(rid), msg)
+
+        self._debugger.on(WsMsgIncoming, on, group=self._socket.id, hid=msg.uid)
+        self._debugger.on(WsMsgOutbound, on, group=self._socket.id, hid=msg.uid)
+
+        return self._debugger.api.request(rid)
 
     @recive.case('fetch.requests')
     async def recive(self, msg):
@@ -44,22 +50,29 @@ class WsMsgDispatcher:
     @recive.case('sibsribe.requests')
     async def recive(self, msg):
 
-        def listener(event):
+        def on(event):
             self._send_json(self._debugger.api.requests, msg)
 
-        self._debugger.on(WsMsgIncoming, listener, self._socket.id)
-        self._debugger.on(WsMsgOutbound, listener, self._socket.id)
-        self._debugger.on(HttpRequest, listener, self._socket.id)
-        self._debugger.on(HttpResponse, listener, self._socket.id)
+        self._debugger.on(HttpRequest, on, group=self._socket.id, hid=msg.uid)
+        self._debugger.on(HttpResponse, on, group=self._socket.id, hid=msg.uid)
 
         return self._debugger.api.requests
 
+    @recive.case('unsibscribe')
+    async def recive(self, msg):
+        self._debugger.off(hid=msg.data['id'])
+
     @recive.default
     async def recive(self, msg):
-        return {}
+        return {"status": "endpoint not found"}
+
+    @recive.catch(Exception)
+    async def recive(self, exception):
+        """ TODO - async eception not catch with this way """
+        return {"status": "error", "cause": str(exception)}
 
     def close(self):
-        self._debugger.off(self._socket.id)
+        self._debugger.off(group=self._socket.id)
 
     def _send_json(self, json, msg):
         if not self._socket.closed:

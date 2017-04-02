@@ -15,6 +15,7 @@
                                         <div class="list-group">
                                             <router-link to="/" class="list-group-item list-group-item-action">Requests</router-link>
                                             <router-link to="/help" class="list-group-item list-group-item-action">Logs</router-link>
+                                            <router-link to="/help" class="list-group-item list-group-item-action">Platform info</router-link>
                                         </div>
                                     </div>
                                 </div>

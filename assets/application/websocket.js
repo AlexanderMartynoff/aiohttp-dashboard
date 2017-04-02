@@ -95,14 +95,19 @@ class WebSocketService {
         return preparedReqMsg.uid;
     }
 
-    subcribe(endpoint, callback) {
+    subcribe(endpoint, callback, data) {
         return this.send({
-            endpoint: endpoint
+            endpoint: endpoint,
+            data: data
         }, callback, true);
     }
 
-    unsibscribe(uid) {}
+    unsibscribe(uid) {
+        return this.send({
+            endpoint: "unsibscribe",
+            data: {id: uid}
+        }, undefined, false);
+    }
 }
-
 
 export {WebSocketService}

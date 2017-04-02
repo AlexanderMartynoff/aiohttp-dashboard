@@ -1,21 +1,25 @@
 <template>
-    <div class="row">
-        <div class="col">
-            <b-table striped :items="items" :fields="fields" :current-page="currentPage" :per-page="perPage" :filter="filter">
-                <template slot="open" scope="item">
-                    <div class="text-right">
-                        <b-btn size="sm" @click="details(item.item.id)">
-                            <i class="fa fa-eye" aria-hidden="true"></i>
-                        </b-btn>
-                    </div>
-                </template>
-            </b-table>
-            
+  <b-card header="Requests" class="flex-card" show-footer>
+        <b-table striped :items="items" :fields="fields" :current-page="currentPage" :per-page="perPage" :filter="filter">
+            <template slot="open" scope="item">
+                <div class="text-right">
+                    <b-btn size="sm" @click="details(item.item.id)">
+                        <i class="fa fa-eye" aria-hidden="true"></i>
+                    </b-btn>
+                </div>
+            </template>
+
+            <template slot="status" scope="item">
+                {{item.item.status}}/{{item.item.reason}}
+            </template>
+        </b-table>
+
+        <small slot="footer">
             <div class="justify-content-center row">
-                <b-pagination size="sm" :total-rows="this.items.length" :per-page="perPage" v-model="currentPage"/>
+                <b-pagination size="md" :total-rows="this.items.length" :per-page="perPage" v-model="currentPage"/>
             </div>
-        </div>
-    </div>
+        </small>
+    </b-card>
 </template>
 
 
@@ -27,16 +31,16 @@
     export default {
         data: () => ({
             fields: {
-                host: {label: 'Host'},
                 path: {label: 'Path'},
                 method: {label: 'Method'},
                 begintime: {label: 'Begin time'},
                 donetime: {label: 'Done time'},
+                status: {label: 'Status'},
                 open: {label: String()},
             },
             items: [],
             currentPage: 1,
-            perPage: 5,
+            perPage: 15,
             filter: null
         }),
         methods: {
@@ -44,16 +48,17 @@
                 router.push({path: `/request/detail/${id}`})
             }
         },
-        created: function () {
-            WebSocketService.instance.send({endpoint: "sibsribe.requests"}, msg => {
+        created: function() {
+            this.subscription = WebSocketService.instance.subcribe("sibsribe.requests", msg => {
                 this.items = msg.data;
-            }, true);
+            });
+        },
+        destroyed: function() {
+            WebSocketService.instance.unsibscribe(this.subscription);
         }
     }
 </script>
 
 
 <style lang="stylus" scoped>
-    button
-        cursor: pointer
 </style>
