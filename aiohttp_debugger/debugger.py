@@ -2,7 +2,6 @@ from datetime import datetime
 from asyncio import ensure_future
 from aiohttp.web import WebSocketResponse
 from .helper import PubSubSupport
-import sys
 
 
 class Debugger(PubSubSupport):
@@ -80,7 +79,7 @@ class Debugger(PubSubSupport):
         def ping_overload(data):
             """ for catch outbound message """
             self._handle_ws_msg(
-                "ws_response_msg",
+                "incoming",
                 request, data, self._out_msg_mapper, WsMsgOutbound())
             return response.__aiohttp_debugger_ping__(data)
 
@@ -90,7 +89,7 @@ class Debugger(PubSubSupport):
         def pong_overload(data):
             """ for catch outbound message """
             self._handle_ws_msg(
-                "ws_response_msg",
+                "incoming",
                 request, data, self._out_msg_mapper, WsMsgOutbound())
             return response.__aiohttp_debugger_pong__(data)
 
@@ -100,7 +99,7 @@ class Debugger(PubSubSupport):
         def send_str_overload(data):
             """ for catch outbound message """
             self._handle_ws_msg(
-                "ws_response_msg",
+                "incoming",
                 request, data, self._out_msg_mapper, WsMsgOutbound())
             return response.__aiohttp_debugger_send_str__(data)
 
@@ -111,7 +110,7 @@ class Debugger(PubSubSupport):
             """ for catch outbound message """
 
             self._handle_ws_msg(
-                "ws_response_msg",
+                "incoming",
                 request, data, self._out_msg_mapper, WsMsgOutbound())
             return response.__aiohttp_debugger_send_str__(data)
 
@@ -159,13 +158,11 @@ class Debugger(PubSubSupport):
                     self._state.requests[rid]["ws_messages"] = []
 
                 msg = msg_mapper(msg)
-                msgsize = sys.getsizeof(msg)
 
                 self._state.requests[rid]["ws_messages"] += dict(
                     id=mid,
                     msg=msg,
                     time=self._state.now,
-                    size=msgsize,
                     direction=direction
                 ),
 
@@ -188,9 +185,39 @@ class Debugger(PubSubSupport):
         def requests(self):
             return list(self._state.requests.values())
 
-        def request(self, rid):
-            return next((request for request in self.requests
-                         if request['id'] == rid), None)
+        def request(self, rid, exclude_ws=True):
+            record = next((request for request in self.requests
+                           if request['id'] == rid), None)
+
+            # reset websocket messages
+            if exclude_ws and record and record['ws_messages']:
+                record = dict(record, ws_messages=None)
+
+            return record
+
+        def messages(self, rid, page=1, perpage=-1):
+            """ By default return first message on first page"""
+            record = self.request(rid, exclude_ws=False)
+
+            if record:
+                if perpage == -1:
+                    return record['ws_messages']
+
+                if 'ws_messages' in record and record['ws_messages']:
+                    start = (page - 1) * perpage
+                    end = start + perpage
+
+                    return record['ws_messages'][start:end]
+            else:
+                return None
+
+        def incoming_messages(self, rid):
+            return [msg for msg in self.messages(rid, perpage=-1)
+                    if msg['direction'] == 'incoming']
+
+        def outbound_messages(self, rid):
+            return [msg for msg in self.messages(rid, perpage=-1)
+                    if msg['direction'] == 'outbound']
 
     class _State:
 

@@ -11,6 +11,7 @@ import topMenu from '@/component/menu/top';
 import indexGrid from '@/component/requests/grid';
 import clock from '@/component/clock/clock';
 import dropdpownPane from '@/component/widget/dropdpown-pane';
+import alert from '@/component/widget/alert';
 import layout from '@/component/layout/layout';
 
 
@@ -25,6 +26,7 @@ const components = {
     indexGrid,
     clock,
     dropdpownPane,
+    alert,
     layout
 }
 

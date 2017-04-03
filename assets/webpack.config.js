@@ -31,7 +31,8 @@ module.exports = {
             {
                 test: /\.js$/,
                 loader: 'babel-loader',
-                include: [resolve('application')]
+                include: [resolve('application')],
+                query: {presets: 'es2015'}
             }
         ]
     },

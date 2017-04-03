@@ -63,6 +63,9 @@ export default {}
         height 0
         overflow auto
     
+    .card.flex-card.grey-card-bg .card-block 
+        background rgba(247, 247, 249, 0.48)
+            
     .card.flex-card .tabs 
         flex auto
         flex-direction column
@@ -71,6 +74,11 @@ export default {}
     .d-flex
         flex auto
         
+    .tab-content
+        display flex
+        
+        .tab-pane
+            flex auto
     button
         cursor pointer
         

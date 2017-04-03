@@ -17,7 +17,8 @@ async def dashboard(request):
 
 async def websocket(request):
     response = await WsResponseHelper.instance(request)
-    proxy = api.WsMsgDispatcherProxy(response, api.WsMsgDispatcher(response))
+    sender = api.Sender(response)
+    proxy = api.WsMsgDispatcherProxy(api.WsMsgDispatcher(sender), sender)
 
     async for msg in response:
         ensure_future(proxy.recive(msg))

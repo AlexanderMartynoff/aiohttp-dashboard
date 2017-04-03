@@ -1,6 +1,6 @@
 <template>
-  <b-card header="Requests" class="flex-card" show-footer>
-        <b-table striped :items="items" :fields="fields" :current-page="currentPage" :per-page="perPage" :filter="filter">
+  <b-card class="flex-card grey-card-bg" show-footer show-header>
+        <b-table v-if="items.length" striped :items="items" :fields="fields" :current-page="currentPage" :per-page="perPage">
             <template slot="open" scope="item">
                 <div class="text-right">
                     <b-btn size="sm" @click="details(item.item.id)">
@@ -14,8 +14,14 @@
             </template>
         </b-table>
 
+        <alert v-else message="Записей не найдено"></alert>
+
+        <span slot="header">
+            <i class="fa fa-globe" aria-hidden="true"></i> Requests
+        </span>
+
         <small slot="footer">
-            <div class="justify-content-center row">
+            <div v-if="items.length" class="justify-content-center row">
                 <b-pagination size="md" :total-rows="this.items.length" :per-page="perPage" v-model="currentPage"/>
             </div>
         </small>
@@ -49,7 +55,7 @@
             }
         },
         created: function() {
-            this.subscription = WebSocketService.instance.subcribe("sibsribe.requests", msg => {
+            this.subscription = WebSocketService.instance.subscribe("sibsribe.requests", msg => {
                 this.items = msg.data;
             });
         },

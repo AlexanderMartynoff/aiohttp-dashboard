@@ -17,7 +17,7 @@ class Npm(Command):
 
 setup(
     name='aiohttp_debugger',
-    version='1.0.5.5',
+    version='1.0.5.9.1',
     install_requires=[
         'aiohttp>=2.0.0',
         'aiohttp_jinja2'
