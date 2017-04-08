@@ -7,8 +7,10 @@ class Npm(Command):
     user_options = [('static', None, None)]
 
     def run(self):
-        with Popen(args=['npm', 'run', 'build'], cwd=r'./assets') as process:
-            process.wait()
+        # `npm install` in any case
+       Popen(args=['npm', 'install'], cwd=r'./assets').wait()
+       # run build task
+       Popen(args=['npm', 'run', 'build'], cwd=r'./assets').wait()
 
     def initialize_options(self): pass
 
