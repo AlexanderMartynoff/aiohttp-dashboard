@@ -78,6 +78,7 @@ class Debugger(PubSubSupport):
     def _overload_ws_response(self, request, response):
         def ping_overload(data):
             """ for catch outbound message """
+
             self._handle_ws_msg(
                 "incoming",
                 request, data, self._out_msg_mapper, WsMsgOutbound())
@@ -88,6 +89,7 @@ class Debugger(PubSubSupport):
 
         def pong_overload(data):
             """ for catch outbound message """
+
             self._handle_ws_msg(
                 "incoming",
                 request, data, self._out_msg_mapper, WsMsgOutbound())
@@ -98,6 +100,7 @@ class Debugger(PubSubSupport):
 
         def send_str_overload(data):
             """ for catch outbound message """
+
             self._handle_ws_msg(
                 "incoming",
                 request, data, self._out_msg_mapper, WsMsgOutbound())
@@ -190,26 +193,26 @@ class Debugger(PubSubSupport):
                            if request['id'] == rid), None)
 
             # reset websocket messages
-            if exclude_ws and record and record['ws_messages']:
+            if record and 'ws_messages' in record and exclude_ws:
                 record = dict(record, ws_messages=None)
 
             return record
 
         def messages(self, rid, page=1, perpage=-1):
-            """ By default return first message on first page"""
+            """ By default return first message on first page """
+
             record = self.request(rid, exclude_ws=False)
 
-            if record:
+            if record and 'ws_messages' in record and record['ws_messages']:
                 if perpage == -1:
                     return record['ws_messages']
 
-                if 'ws_messages' in record and record['ws_messages']:
-                    start = (page - 1) * perpage
-                    end = start + perpage
+                start = (page - 1) * perpage
+                end = start + perpage
 
-                    return record['ws_messages'][start:end]
+                return record['ws_messages'][start:end]
             else:
-                return None
+                return []
 
         def incoming_messages(self, rid):
             return [msg for msg in self.messages(rid, perpage=-1)

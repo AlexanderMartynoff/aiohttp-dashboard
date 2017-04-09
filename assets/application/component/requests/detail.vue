@@ -24,7 +24,7 @@
                     </li>
                 </ul>
 
-                <alert v-else message="Записей не найдено"></alert>
+                <alert v-else message="Records not found"></alert>
             </b-card>
         </div>
         <div class="col-7 d-flex align-items-stretch">
@@ -36,7 +36,7 @@
                                 <span class="key-name">{{key}}:</span> <code>{{value}}</code> 
                             </li>
                         </ul>
-                        <alert v-else message="Записей не найдено"></alert>
+                        <alert v-else message="Records not found"></alert>
                     </b-tab>
                     <b-tab title="Response headers">
                         <ul class="list-group" v-if="record">
@@ -44,7 +44,7 @@
                                 <span class="key-name">{{key}}:</span> <code>{{value}}</code> 
                             </li>
                         </ul>
-                        <alert v-else message="Записей не найдено"></alert>
+                        <alert v-else message="Records not found"></alert>
                     </b-tab>
                     <b-tab title="WebSocket messages" :disabled="isNotWs" id="ws">
                         <ul class="list-group" v-if="record">

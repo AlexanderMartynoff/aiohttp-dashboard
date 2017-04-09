@@ -2,33 +2,30 @@ from .debugger import (Debugger, WsMsgIncoming, WsMsgOutbound,
                        HttpRequest, HttpResponse)
 from .helper import casemethod
 from operator import itemgetter
-from asyncio import sleep, ensure_future
+from asyncio import sleep, ensure_future, get_event_loop
+from time import time
+from collections import defaultdict
 
 
 class Sender:
-    _timeout = 1
 
     def __init__(self, socket):
         self._socket = socket
-        self._endpoints = dict()
-        self._is_run = False
+        self._endpoints = defaultdict(lambda: None)
 
     def put(self, res_msg, req_msg):
-        self._endpoints[req_msg.endpoint] = res_msg, req_msg
+        record = self._endpoints[req_msg.endpoint]
 
-        if not self._is_run:
-            ensure_future(self._start())
-            self._is_run = True
+        if record is None:
+            record = self._endpoints[req_msg.endpoint] = self.SendToken(self._send)
+            record.run_soon(args=(res_msg, req_msg))
+        elif record.isoverdue:
+            record.run_soon(args=(res_msg, req_msg))
+        else:
+            record.run_deferred(args=(res_msg, req_msg))
 
     def _send(self, res_msg, req_msg):
         self._socket.send_json(self._prepare_ws_response(res_msg, req_msg))
-
-    async def _start(self):
-        while True:
-            for endpoint, pair in list(self._endpoints.items()):
-                self._send(*pair)
-                del self._endpoints[endpoint]
-            await sleep(self._timeout)
 
     def _prepare_ws_response(self, res_msg, req_msg):
         return dict(data=res_msg, uid=req_msg.uid, endpoint=req_msg.endpoint)
@@ -36,6 +33,37 @@ class Sender:
     @property
     def id(self):
         return self._socket.id
+
+    class SendToken:
+        _delay = 5
+        _handler = None
+        _args = None
+        _last_send_time = None
+        _is_wait_for_call = False
+
+        def __init__(self, handler):
+            self._handler = handler
+
+        def _handler_wrapper(self):
+            self._is_wait_for_call = False
+            self._handler(*self._args)
+
+        def run_soon(self, args):
+            self._args = args
+            self._last_send_time = time()
+            get_event_loop().call_soon(self._handler_wrapper)
+
+        def run_deferred(self, args):
+            self._args = args
+
+            if not self._is_wait_for_call:
+                self._is_wait_for_call = True
+                get_event_loop().call_later(self._delay, self._handler_wrapper)
+
+        @property
+        def isoverdue(self):
+            delta = time() - self._last_send_time
+            return delta > self._delay
 
 
 class WsMsgDispatcherProxy:

@@ -8,9 +8,9 @@ class Npm(Command):
 
     def run(self):
         # `npm install` in any case
-       Popen(args=['npm', 'install'], cwd=r'./assets').wait()
-       # run build task
-       Popen(args=['npm', 'run', 'build'], cwd=r'./assets').wait()
+        Popen(args=['npm', 'install'], cwd=r'./assets').wait()
+        # run build task
+        Popen(args=['npm', 'run', 'build'], cwd=r'./assets').wait()
 
     def initialize_options(self): pass
 
