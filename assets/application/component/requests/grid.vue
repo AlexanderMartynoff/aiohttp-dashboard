@@ -46,7 +46,7 @@
             },
             items: [],
             currentPage: 1,
-            perPage: 15,
+            perPage: 25,
             filter: null
         }),
         methods: {

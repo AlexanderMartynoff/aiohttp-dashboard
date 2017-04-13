@@ -2,6 +2,7 @@
     <div class="row d-flex">
         <div class="col-5 d-flex align-items-stretch">
             <b-card header="Request info" class="flex-card">
+                
                 <ul class="list-group" v-if="record">
                     <li class="list-group-item list-group-item-warning block" v-if="record.status || record.reason">
                         <div><span>{{record.status}}</span></div>
@@ -29,8 +30,8 @@
         </div>
         <div class="col-7 d-flex align-items-stretch">
             <b-card no-block class="flex-card" show-footer>
-                <b-tabs small card no-fade ref="tabs">
-                    <b-tab title="Request headers" active>
+                <b-tabs small card no-fade>
+                    <b-tab title="Request headers">
                         <ul class="list-group" v-if="record">
                             <li class="list-group-item" v-for="value, key in record.reqheaders">
                                 <span class="key-name">{{key}}:</span> <code>{{value}}</code> 
@@ -46,7 +47,7 @@
                         </ul>
                         <alert v-else message="Records not found"></alert>
                     </b-tab>
-                    <b-tab title="WebSocket messages" :disabled="isNotWs" id="ws">
+                    <b-tab title="WebSocket messages" :disabled="isNotWs">
                         <ul class="list-group" v-if="record">
                             <li class="list-group-item aiodebugger__ws-list-group-item" v-for="(key, index) in wsCollection">
                                 <i class="fa fa-arrow-circle-up" aria-hidden="true" v-if="key.direction == 'outbound'"></i>
@@ -65,13 +66,13 @@
                                 </b-modal>
                             </li>
                         </ul>
-                        <alert v-else message="Записей не найдено"></alert>
+                        <alert v-else message="Records not found"></alert>
                     </b-tab>
                 </b-tabs>
 
                 <div slot="footer">
                     <div class="container-fluid">
-                        <div class="row" v-if="wsCollection.length > 0">
+                        <div class="row" v-if="wsCollection && wsCollection.length > 0">
                             <div class="col-md-auto">
                                 <span>
                                     <span class="badge badge-success">
@@ -116,7 +117,7 @@
         },
         computed: {
             isNotWs: function() {
-                return this.wsCollection == undefined;
+                return !(this.wsCollection || {}).length;
             }
         },
         watch: {
@@ -128,7 +129,6 @@
         },
         methods: {
             onRequestRecive: function(data) {
-                console.log(data);
                 this.record = data.item;
             },
             onWsMessagesRecive: function(data) {
@@ -146,7 +146,6 @@
             onDetailHidden: function() {
                 this.wsSubscribe();
             },
-            onWsTabSelect: function() {},
             format: function (code) {
                 try {
                     return JSON.stringify(JSON.parse(code), null, 2);
@@ -155,14 +154,14 @@
                 }
             },
             requestSubscribe: function() {
-                return this.subscription = WebSocketService.instance.subscribe(
+                return this.httpSubscription = WebSocketService.instance.subscribe(
                     "sibsribe.request",
                     msg => this.onRequestRecive(msg.data),
                     {"id": parseInt(this.id)}
                 );
             },
             wsSubscribe: function() {
-                return this.subscription = WebSocketService.instance.subscribe(
+                return this.wsSubscription = WebSocketService.instance.subscribe(
                     "sibsribe.request.messages",
                     msg => this.onWsMessagesRecive(msg.data),
                     {
@@ -173,18 +172,19 @@
                 );
             },
             wsUnsubscribe: function(onComplete) {
-                WebSocketService.instance.unsibscribe(this.subscription, onComplete);
+                WebSocketService.instance.unsibscribe(this.wsSubscription, onComplete);
+            },
+            httpUnsubscribe: function(onComplete) {
+                WebSocketService.instance.unsibscribe(this.httpSubscription, onComplete);
             }
         },
         created: function() {
             this.wsSubscribe();
             this.requestSubscribe();
         },
-        mounted: function() {
-            this.$refs.tabs.$el.querySelectorAll(".nav-item");
-        },
         destroyed: function() {
             this.wsUnsubscribe();
+            this.httpUnsubscribe();
         }
     }
 </script>

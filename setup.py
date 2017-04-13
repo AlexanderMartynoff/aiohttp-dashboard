@@ -18,10 +18,10 @@ class Npm(Command):
 
 
 setup(
-    name='aiohttp_debugger',
-    version='1.0.5.9.1',
+    name='aiohttp-debugger',
+    version='2.0.1.1',
     install_requires=[
-        'aiohttp>=2.0.0',
+        'aiohttp',
         'aiohttp_jinja2'
     ],
     packages=['aiohttp_debugger'],

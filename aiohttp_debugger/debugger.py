@@ -198,7 +198,7 @@ class Debugger(PubSubSupport):
 
             return record
 
-        def messages(self, rid, page=1, perpage=-1):
+        def messages(self, rid, page=1, perpage=-1, filter=lambda: None):
             """ By default return first message on first page """
 
             record = self.request(rid, exclude_ws=False)
@@ -212,15 +212,18 @@ class Debugger(PubSubSupport):
 
                 return record['ws_messages'][start:end]
             else:
-                return []
+                return None
 
-        def incoming_messages(self, rid):
-            return [msg for msg in self.messages(rid, perpage=-1)
-                    if msg['direction'] == 'incoming']
+        def count_by_direction(self, rid, direction=None):
+            all = self.messages(rid, perpage=-1)
 
-        def outbound_messages(self, rid):
-            return [msg for msg in self.messages(rid, perpage=-1)
-                    if msg['direction'] == 'outbound']
+            if all is None:
+                return None
+
+            if direction is None:
+                return all.__len__()
+
+            return [msg for msg in all if msg['direction'] == direction].__len__()
 
     class _State:
 

@@ -17,12 +17,13 @@ class Sender:
         record = self._endpoints[req_msg.endpoint]
 
         if record is None:
-            record = self._endpoints[req_msg.endpoint] = self.SendToken(self._send)
-            record.run_soon(args=(res_msg, req_msg))
+            record = self._endpoints[req_msg.endpoint] = \
+                self.SendToken(handler=self._send)
+            record.send_soon(args=(res_msg, req_msg))
         elif record.isoverdue:
-            record.run_soon(args=(res_msg, req_msg))
+            record.send_soon(args=(res_msg, req_msg))
         else:
-            record.run_deferred(args=(res_msg, req_msg))
+            record.send_deferred(args=(res_msg, req_msg))
 
     def _send(self, res_msg, req_msg):
         self._socket.send_json(self._prepare_ws_response(res_msg, req_msg))
@@ -35,7 +36,7 @@ class Sender:
         return self._socket.id
 
     class SendToken:
-        _delay = 5
+        _delay = 1
         _handler = None
         _args = None
         _last_send_time = None
@@ -48,12 +49,12 @@ class Sender:
             self._is_wait_for_call = False
             self._handler(*self._args)
 
-        def run_soon(self, args):
+        def send_soon(self, args):
             self._args = args
             self._last_send_time = time()
             get_event_loop().call_soon(self._handler_wrapper)
 
-        def run_deferred(self, args):
+        def send_deferred(self, args):
             self._args = args
 
             if not self._is_wait_for_call:
@@ -112,9 +113,9 @@ class WsMsgDispatcher:
         def res_msg():
             return dict(
                 collection=self._debugger.api.messages(rid, page, perpage),
-                total=self._debugger.api.messages(rid, perpage=-1).__len__(),
-                incoming=self._debugger.api.incoming_messages(rid).__len__(),
-                outbound=self._debugger.api.outbound_messages(rid).__len__()
+                total=self._debugger.api.count_by_direction(rid),
+                incoming=self._debugger.api.count_by_direction(rid, 'incoming'),
+                outbound=self._debugger.api.count_by_direction(rid, 'outbound')
             )
 
         def on(event):
@@ -141,6 +142,7 @@ class WsMsgDispatcher:
 
     @recive.case('unsibscribe')
     async def recive(self, req_msg):
+        """ with this hid maybe be multiple handlers """
         self._debugger.off(hid=req_msg.data['id'])
 
     @recive.default
@@ -149,7 +151,7 @@ class WsMsgDispatcher:
 
     @recive.catch(Exception)
     async def recive(self, exception):
-        """ TODO - async eception not catch with this way """
+        """ TODO - async eception not catch through this way """
         return {"status": "error", "cause": str(exception)}
 
     def close(self):

@@ -120,6 +120,10 @@ class PubSubSupport:
         return self
 
     def off(self, *, group=None, hid=None):
+
+        if group is None and hid is None:
+            raise ValueError('group or/and hid must be not None')
+
         if group:
             del self.__handlers[group]
 
@@ -127,7 +131,7 @@ class PubSubSupport:
             for _group, handlers in self.__handlers.items():
                 for etype, handler, _hid in handlers[:]:
                     if _hid == hid:
-                        handlers.remove((etype, handler, _hid))
+                        self.__handlers[_group].remove((etype, handler, _hid))
 
     def fire(self, event):
         for handlers in self.__handlers.values():
