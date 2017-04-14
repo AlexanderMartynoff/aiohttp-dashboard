@@ -1,6 +1,7 @@
 from setuptools import setup
 from distutils.cmd import Command
 from subprocess import Popen
+import subprocess
 
 
 class Npm(Command):
@@ -8,9 +9,9 @@ class Npm(Command):
 
     def run(self):
         # `npm install` in any case
-        Popen(args=['npm', 'install'], cwd=r'./assets').wait()
+        subprocess.run(args=['npm', 'install'], cwd=r'./assets')
         # run build task
-        Popen(args=['npm', 'run', 'build'], cwd=r'./assets').wait()
+        subprocess.run(args=['npm', 'run', 'build'], cwd=r'./assets')
 
     def initialize_options(self): pass
 
@@ -19,7 +20,7 @@ class Npm(Command):
 
 setup(
     name='aiohttp-debugger',
-    version='2.0.1.1',
+    version='2.0.1.9',
     install_requires=[
         'aiohttp',
         'aiohttp_jinja2'

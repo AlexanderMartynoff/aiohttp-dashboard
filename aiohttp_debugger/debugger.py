@@ -2,13 +2,19 @@ from datetime import datetime
 from asyncio import ensure_future
 from aiohttp.web import WebSocketResponse
 from .helper import PubSubSupport
+from queue import Queue
 
 
 class Debugger(PubSubSupport):
     self = None
 
     @classmethod
-    def instance(cls, application) -> 'Debugger':
+    def instance(cls, application):
+        """ deprecated """
+        return cls.setup(application)
+
+    @classmethod
+    def setup(cls, application) -> 'Debugger':
         from . import action
         import aiohttp_jinja2
         import jinja2
@@ -70,12 +76,12 @@ class Debugger(PubSubSupport):
             self.fire(HttpResponse())
 
             if isinstance(response, WebSocketResponse):
-                self._overload_ws_response(request, response)
+                self._ws_resposne_monkey_patch(request, response)
 
     def _is_sutable_req(self, req):
         return not req.path.startswith("/_debugger")
 
-    def _overload_ws_response(self, request, response):
+    def _ws_resposne_monkey_patch(self, request, response):
         def ping_overload(data):
             """ for catch outbound message """
 
@@ -153,23 +159,16 @@ class Debugger(PubSubSupport):
 
     def _handle_ws_msg(self, direction, req, msg, msg_mapper, event):
         if self._is_sutable_req(req):
-            rid = id(req)
-            mid = id(msg)
+            rid, mid = id(req), id(msg)
 
-            if rid in self._state.requests.keys():
-                if "ws_messages" not in self._state.requests[rid].keys():
-                    self._state.requests[rid]["ws_messages"] = []
+            self._state.put_ws_message(rid, dict(
+                id=mid,
+                msg=msg_mapper(msg),
+                time=self._state.now,
+                direction=direction
+            ))
 
-                msg = msg_mapper(msg)
-
-                self._state.requests[rid]["ws_messages"] += dict(
-                    id=mid,
-                    msg=msg,
-                    time=self._state.now,
-                    direction=direction
-                ),
-
-                self.fire(event)
+            self.fire(event)
 
     def _handle_request(self, request):
         self._state.put_request(request)
@@ -184,17 +183,20 @@ class Debugger(PubSubSupport):
         def __init__(self, state):
             self._state = state
 
-        @property
-        def requests(self):
-            return list(self._state.requests.values())
+        def requests(self, exclude_ws=True):
+
+            def do_exclude_ws(record):
+                if record and 'ws_messages' in record:
+                    return {key: value for key, value
+                            in record.items() if key != 'ws_messages'}
+                return record
+
+            return [do_exclude_ws(record) if exclude_ws else record
+                    for record in self._state.requests.values()]
 
         def request(self, rid, exclude_ws=True):
-            record = next((request for request in self.requests
+            record = next((request for request in self.requests(exclude_ws)
                            if request['id'] == rid), None)
-
-            # reset websocket messages
-            if record and 'ws_messages' in record and exclude_ws:
-                record = dict(record, ws_messages=None)
 
             return record
 
@@ -203,14 +205,18 @@ class Debugger(PubSubSupport):
 
             record = self.request(rid, exclude_ws=False)
 
-            if record and 'ws_messages' in record and record['ws_messages']:
+            if record and 'ws_messages' in record:
+
+                # just make list from queue
+                messages = list(record['ws_messages'].queue)
+
                 if perpage == -1:
-                    return record['ws_messages']
+                    return messages
 
                 start = (page - 1) * perpage
                 end = start + perpage
 
-                return record['ws_messages'][start:end]
+                return messages[start:end]
             else:
                 return None
 
@@ -226,6 +232,7 @@ class Debugger(PubSubSupport):
             return [msg for msg in all if msg['direction'] == direction].__len__()
 
     class _State:
+        _wsmaxsize = 10
 
         def __init__(self):
             self._requests = dict()
@@ -233,6 +240,14 @@ class Debugger(PubSubSupport):
         def put_request(self, request):
             rid, record = self._make_request_log(request)
             self.requests[rid] = record
+
+        def put_ws_message(self, rid, message):
+
+            if rid in self._requests.keys():
+                if "ws_messages" not in self._requests[rid].keys():
+                    self._requests[rid]["ws_messages"] = Queue(self._wsmaxsize)
+
+                self._requests[rid]["ws_messages"].put_nowait(message)
 
         def _make_request_log(self, request) -> (int, dict):
             rid = id(request)

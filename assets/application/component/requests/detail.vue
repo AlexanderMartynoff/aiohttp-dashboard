@@ -1,8 +1,7 @@
 <template>
     <div class="row d-flex">
         <div class="col-5 d-flex align-items-stretch">
-            <b-card header="Request info" class="flex-card">
-                
+            <b-card header="Request info" class="flex-card"> 
                 <ul class="list-group" v-if="record">
                     <li class="list-group-item list-group-item-warning block" v-if="record.status || record.reason">
                         <div><span>{{record.status}}</span></div>
@@ -87,7 +86,12 @@
                             </div>
                             <div class="col-10">
                                 <div class="justify-content-center row">
-                                    <b-pagination size="md" :total-rows="wsTotal" :per-page="wsPerPage" v-model="wsCurrentPage"/>
+                                    <b-pagination size="md"
+                                                  :total-rows="wsTotal"
+                                                  variant="primary"
+                                                  secondary-variant="info"
+                                                  :per-page="wsPerPage"
+                                                  v-model="wsCurrentPage"/>
                                 </div>
                             </div>
                         </div>
@@ -107,7 +111,7 @@
             return {
                 record: {},
                 wsCurrentPage: 1,
-                wsPerPage: 10,
+                wsPerPage: 50,
                 wsTotal: 0,
                 wsCollection: []
             }
@@ -118,6 +122,10 @@
         computed: {
             isNotWs: function() {
                 return !(this.wsCollection || {}).length;
+            },
+
+            isWsOnLastPage: function() {
+                this.wsCurrentPage == this.wsTotal;
             }
         },
         watch: {
@@ -136,6 +144,10 @@
                 this.wsTotal = data.total;
                 this.wsIncomingTotal = data.incoming;
                 this.wsOutboundTotal = data.outbound;
+
+                if (this.isWsOnLastPage) {
+                    this.wsCurrentPage = this.wsTotal;
+                } 
             },
             showWsDetail: function(index) {
                 this.$refs.wsDetail[index].show();

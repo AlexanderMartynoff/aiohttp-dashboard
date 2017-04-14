@@ -36,7 +36,7 @@ class Sender:
         return self._socket.id
 
     class SendToken:
-        _delay = 1
+        _delay = .5
         _handler = None
         _args = None
         _last_send_time = None
@@ -130,7 +130,7 @@ class WsMsgDispatcher:
     async def recive(self, req_msg):
 
         def res_msg():
-            return self._debugger.api.requests
+            return self._debugger.api.requests()
 
         def on(event):
             self._send(res_msg(), req_msg)
