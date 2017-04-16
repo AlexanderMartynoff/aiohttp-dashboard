@@ -88,8 +88,6 @@
                                 <div class="justify-content-center row">
                                     <b-pagination size="md"
                                                   :total-rows="wsTotal"
-                                                  variant="primary"
-                                                  secondary-variant="info"
                                                   :per-page="wsPerPage"
                                                   v-model="wsCurrentPage"/>
                                 </div>

@@ -2,6 +2,7 @@ from setuptools import setup
 from distutils.cmd import Command
 from subprocess import Popen
 import subprocess
+from aiohttp_debugger import __version__
 
 
 class Npm(Command):
@@ -20,7 +21,7 @@ class Npm(Command):
 
 setup(
     name='aiohttp-debugger',
-    version='2.0.1.9',
+    version=__version__,
     install_requires=[
         'aiohttp',
         'aiohttp_jinja2'

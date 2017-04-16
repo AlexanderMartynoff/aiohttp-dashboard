@@ -2,7 +2,11 @@ from datetime import datetime
 from asyncio import ensure_future
 from aiohttp.web import WebSocketResponse
 from .helper import PubSubSupport
+from .helper import LimitedDict
 from queue import Queue
+from collections import deque
+import os
+import sys
 
 
 class Debugger(PubSubSupport):
@@ -76,12 +80,12 @@ class Debugger(PubSubSupport):
             self.fire(HttpResponse())
 
             if isinstance(response, WebSocketResponse):
-                self._ws_resposne_monkey_patch(request, response)
+                self._ws_resposne_do_monkey_patch(request, response)
 
     def _is_sutable_req(self, req):
         return not req.path.startswith("/_debugger")
 
-    def _ws_resposne_monkey_patch(self, request, response):
+    def _ws_resposne_do_monkey_patch(self, request, response):
         def ping_overload(data):
             """ for catch outbound message """
 
@@ -158,6 +162,7 @@ class Debugger(PubSubSupport):
         return msg
 
     def _handle_ws_msg(self, direction, req, msg, msg_mapper, event):
+        # refact this and move to Debugger._State class
         if self._is_sutable_req(req):
             rid, mid = id(req), id(msg)
 
@@ -183,42 +188,42 @@ class Debugger(PubSubSupport):
         def __init__(self, state):
             self._state = state
 
-        def requests(self, exclude_ws=True):
+        def platform_info(self):
+            import platform
+            import sys
+            import aiohttp
+            from . import __version__
 
-            def do_exclude_ws(record):
-                if record and 'ws_messages' in record:
-                    return {key: value for key, value
-                            in record.items() if key != 'ws_messages'}
-                return record
+            return dict(
+                platform=platform.platform(),
+                python=sys.version,
+                aiohttp=aiohttp.__version__,
+                debugger=__version__
+            )
 
-            return [do_exclude_ws(record) if exclude_ws else record
-                    for record in self._state.requests.values()]
+        def requests(self, *args, **kwargs):
+            return list(self._state.requests.values())
 
-        def request(self, rid, exclude_ws=True):
-            record = next((request for request in self.requests(exclude_ws)
+        def request(self, rid):
+            record = next((request for request in self.requests()
                            if request['id'] == rid), None)
 
             return record
 
-        def messages(self, rid, page=1, perpage=-1, filter=lambda: None):
-            """ By default return first message on first page """
+        def messages(self, rid, page=1, perpage=-1):
 
-            record = self.request(rid, exclude_ws=False)
-
-            if record and 'ws_messages' in record:
-
-                # just make list from queue
-                messages = list(record['ws_messages'].queue)
-
-                if perpage == -1:
-                    return messages
-
-                start = (page - 1) * perpage
-                end = start + perpage
-
-                return messages[start:end]
-            else:
+            if rid not in self._state.messages:
                 return None
+
+            messages = list(self._state.messages[rid])
+
+            if perpage == -1:
+                return messages
+
+            start = (page - 1) * perpage
+            end = start + perpage
+
+            return messages[start:end]
 
         def count_by_direction(self, rid, direction=None):
             all = self.messages(rid, perpage=-1)
@@ -232,27 +237,16 @@ class Debugger(PubSubSupport):
             return [msg for msg in all if msg['direction'] == direction].__len__()
 
     class _State:
-        _wsmaxsize = 10
+        _maxlen = 50000
 
         def __init__(self):
-            self._requests = dict()
+            self._requests = LimitedDict(maxlen=self._maxlen)
+            self._messages = LimitedDict(maxlen=self._maxlen)
 
         def put_request(self, request):
-            rid, record = self._make_request_log(request)
-            self.requests[rid] = record
-
-        def put_ws_message(self, rid, message):
-
-            if rid in self._requests.keys():
-                if "ws_messages" not in self._requests[rid].keys():
-                    self._requests[rid]["ws_messages"] = Queue(self._wsmaxsize)
-
-                self._requests[rid]["ws_messages"].put_nowait(message)
-
-        def _make_request_log(self, request) -> (int, dict):
             rid = id(request)
             ip, _ = request.transport.get_extra_info('peername')
-            return rid, dict(
+            self._requests[rid] = dict(
                 id=rid,
                 scheme=request.scheme,
                 host=request.host,
@@ -264,13 +258,26 @@ class Debugger(PubSubSupport):
                 ip=ip
             )
 
+        def put_ws_message(self, rid, message):
+            """
+            :param req: request id
+            """
+            if rid not in self._messages:
+                self._messages[rid] = deque(maxlen=self._maxlen)
+
+            self._messages[rid] += message,
+
         @property
         def now(self):
             return datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f")
 
         @property
-        def requests(self):
+        def requests(self) -> dict:
             return self._requests
+
+        @property
+        def messages(self) -> LimitedDict:
+            return self._messages
 
 
 class HttpRequest(PubSubSupport.Event):

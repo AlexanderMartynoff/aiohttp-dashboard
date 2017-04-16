@@ -1,5 +1,5 @@
 from aiohttp.web import WebSocketResponse
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from uuid import uuid4
 from functools import lru_cache
 
@@ -142,3 +142,19 @@ class PubSubSupport:
     class Event:
         def __init__(self, name):
             self.name = name
+
+
+class LimitedDict(OrderedDict):
+    def __init__(self, *args, **kwargs):
+        self._maxlen = kwargs.pop('maxlen', None)
+        super().__init__(*args, **kwargs)
+        self._controll_size_limit()
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        self._controll_size_limit()
+
+    def _controll_size_limit(self):
+        if self._maxlen is not None:
+            while len(self) > self._maxlen:
+                self.popitem(last=False)

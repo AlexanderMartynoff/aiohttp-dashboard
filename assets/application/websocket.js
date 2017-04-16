@@ -1,3 +1,7 @@
+import {port} from '@/utils';
+import config from '@/config';
+
+
 class WebSocketService {
     constructor(url) {
         this._ws = null;
@@ -51,16 +55,6 @@ class WebSocketService {
         return this;
     }
 
-    _reciveMsg(resMsg, callbackObject) {
-        switch (resMsg.type) {
-            case "fetch": null; break;
-            case "sibscribe": null; break;
-            case "fire": null; break;
-            case "undefined": null; break;
-            default: null; break;
-        }
-    }
-
     _do(success, fail=() => {}) {
         switch(this._getState()) {
             case WebSocket.CONNECTING: this._onOpenWaiters.push(success); break;
@@ -84,7 +78,10 @@ class WebSocketService {
     }
 
     send(reqMsg, callback, persistent=false) {
-        const preparedReqMsg = this._prepareMsg(reqMsg);
+        const preparedReqMsg = this._prepareMsg(
+            typeof reqMsg === 'string' ? {endpoint: reqMsg} : reqMsg
+        );
+
         this._do(() => {
             this._responseHandlres[preparedReqMsg.uid] = {
                 callback,
@@ -109,5 +106,13 @@ class WebSocketService {
         }, onComplete, false);
     }
 }
+
+const instance = WebSocketService.instance = new WebSocketService(config.wsApiEndpoint);
+
+WebSocketService.mixin = {
+    methods: {
+        send: (...args) => instance.send.apply(instance, args)
+    }
+};
 
 export {WebSocketService}

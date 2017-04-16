@@ -5,6 +5,7 @@ from operator import itemgetter
 from asyncio import sleep, ensure_future, get_event_loop
 from time import time
 from collections import defaultdict
+import warnings
 
 
 class Sender:
@@ -14,19 +15,22 @@ class Sender:
         self._endpoints = defaultdict(lambda: None)
 
     def put(self, res_msg, req_msg):
-        record = self._endpoints[req_msg.endpoint]
+        send_token = self._endpoints[req_msg.endpoint]
 
-        if record is None:
-            record = self._endpoints[req_msg.endpoint] = \
+        if send_token is None:
+            send_token = self._endpoints[req_msg.endpoint] = \
                 self.SendToken(handler=self._send)
-            record.send_soon(args=(res_msg, req_msg))
-        elif record.isoverdue:
-            record.send_soon(args=(res_msg, req_msg))
+            send_token.send_soon(args=(res_msg, req_msg))
+        elif send_token.isoverdue:
+            send_token.send_soon(args=(res_msg, req_msg))
         else:
-            record.send_deferred(args=(res_msg, req_msg))
+            send_token.send_deferred(args=(res_msg, req_msg))
 
     def _send(self, res_msg, req_msg):
-        self._socket.send_json(self._prepare_ws_response(res_msg, req_msg))
+        if not self._socket.closed:
+            self._socket.send_json(self._prepare_ws_response(res_msg, req_msg))
+        else:
+            warnings.warn('try send into closed websoclet connection')
 
     def _prepare_ws_response(self, res_msg, req_msg):
         return dict(data=res_msg, uid=req_msg.uid, endpoint=req_msg.endpoint)
@@ -36,7 +40,7 @@ class Sender:
         return self._socket.id
 
     class SendToken:
-        _delay = .5
+        _delay = .2
         _handler = None
         _args = None
         _last_send_time = None
@@ -63,8 +67,7 @@ class Sender:
 
         @property
         def isoverdue(self):
-            delta = time() - self._last_send_time
-            return delta > self._delay
+            return (time() - self._last_send_time) > self._delay
 
 
 class WsMsgDispatcherProxy:
@@ -118,7 +121,7 @@ class WsMsgDispatcher:
                 outbound=self._debugger.api.count_by_direction(rid, 'outbound')
             )
 
-        def on(event):
+        def on(event: WsMsgIncoming or WsMsgOutbound):
             self._send(res_msg(), req_msg)
 
         self._debugger.on(WsMsgIncoming, on, group=self._sender.id, hid=req_msg.uid)
@@ -144,6 +147,10 @@ class WsMsgDispatcher:
     async def recive(self, req_msg):
         """ with this hid maybe be multiple handlers """
         self._debugger.off(hid=req_msg.data['id'])
+
+    @recive.case('fetch.info')
+    async def recive(self, req_msg):
+        return self._debugger.api.platform_info()
 
     @recive.default
     async def recive(self, req_msg):

@@ -1,13 +1,13 @@
 <template>
   <b-card class="flex-card grey-card-bg" show-footer show-header>
-        <b-table v-if="items.length" striped :items="items" :fields="fields" :current-page="currentPage" :per-page="perPage">
-            <template slot="open" scope="item">
-                <div class="text-right">
-                    <b-btn size="sm" @click="details(item.item.id)">
-                        <i class="fa fa-eye" aria-hidden="true"></i>
-                    </b-btn>
-                </div>
-            </template>
+        <b-table v-if="items.length"
+                 @row-clicked="(item, index) => details(item.id, index)"
+                 :items="items"
+                 :fields="fields"
+                 :current-page="currentPage"
+                 :per-page="perPage"
+                 class="table-pinter table-hover"
+                 striped>
 
             <template slot="status" scope="item">
                 {{item.item.status}}/{{item.item.reason}}
@@ -41,8 +41,7 @@
                 method: {label: 'Method'},
                 begintime: {label: 'Begin time'},
                 donetime: {label: 'Done time'},
-                status: {label: 'Status'},
-                open: {label: String()},
+                status: {label: 'Status'}
             },
             items: [],
             currentPage: 1,
@@ -67,4 +66,11 @@
 
 
 <style lang="stylus" scoped>
+.websocket_icon
+    margin-right 5px
+</style>
+
+<style lang="stylus">
+.table-pinter tr
+    cursor pointer
 </style>

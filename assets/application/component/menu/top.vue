@@ -14,13 +14,17 @@
                                         <h4 class="card-title">AiohttpDebbuger</h4>
                                         <div class="list-group">
                                             <router-link to="/" class="list-group-item list-group-item-action">Requests</router-link>
-                                            <router-link to="/help" class="list-group-item list-group-item-action">Logs</router-link>
-                                            <router-link to="/help" class="list-group-item list-group-item-action">Platform info</router-link>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </dropdpown-pane>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" @click="showAboutInfo" href="javascript: void(null)">
+                            <i class="fa fa-info-circle" aria-hidden="true"></i>
+                        </a>
+                        <about-window ref="aboutWindow"></about-window>
                     </li>
                 </ul>
             </div>
@@ -30,7 +34,13 @@
 
 
 <script type="text/javascript">
-export default {}
+export default {
+    methods: {
+        showAboutInfo: function() {
+            this.$refs.aboutWindow.show();
+        }
+    }
+}
 </script>
 
 

@@ -76,14 +76,12 @@ export default {}
         
     .tab-content
         display flex
-        
         .tab-pane
             flex auto
     button
         cursor pointer
         
     .table td
-        padding 4px
         font-size 14px
         vertical-align middle
         
