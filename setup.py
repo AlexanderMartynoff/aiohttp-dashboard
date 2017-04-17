@@ -3,6 +3,18 @@ from distutils.cmd import Command
 from subprocess import Popen
 import subprocess
 from aiohttp_debugger import __version__
+from setuptools.command.test import test as TestCommand
+import sys
+
+
+class Test(TestCommand):
+    _args = ['tests']
+
+    def run_tests(self):
+        import pytest
+
+        if pytest.main(self._args) > 0:
+            sys.exit(0)
 
 
 class Npm(Command):
@@ -19,13 +31,21 @@ class Npm(Command):
     def finalize_options(self): pass
 
 
+prod_requires = [
+    'aiohttp',
+    'aiohttp_jinja2'
+]
+
+dev_requires = prod_requires + [
+    'pytest-aiohttp',
+    'pytest'
+]
+
 setup(
     name='aiohttp-debugger',
     version=__version__,
-    install_requires=[
-        'aiohttp',
-        'aiohttp_jinja2'
-    ],
+    install_requires=prod_requires,
+    extras_require=dict(dev=dev_requires),
     packages=['aiohttp_debugger'],
     package_data=dict(aiohttp_debugger=[
         'static/*',
@@ -34,5 +54,5 @@ setup(
         'static/bundle/font-awesome/fonts/*',
     ]),
     include_package_data=True,
-    cmdclass=dict(static=Npm)
+    cmdclass=dict(static=Npm, test=Test)
 )
