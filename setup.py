@@ -33,7 +33,8 @@ class Npm(Command):
 
 prod_requires = [
     'aiohttp',
-    'aiohttp_jinja2'
+    'aiohttp_jinja2',
+    'ujson'
 ]
 
 dev_requires = prod_requires + [
@@ -45,7 +46,9 @@ setup(
     name='aiohttp-debugger',
     version=__version__,
     install_requires=prod_requires,
-    extras_require=dict(dev=dev_requires),
+    extras_require=dict(
+        dev=dev_requires
+    ),
     packages=['aiohttp_debugger'],
     package_data=dict(aiohttp_debugger=[
         'static/*',

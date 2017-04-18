@@ -109,7 +109,7 @@
             return {
                 record: {},
                 wsCurrentPage: 1,
-                wsPerPage: 50,
+                wsPerPage: 30,
                 wsTotal: 0,
                 wsCollection: []
             }
@@ -128,9 +128,7 @@
         },
         watch: {
             wsCurrentPage: function(page) {
-                this.wsUnsubscribe(() => {
-                    this.wsSubscribe();
-                })
+                this.wsUnsubscribe(() => this.wsSubscribe());
             }
         },
         methods: {

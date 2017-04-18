@@ -4,18 +4,13 @@ from aiohttp.web import WebSocketResponse
 from .helper import PubSubSupport
 from .helper import LimitedDict
 from queue import Queue
-from collections import deque
+from collections import deque, defaultdict
 import os
 import sys
 
 
 class Debugger(PubSubSupport):
-    self = None
-
-    @classmethod
-    def instance(cls, application):
-        """ deprecated """
-        return cls.setup(application)
+    instance = None
 
     @classmethod
     def setup(cls, application) -> 'Debugger':
@@ -23,17 +18,19 @@ class Debugger(PubSubSupport):
         import aiohttp_jinja2
         import jinja2
 
-        if cls.self is None:
-            cls.self = cls(application, action.routes, action.static_routes)
+        if cls.instance is None:
+
+            cls.instance = cls(application, action.routes, action.static_routes)
             aiohttp_jinja2.setup(
                 application,
                 loader=jinja2.FileSystemLoader(f"{action.debugger_dir}/static")
             )
-        return cls.self
+        return cls.instance
 
     def __init__(self, application, routes, static_routes):
         self._application = self._configure_application(
             application, routes, static_routes)
+
         self._state = self._State()
         self._api = self._Api(self._state)
 
@@ -77,7 +74,7 @@ class Debugger(PubSubSupport):
                     status=response.status,
                     reason=response.reason
                 )
-            self.fire(HttpResponse())
+            self.fire(HttpResponse(id(request)))
 
             if isinstance(response, WebSocketResponse):
                 self._ws_resposne_do_monkey_patch(request, response)
@@ -165,6 +162,7 @@ class Debugger(PubSubSupport):
         # refact this and move to Debugger._State class
         if self._is_sutable_req(req):
             rid, mid = id(req), id(msg)
+            event.rid = rid
 
             self._state.put_ws_message(rid, dict(
                 id=mid,
@@ -177,7 +175,7 @@ class Debugger(PubSubSupport):
 
     def _handle_request(self, request):
         self._state.put_request(request)
-        self.fire(HttpRequest())
+        self.fire(HttpRequest(id(request)))
 
     @property
     def api(self):
@@ -234,12 +232,11 @@ class Debugger(PubSubSupport):
             if direction is None:
                 return all.__len__()
 
-            return [msg for msg in all if msg['direction'] == direction].__len__()
+            return len([msg for msg in all if msg['direction'] == direction])
 
     class _State:
-        _maxlen = 50000
-
-        def __init__(self):
+        def __init__(self, maxlen=50_000):
+            self._maxlen = maxlen
             self._requests = LimitedDict(maxlen=self._maxlen)
             self._messages = LimitedDict(maxlen=self._maxlen)
 
@@ -280,21 +277,43 @@ class Debugger(PubSubSupport):
             return self._messages
 
 
-class HttpRequest(PubSubSupport.Event):
-    def __init__(self):
-        super().__init__(HttpRequest.__name__)
+class DebuggerAbstractWebEvent(PubSubSupport.Event):
+    # request id
+    _rid = None
+
+    def __init__(self, *args):
+        super().__init__(args)
+
+    @property
+    def rid(self):
+        return self._rid
+
+    @rid.setter
+    def rid(self, rid):
+        self._rid = rid
 
 
-class HttpResponse(PubSubSupport.Event):
-    def __init__(self):
-        super().__init__(HttpResponse.__name__)
+class DebuggerAbstractReqResEvent(DebuggerAbstractWebEvent):
+    def __init__(self, name, rid):
+        super().__init__(name)
+        self.rid = rid
 
 
-class WsMsgIncoming(PubSubSupport.Event):
+class HttpRequest(DebuggerAbstractReqResEvent):
+    def __init__(self, rid):
+        super().__init__(HttpRequest.__name__, rid)
+
+
+class HttpResponse(DebuggerAbstractWebEvent):
+    def __init__(self, rid):
+        super().__init__(HttpResponse.__name__, rid)
+
+
+class WsMsgIncoming(DebuggerAbstractWebEvent):
     def __init__(self):
         super().__init__(WsMsgIncoming.__name__)
 
 
-class WsMsgOutbound(PubSubSupport.Event):
+class WsMsgOutbound(DebuggerAbstractWebEvent):
     def __init__(self):
         super().__init__(WsMsgOutbound.__name__)

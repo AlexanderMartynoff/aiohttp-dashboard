@@ -6,6 +6,7 @@ from asyncio import sleep, ensure_future, get_event_loop
 from time import time
 from collections import defaultdict
 import warnings
+import ujson
 
 
 class Sender:
@@ -28,7 +29,8 @@ class Sender:
 
     def _send(self, res_msg, req_msg):
         if not self._socket.closed:
-            self._socket.send_json(self._prepare_ws_response(res_msg, req_msg))
+            self._socket.send_json(self._prepare_ws_response(res_msg, req_msg),
+                dumps=ujson.dumps)
         else:
             warnings.warn('try send into closed websoclet connection')
 
@@ -50,8 +52,8 @@ class Sender:
             self._handler = handler
 
         def _handler_wrapper(self):
-            self._is_wait_for_call = False
             self._handler(*self._args)
+            self._is_wait_for_call = False
 
         def send_soon(self, args):
             self._args = args
@@ -85,7 +87,7 @@ class WsMsgDispatcherProxy:
 class WsMsgDispatcher:
 
     def __init__(self, sender):
-        self._debugger = Debugger.self
+        self._debugger = Debugger.instance
         self._sender = sender
 
     @casemethod
@@ -100,7 +102,8 @@ class WsMsgDispatcher:
             return dict(item=self._debugger.api.request(rid))
 
         def on(event):
-            self._send(response(), req_msg)
+            if event.rid == rid:
+                self._send(response(), req_msg)
 
         self._debugger.on(HttpRequest, on, group=self._sender.id, hid=req_msg.uid)
         self._debugger.on(HttpResponse, on, group=self._sender.id, hid=req_msg.uid)
@@ -122,7 +125,8 @@ class WsMsgDispatcher:
             )
 
         def on(event: WsMsgIncoming or WsMsgOutbound):
-            self._send(res_msg(), req_msg)
+            if event.rid == rid:
+                self._send(res_msg(), req_msg)
 
         self._debugger.on(WsMsgIncoming, on, group=self._sender.id, hid=req_msg.uid)
         self._debugger.on(WsMsgOutbound, on, group=self._sender.id, hid=req_msg.uid)

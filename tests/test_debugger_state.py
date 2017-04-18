@@ -22,7 +22,7 @@ async def test_debugger_requests(test_client, application):
     response_one = await client.get('/index')
     response_two = await client.get('/404')
 
-    log_records = Debugger.self.api.requests()
+    log_records = Debugger.instance.api.requests()
 
     assert len(log_records) == 2
 
