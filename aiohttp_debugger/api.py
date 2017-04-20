@@ -1,5 +1,5 @@
 from .debugger import (Debugger, WsMsgIncoming, WsMsgOutbound,
-                       HttpRequest, HttpResponse)
+                       HttpRequest, HttpResponse, MsgDirection)
 from .helper import casemethod
 from operator import itemgetter
 from asyncio import sleep, ensure_future, get_event_loop
@@ -19,8 +19,9 @@ class Sender:
         send_token = self._endpoints[req_msg.endpoint]
 
         if send_token is None:
-            send_token = self._endpoints[req_msg.endpoint] = \
-                self.SendToken(handler=self._send)
+            send_token = self._endpoints[req_msg.endpoint] = self.Proxy(
+                handler=self._send)
+
             send_token.send_soon(args=(res_msg, req_msg))
         elif send_token.isoverdue:
             send_token.send_soon(args=(res_msg, req_msg))
@@ -41,8 +42,8 @@ class Sender:
     def id(self):
         return self._socket.id
 
-    class SendToken:
-        _delay = .2
+    class Proxy:
+        _delay = .4
         _handler = None
         _args = None
         _last_send_time = None
@@ -54,10 +55,10 @@ class Sender:
         def _handler_wrapper(self):
             self._handler(*self._args)
             self._is_wait_for_call = False
+            self._last_send_time = time()
 
         def send_soon(self, args):
             self._args = args
-            self._last_send_time = time()
             get_event_loop().call_soon(self._handler_wrapper)
 
         def send_deferred(self, args):
@@ -120,8 +121,8 @@ class WsMsgDispatcher:
             return dict(
                 collection=self._debugger.api.messages(rid, page, perpage),
                 total=self._debugger.api.count_by_direction(rid),
-                incoming=self._debugger.api.count_by_direction(rid, 'incoming'),
-                outbound=self._debugger.api.count_by_direction(rid, 'outbound')
+                incoming=self._debugger.api.count_by_direction(rid, MsgDirection.INCOMING),
+                outbound=self._debugger.api.count_by_direction(rid, MsgDirection.OUTBOUND)
             )
 
         def on(event: WsMsgIncoming or WsMsgOutbound):

@@ -7,6 +7,8 @@ from queue import Queue
 from collections import deque, defaultdict
 import os
 import sys
+from enum import Enum
+import ruamel
 
 
 class Debugger(PubSubSupport):
@@ -31,8 +33,8 @@ class Debugger(PubSubSupport):
         self._application = self._configure_application(
             application, routes, static_routes)
 
-        self._state = self._State()
-        self._api = self._Api(self._state)
+        self._state = State()
+        self._api = Api(self._state)
 
     async def __call__(self, *args, **kwargs):
         return await self._middleware_factory(*args, **kwargs)
@@ -83,11 +85,16 @@ class Debugger(PubSubSupport):
         return not req.path.startswith("/_debugger")
 
     def _ws_resposne_do_monkey_patch(self, request, response):
+        """
+        todo - no use this method for monkey patching
+        and use `response._writer` perhaps
+        """
+
         def ping_overload(data):
             """ for catch outbound message """
 
             self._handle_ws_msg(
-                "incoming",
+                MsgDirection.INCOMING,
                 request, data, self._out_msg_mapper, WsMsgOutbound())
             return response.__aiohttp_debugger_ping__(data)
 
@@ -98,7 +105,7 @@ class Debugger(PubSubSupport):
             """ for catch outbound message """
 
             self._handle_ws_msg(
-                "incoming",
+                MsgDirection.INCOMING,
                 request, data, self._out_msg_mapper, WsMsgOutbound())
             return response.__aiohttp_debugger_pong__(data)
 
@@ -109,7 +116,7 @@ class Debugger(PubSubSupport):
             """ for catch outbound message """
 
             self._handle_ws_msg(
-                "incoming",
+                MsgDirection.INCOMING,
                 request, data, self._out_msg_mapper, WsMsgOutbound())
             return response.__aiohttp_debugger_send_str__(data)
 
@@ -120,30 +127,20 @@ class Debugger(PubSubSupport):
             """ for catch outbound message """
 
             self._handle_ws_msg(
-                "incoming",
+                MsgDirection.INCOMING,
                 request, data, self._out_msg_mapper, WsMsgOutbound())
             return response.__aiohttp_debugger_send_str__(data)
 
         response.__aiohttp_debugger_send_bytes__ = response.send_bytes
         response.send_bytes = send_bytes_overload
 
-        def send_json_overload(data):
-            """ for catch outbound message """
-
-            self._handle_ws_msg(
-                "incoming",
-                request, data, self._out_msg_mapper, WsMsgOutbound())
-            return response.__aiohttp_debugger_send_json__(data)
-
-        response.__aiohttp_debugger_send_json__ = response.send_json
-        response.send_json = send_json_overload
-
+        # outbound
         async def receive_overload():
             """ for catch incoming message """
 
             msg = await response.__aiohttp_debugger_receive__()
             self._handle_ws_msg(
-                "outbound",
+                MsgDirection.OUTBOUND,
                 request, msg, self._in_msg_mapper, WsMsgIncoming())
             return msg
 
@@ -181,100 +178,120 @@ class Debugger(PubSubSupport):
     def api(self):
         return self._api
 
-    class _Api:
 
-        def __init__(self, state):
-            self._state = state
+class Api:
 
-        def platform_info(self):
-            import platform
-            import sys
-            import aiohttp
-            from . import __version__
+    def __init__(self, state):
+        self._state = state
 
-            return dict(
-                platform=platform.platform(),
-                python=sys.version,
-                aiohttp=aiohttp.__version__,
-                debugger=__version__
-            )
+    def platform_info(self):
+        import platform
+        import sys
+        import aiohttp
+        from . import __version__
 
-        def requests(self, *args, **kwargs):
-            return list(self._state.requests.values())
+        return dict(
+            platform=platform.platform(),
+            python=sys.version,
+            aiohttp=aiohttp.__version__,
+            debugger=__version__
+        )
 
-        def request(self, rid):
-            record = next((request for request in self.requests()
-                           if request['id'] == rid), None)
+    def requests(self, *args, **kwargs):
+        return list(self._state.requests.values())
 
-            return record
+    def request(self, rid):
+        record = next((request for request in self.requests()
+                       if request['id'] == rid), None)
 
-        def messages(self, rid, page=1, perpage=-1):
+        return record
 
-            if rid not in self._state.messages:
-                return None
+    def messages(self, rid, page=1, perpage=-1):
 
-            messages = list(self._state.messages[rid])
+        if rid not in self._state.messages:
+            return None
 
-            if perpage == -1:
-                return messages
+        messages = list(self._state.messages[rid])
 
-            start = (page - 1) * perpage
-            end = start + perpage
+        if perpage == -1:
+            return messages
 
-            return messages[start:end]
+        start = (page - 1) * perpage
+        end = start + perpage
 
-        def count_by_direction(self, rid, direction=None):
-            all = self.messages(rid, perpage=-1)
+        return messages[start:end]
 
-            if all is None:
-                return None
+    def count_by_direction(self, rid, direction=None):
+        if direction is None:
+            return self._state.incoming_msg_length + \
+                self._state.outbound_msg_length
+        elif direction is MsgDirection.OUTBOUND:
+            return self._state.outbound_msg_length
+        else:
+            return self._state.incoming_msg_length
 
-            if direction is None:
-                return all.__len__()
 
-            return len([msg for msg in all if msg['direction'] == direction])
+class State:
+    def __init__(self, maxlen=50_000):
+        self._maxlen = maxlen
+        self._requests = LimitedDict(maxlen=self._maxlen)
+        self._messages = LimitedDict(maxlen=self._maxlen)
+        self._incoming_msg_length = 0
+        self._outbound_msg_length = 0
 
-    class _State:
-        def __init__(self, maxlen=50_000):
-            self._maxlen = maxlen
-            self._requests = LimitedDict(maxlen=self._maxlen)
-            self._messages = LimitedDict(maxlen=self._maxlen)
+    def put_request(self, request):
+        rid = id(request)
+        ip, _ = request.transport.get_extra_info('peername')
+        self._requests[rid] = dict(
+            id=rid,
+            scheme=request.scheme,
+            host=request.host,
+            path=request.raw_path,
+            method=request.method,
+            begintime=self.now,
+            done=False,
+            reqheaders=dict(request.headers),
+            ip=ip
+        )
 
-        def put_request(self, request):
-            rid = id(request)
-            ip, _ = request.transport.get_extra_info('peername')
-            self._requests[rid] = dict(
-                id=rid,
-                scheme=request.scheme,
-                host=request.host,
-                path=request.raw_path,
-                method=request.method,
-                begintime=self.now,
-                done=False,
-                reqheaders=dict(request.headers),
-                ip=ip
-            )
+    def put_ws_message(self, rid, message):
+        """
+        :param req: request id
+        """
+        if rid not in self._messages:
+            self._messages[rid] = deque(maxlen=self._maxlen)
 
-        def put_ws_message(self, rid, message):
-            """
-            :param req: request id
-            """
-            if rid not in self._messages:
-                self._messages[rid] = deque(maxlen=self._maxlen)
+        self._messages[rid] += message,
 
-            self._messages[rid] += message,
+        if message['direction'] is MsgDirection.OUTBOUND:
+            self._outbound_msg_length += 1
+        else:
+            self._incoming_msg_length += 1
 
-        @property
-        def now(self):
-            return datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f")
+    @property
+    def outbound_msg_length(self):
+        return self._outbound_msg_length
 
-        @property
-        def requests(self) -> dict:
-            return self._requests
+    @property
+    def incoming_msg_length(self):
+        return self._incoming_msg_length
 
-        @property
-        def messages(self) -> LimitedDict:
-            return self._messages
+    @property
+    def now(self):
+        return datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f")
+
+    @property
+    def requests(self) -> dict:
+        return self._requests
+
+    @property
+    def messages(self) -> LimitedDict:
+        return self._messages
+
+
+class MsgDirection(Enum):
+    OUTBOUND = 1
+    INCOMING = 2
 
 
 class DebuggerAbstractWebEvent(PubSubSupport.Event):
