@@ -9,13 +9,14 @@ import os
 import sys
 from enum import Enum
 import ruamel
+from typing import TypeVar, Generic
 
 
 class Debugger(PubSubSupport):
     instance = None
 
     @classmethod
-    def setup(cls, application) -> 'Debugger':
+    def setup(cls, application):
         from . import action
         import aiohttp_jinja2
         import jinja2
@@ -157,6 +158,7 @@ class Debugger(PubSubSupport):
 
     def _handle_ws_msg(self, direction, req, msg, msg_mapper, event):
         # refact this and move to Debugger._State class
+
         if self._is_sutable_req(req):
             rid, mid = id(req), id(msg)
             event.rid = rid
@@ -180,6 +182,7 @@ class Debugger(PubSubSupport):
 
 
 class Api:
+    """ Facade API for `Debugger` """
 
     def __init__(self, state):
         self._state = state
@@ -223,12 +226,12 @@ class Api:
 
     def count_by_direction(self, rid, direction=None):
         if direction is None:
-            return self._state.incoming_msg_length + \
-                self._state.outbound_msg_length
+            return self._state.incoming_msg_counter[rid] + \
+                self._state.outbound_msg_counter[rid]
         elif direction is MsgDirection.OUTBOUND:
-            return self._state.outbound_msg_length
+            return self._state.outbound_msg_counter[rid]
         else:
-            return self._state.incoming_msg_length
+            return self._state.incoming_msg_counter[rid]
 
 
 class State:
@@ -236,8 +239,8 @@ class State:
         self._maxlen = maxlen
         self._requests = LimitedDict(maxlen=self._maxlen)
         self._messages = LimitedDict(maxlen=self._maxlen)
-        self._incoming_msg_length = 0
-        self._outbound_msg_length = 0
+        self._incoming_msg_counter = defaultdict(lambda: 0)
+        self._outbound_msg_counter = defaultdict(lambda: 0)
 
     def put_request(self, request):
         rid = id(request)
@@ -264,17 +267,17 @@ class State:
         self._messages[rid] += message,
 
         if message['direction'] is MsgDirection.OUTBOUND:
-            self._outbound_msg_length += 1
+            self._outbound_msg_counter[rid] += 1
         else:
-            self._incoming_msg_length += 1
+            self._incoming_msg_counter[rid] += 1
 
     @property
-    def outbound_msg_length(self):
-        return self._outbound_msg_length
+    def outbound_msg_counter(self):
+        return self._outbound_msg_counter
 
     @property
-    def incoming_msg_length(self):
-        return self._incoming_msg_length
+    def incoming_msg_counter(self):
+        return self._incoming_msg_counter
 
     @property
     def now(self):
