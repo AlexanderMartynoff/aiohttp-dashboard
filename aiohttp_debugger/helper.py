@@ -55,7 +55,9 @@ class casemethod:
     def __get__(self, instance, owner):
         def getter(*args, **kwargs):
             try:
-                return self._resolve_method(*args, **kwargs)(instance, *args)
+                # todo: if resolve case return coroutine function
+                # we need add exception handler on future 
+                return self._resolve_case(*args, **kwargs)(instance, *args)
             except Exception as error:
                 return self._resolve_exception_case(error)(instance, error)
 
@@ -74,7 +76,7 @@ class casemethod:
         unapply = self._unapply(*args, **kwargs)
         return unapply if isinstance(unapply, (tuple, list)) else (unapply,)
 
-    def _resolve_method(self, *args, **kwargs):
+    def _resolve_case(self, *args, **kwargs):
         for values, method in self._matchers:
             if values == self._parseunapply(*args, **kwargs):
                 return method
@@ -140,8 +142,7 @@ class PubSubSupport:
                     handler(event)
 
     class Event:
-        def __init__(self, name):
-            self.name = name
+        ...
 
 
 class LimitedDict(OrderedDict):

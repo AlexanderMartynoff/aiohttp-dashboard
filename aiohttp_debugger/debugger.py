@@ -75,17 +75,17 @@ class Debugger(PubSubSupport):
                     done=True,
                     resheaders=dict(response.headers),
                     status=response.status,
-                    reason=response.reason
-                )
+                    reason=response.reason)
+
             self.fire(HttpResponse(id(request)))
 
             if isinstance(response, WebSocketResponse):
-                self._ws_resposne_do_monkey_patch(request, response)
+                self._ws_resposne_do_monkey_patching(request, response)
 
     def _is_sutable_req(self, req):
         return not req.path.startswith("/_debugger")
 
-    def _ws_resposne_do_monkey_patch(self, request, response):
+    def _ws_resposne_do_monkey_patching(self, request, response):
         """
         todo - no use this method for monkey patching
         and use `response._writer` perhaps
@@ -230,8 +230,10 @@ class Api:
                 self._state.outbound_msg_counter[rid]
         elif direction is MsgDirection.OUTBOUND:
             return self._state.outbound_msg_counter[rid]
-        else:
+        elif MsgDirection.INCOMING:
             return self._state.incoming_msg_counter[rid]
+        else:
+            return None
 
 
 class State:
@@ -265,6 +267,9 @@ class State:
             self._messages[rid] = deque(maxlen=self._maxlen)
 
         self._messages[rid] += message,
+
+        if self._outbound_msg_counter[rid] + self._outbound_msg_counter[rid] >= self._maxlen:
+            return
 
         if message['direction'] is MsgDirection.OUTBOUND:
             self._outbound_msg_counter[rid] += 1
@@ -301,8 +306,8 @@ class DebuggerAbstractWebEvent(PubSubSupport.Event):
     # request id
     _rid = None
 
-    def __init__(self, *args):
-        super().__init__(args)
+    def __init__(self, rid=None):
+        self._rid = rid
 
     @property
     def rid(self):
@@ -314,26 +319,23 @@ class DebuggerAbstractWebEvent(PubSubSupport.Event):
 
 
 class DebuggerAbstractReqResEvent(DebuggerAbstractWebEvent):
-    def __init__(self, name, rid):
-        super().__init__(name)
+    def __init__(self, rid):
         self.rid = rid
 
 
 class HttpRequest(DebuggerAbstractReqResEvent):
     def __init__(self, rid):
-        super().__init__(HttpRequest.__name__, rid)
+        super().__init__(rid)
 
 
 class HttpResponse(DebuggerAbstractWebEvent):
     def __init__(self, rid):
-        super().__init__(HttpResponse.__name__, rid)
+        super().__init__(rid)
 
 
 class WsMsgIncoming(DebuggerAbstractWebEvent):
-    def __init__(self):
-        super().__init__(WsMsgIncoming.__name__)
+    ...
 
 
 class WsMsgOutbound(DebuggerAbstractWebEvent):
-    def __init__(self):
-        super().__init__(WsMsgOutbound.__name__)
+    ...

@@ -4,16 +4,17 @@ import VueRouter from 'vue-router';
 
 import {WebSocketService} from '@/websocket';
 import {router} from '@/router';
-import {port} from '@/utils';
+import {port} from '@/utils'; 
 
 // component block
 import topMenu from '@/component/menu/top';
-import aboutWindow from '@/component/about/window';
+import settingsWindow from '@/component/settings/window';
 import indexGrid from '@/component/requests/grid';
 import clock from '@/component/clock/clock';
 import dropdpownPane from '@/component/widget/dropdpown-pane';
 import alert from '@/component/widget/alert';
 import layout from '@/component/layout/layout';
+
 
 Vue.use(VueRouter);
 // register boostrap as global components
@@ -26,7 +27,7 @@ const components = {
     dropdpownPane,
     alert,
     layout,
-    aboutWindow
+    settingsWindow
 }
 
 for (const key in components) Vue.component(key, components[key]);

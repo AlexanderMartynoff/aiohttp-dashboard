@@ -22,9 +22,9 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" @click="showAboutInfo" href="javascript: void(null)">
-                            <i class="fa fa-info-circle" aria-hidden="true"></i>
+                            <i class="fa fa-cogs" aria-hidden="true"></i>
                         </a>
-                        <about-window ref="aboutWindow"></about-window>
+                        <settings-window ref="settingsWindow"></settings-window>
                     </li>
                 </ul>
             </div>
@@ -37,7 +37,7 @@
 export default {
     methods: {
         showAboutInfo: function() {
-            this.$refs.aboutWindow.show();
+            this.$refs.settingsWindow.show();
         }
     }
 }

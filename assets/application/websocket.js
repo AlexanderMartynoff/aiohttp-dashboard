@@ -9,6 +9,13 @@ class WebSocketService {
         this._url = url;
         this._onOpenWaiters = [];
         this._responseHandlres = {};
+        this._subscribeHistory = [];
+    }
+
+    _resetState () {
+        this._ws = null;
+        this._onOpenWaiters = [];
+        this._responseHandlres = {};
     }
 
     _getState() {
@@ -49,11 +56,21 @@ class WebSocketService {
             }
         };
 
-        this._ws.onerror = response => {};
-        this._ws.onclose = response => {};
+        this._ws.onerror = response => {
+            console.log(response);
+        };
+
+        this._ws.onclose = response => {
+            this._tryReconnect(2000);
+        };
 
         return this;
     }
+
+    _tryReconnect (delay) {
+        this._resetState();
+        setTimeout(() => this._restoreSubscribe(), delay);
+    };
 
     _do(success, fail=() => {}) {
         switch(this._getState()) {
@@ -67,9 +84,9 @@ class WebSocketService {
       this._ws.send(JSON.stringify(json));
     };
 
-    _getUid(postfix=(new Date()).getTime()) {
+    _getUid(prefix=(new Date()).getTime()) {
       const makeUid = length => Math.floor((1 + Math.random()) * Math.pow(10, length)).toString(16);
-      return [8, 8, 8, 8].map(makeUid).concat([postfix]).join(':');
+      return [prefix].concat([10].map(makeUid)).join('.');
     };
 
     _prepareMsg(reqMsg) {
@@ -93,10 +110,8 @@ class WebSocketService {
     }
 
     subscribe(endpoint, callback, data) {
-        return this.send({
-            endpoint: endpoint,
-            data: data
-        }, callback, true);
+        this._subscribeHistory.push({endpoint, callback, data});
+        return this._doSubscribe(endpoint, callback, data);
     }
 
     unsibscribe(uid, onComplete) {
@@ -104,6 +119,20 @@ class WebSocketService {
             endpoint: "unsibscribe",
             data: {id: uid}
         }, onComplete, false);
+
+        delete this._responseHandlres[uid];
+    }
+
+    _doSubscribe (endpoint, callback, data) {
+        return this.send({
+            endpoint: endpoint,
+            data: data
+        }, callback, true);
+    }
+
+    _restoreSubscribe () {
+        this._subscribeHistory.forEach(record => this._doSubscribe(
+            record.endpoint, record.callback, record.data));
     }
 }
 

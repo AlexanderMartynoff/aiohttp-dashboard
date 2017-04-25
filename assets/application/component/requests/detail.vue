@@ -86,10 +86,11 @@
                             </div>
                             <div class="col-10">
                                 <div class="justify-content-center row">
-                                    <b-pagination size="md"
+                                    <b-pagination :limit="5"
                                                   :total-rows="wsTotal"
                                                   :per-page="wsPerPage"
-                                                  v-model="wsCurrentPage"/>
+                                                  v-model="wsCurrentPage"
+                                                  size="md"/>
                                 </div>
                             </div>
                         </div>
@@ -103,6 +104,7 @@
 
 <script>
     import {WebSocketService} from '@/websocket';
+    import {eventBus} from '@/utils';
 
     export default {
         data: function() {
@@ -111,7 +113,9 @@
                 wsCurrentPage: 1,
                 wsPerPage: 30,
                 wsTotal: 0,
-                wsCollection: []
+                wsCollection: [],
+                goToNextWsPage: false,
+                showWsLastPageSetting: false
             }
         },
         props: {
@@ -123,12 +127,22 @@
             },
 
             isWsOnLastPage: function() {
-                this.wsCurrentPage == this.wsTotal;
+                return this.wsCurrentPage == this.lastWsPageNumber;
+            },
+
+            lastWsPageNumber: function() {
+                return Math.ceil(this.wsTotal / this.wsPerPage);
             }
         },
         watch: {
             wsCurrentPage: function(page) {
                 this.wsUnsubscribe(() => this.wsSubscribe());
+            },
+
+            wsCollection: function() {
+                if (this.goToNextWsPage) {
+                    this.wsCurrentPage = this.lastWsPageNumber;
+                }
             }
         },
         methods: {
@@ -136,14 +150,11 @@
                 this.record = data.item;
             },
             onWsMessagesRecive: function(data) {
+                this.goToNextWsPage = this.isWsOnLastPage && this.showWsLastPageSetting;
                 this.wsCollection = data.collection;
                 this.wsTotal = data.total;
                 this.wsIncomingTotal = data.incoming;
                 this.wsOutboundTotal = data.outbound;
-
-                if (this.isWsOnLastPage) {
-                    this.wsCurrentPage = this.wsTotal;
-                } 
             },
             showWsDetail: function(index) {
                 this.$refs.wsDetail[index].show();
@@ -189,6 +200,8 @@
         created: function() {
             this.wsSubscribe();
             this.requestSubscribe();
+            eventBus.$on('onShowWsLastPageChange',
+                value => this.showWsLastPageSetting = value);
         },
         destroyed: function() {
             this.wsUnsubscribe();
