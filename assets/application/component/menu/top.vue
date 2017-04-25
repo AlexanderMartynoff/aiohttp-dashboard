@@ -14,6 +14,7 @@
                                         <h4 class="card-title">AiohttpDebbuger</h4>
                                         <div class="list-group">
                                             <router-link to="/" class="list-group-item list-group-item-action">Requests</router-link>
+                                            <router-link to="/inspect" class="list-group-item list-group-item-action">Inspect</router-link>
                                         </div>
                                     </div>
                                 </div>

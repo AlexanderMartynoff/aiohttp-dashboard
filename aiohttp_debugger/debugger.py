@@ -9,7 +9,9 @@ import os
 import sys
 from enum import Enum
 import ruamel
-from typing import TypeVar, Generic
+import aiohttp_jinja2
+import jinja2
+import inspect
 
 
 class Debugger(PubSubSupport):
@@ -18,23 +20,20 @@ class Debugger(PubSubSupport):
     @classmethod
     def setup(cls, application):
         from . import action
-        import aiohttp_jinja2
-        import jinja2
 
         if cls.instance is None:
 
             cls.instance = cls(application, action.routes, action.static_routes)
             aiohttp_jinja2.setup(
                 application,
-                loader=jinja2.FileSystemLoader(f"{action.debugger_dir}/static")
-            )
+                loader=jinja2.FileSystemLoader(f"{action.debugger_dir}/static"))
         return cls.instance
 
     def __init__(self, application, routes, static_routes):
         self._application = self._configure_application(
             application, routes, static_routes)
 
-        self._state = State()
+        self._state = State(application)
         self._api = Api(self._state)
 
     async def __call__(self, *args, **kwargs):
@@ -86,10 +85,6 @@ class Debugger(PubSubSupport):
         return not req.path.startswith("/_debugger")
 
     def _ws_resposne_do_monkey_patching(self, request, response):
-        """
-        todo - no use this method for monkey patching
-        and use `response._writer` perhaps
-        """
 
         def ping_overload(data):
             """ for catch outbound message """
@@ -235,9 +230,24 @@ class Api:
         else:
             return None
 
+    def routes(self):
+
+        routes = []
+        for route in self._state.application.router.routes():
+            # todo: parse this struct - route.get_info().items()
+
+            routes += dict(
+                name=route.name,
+                method=route.method,
+                handler=route.handler.__name__,
+                source=inspect.getsource(route.handler)),
+
+        return routes
+
 
 class State:
-    def __init__(self, maxlen=50_000):
+    def __init__(self, application, maxlen=50_000):
+        self._application = application
         self._maxlen = maxlen
         self._requests = LimitedDict(maxlen=self._maxlen)
         self._messages = LimitedDict(maxlen=self._maxlen)
@@ -268,7 +278,7 @@ class State:
 
         self._messages[rid] += message,
 
-        if self._outbound_msg_counter[rid] + self._outbound_msg_counter[rid] >= self._maxlen:
+        if self._outbound_msg_counter[rid] + self._incoming_msg_counter[rid] >= self._maxlen:
             return
 
         if message['direction'] is MsgDirection.OUTBOUND:
@@ -295,6 +305,10 @@ class State:
     @property
     def messages(self) -> LimitedDict:
         return self._messages
+
+    @property
+    def application(self):
+        return self._application
 
 
 class MsgDirection(Enum):

@@ -51,33 +51,31 @@ class Sender:
         _delay = 2
         _handler = None
         _last_send_time = None
-        _is_wait_for_send = False
-        _cb_wait_for_send = None
+        _handler_wait_for_send = None
 
         def __init__(self, handler):
             self._handler = handler
             self._last_send_time = self._loop.time()
 
-        def _handler_wrapper(self, args_getter):
+        def _handler_caller(self, args_getter):
             self._handler(*args_getter())
-            self._is_wait_for_send = False
+            self._handler_wait_for_send = None
             self._last_send_time = self._loop.time()
 
         def send_soon(self, args_getter):
-            self._handler_wrapper(args_getter)
+            self._handler_caller(args_getter)
 
         def send_later(self, args_getter):
 
-            if self._is_wait_for_send and self._cb_wait_for_send:
-                self._cb_wait_for_send.cancel()
+            if self._handler_wait_for_send:
+                self._handler_wait_for_send.cancel()
 
-            self._is_wait_for_send = True
-            self._cb_wait_for_send = self._do_send_later(args_getter)
+            self._handler_wait_for_send = self._do_send_later(args_getter)
 
         def _do_send_later(self, args_getter):
             return self._loop.call_at(
                 self._last_send_time + self._delay,
-                lambda: self._handler_wrapper(args_getter)
+                lambda: self._handler_caller(args_getter)
             )
 
         @property
@@ -178,6 +176,10 @@ class WsMsgDispatcher:
     @recive.case('fetch.info')
     async def recive(self, req_msg):
         return self._debugger.api.platform_info()
+
+    @recive.case('fetch.routes')
+    async def recive(self, req_msg):
+        return self._debugger.api.routes()
 
     @recive.default
     async def recive(self, req_msg):
