@@ -177,7 +177,9 @@ class Debugger(PubSubSupport):
 
 
 class Api:
-    """ Facade API for `Debugger` """
+    """ Facade API for `Debugger`
+        Presentation layer for `State` data
+    """
 
     def __init__(self, state):
         self._state = state
@@ -231,18 +233,19 @@ class Api:
             return None
 
     def routes(self):
+        return [dict(
+            name=route.name,
+            method=route.method,
+            info=self._extract_route_info(route),
+            handler=route.handler.__name__,
+            source=inspect.getsource(route.handler)
+        ) for route in self._state.application.router.routes()]
 
-        routes = []
-        for route in self._state.application.router.routes():
-            # todo: parse this struct - route.get_info().items()
-
-            routes += dict(
-                name=route.name,
-                method=route.method,
-                handler=route.handler.__name__,
-                source=inspect.getsource(route.handler)),
-
-        return routes
+    def _extract_route_info(self, route):
+        return {
+            str(key): str(value)
+            for key, value in route.get_info().items()
+        }
 
 
 class State:

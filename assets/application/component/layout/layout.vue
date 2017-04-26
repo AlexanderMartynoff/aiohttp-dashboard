@@ -90,4 +90,14 @@ export default {}
         
     .block
         display block
+        
+    .modal-huge .modal-dialog
+        max-width: 60%
+        
+    pre
+        background #f7f7f9
+        border-radius 5px
+        padding 5px
+    pre code
+        color #bd4147
 </style>

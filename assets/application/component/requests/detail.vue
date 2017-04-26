@@ -214,12 +214,6 @@
 <style lang="stylus" scoped>
     .aiodebugger__ws-list-group-item
         display block
-    pre
-        background #f7f7f9
-        border-radius 5px
-        padding 5px
-    pre code
-        color #bd4147
     .key-name 
         margin-right: 5px
         

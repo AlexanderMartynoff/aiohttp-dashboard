@@ -3,7 +3,7 @@ from aiohttp_jinja2 import template
 from aiohttp.web import Response, WebSocketResponse
 from asyncio import ensure_future, sleep
 from .helper import WsResponseHelper
-from . import api
+from . import endpoint as api
 from uuid import uuid4
 import os
 

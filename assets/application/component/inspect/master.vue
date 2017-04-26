@@ -1,13 +1,17 @@
 <template>
   <b-card class="flex-card grey-card-bg" show-footer show-header>
         <b-table v-if="items.length"
-                 @row-clicked="(item, index) => details(item.id, index)"
+                 @row-clicked="(item, index) => details(item, index)"
                  :items="items"
                  :fields="fields"
                  :current-page="currentPage"
                  :per-page="perPage"
+                 class="table-pinter table-hover"
                  striped>
 
+            <template slot="path" scope="item">
+                {{item.item.info.path || item.item.info.prefix + ' -> ' + item.item.info.directory}}
+            </template>
         </b-table>
 
         <alert v-else message="Записей не найдено"></alert>
@@ -21,6 +25,10 @@
                 <b-pagination size="md" :total-rows="this.items.length" :per-page="perPage" v-model="currentPage"/>
             </div>
         </small>
+
+        <b-modal ref="sourceDetail" title="Source code" size="lg" class="modal-huge" hide-footer>
+            <pre><code>{{selected.source}}</code></pre>
+        </b-modal>
     </b-card>
 </template>
 
@@ -38,18 +46,21 @@
                 method: {label: 'Method'},
                 handler: {label: 'Handler'}
             },
+            selected: {},
             items: [],
             currentPage: 1,
             perPage: 50,
             filter: null
         }),
         methods: {
-            details: function(id) {
-                router.push({path: `/inspect/detail/${id}`})
+            details: function(item, index) {
+                this.selected = item;
+                this.$refs.sourceDetail.show();
             }
         },
         created: function() {
-            this.send('fetch.routes', response => this.items = response.data);
+            this.send('fetch.routes',
+                response => this.items = response.data);
         }
     }
 </script>
