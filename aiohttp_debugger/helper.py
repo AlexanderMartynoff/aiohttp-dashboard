@@ -2,6 +2,8 @@ from aiohttp.web import WebSocketResponse
 from collections import defaultdict, OrderedDict
 from uuid import uuid4
 from functools import lru_cache
+import asyncio
+from asyncio import iscoroutine, isfuture, ensure_future
 
 
 class WsResponseHelper(WebSocketResponse):
@@ -45,7 +47,6 @@ class WsResponseHelper(WebSocketResponse):
 
 
 class casemethod:
-
     def __init__(self, unapply):
         self._unapply = unapply
         self._matchers = []
@@ -53,11 +54,20 @@ class casemethod:
         self._default_case = self._not_implemented_noop
 
     def __get__(self, instance, owner):
+        # check exception handling in `getter`
+        # maybe it not wotk as need
+        
         def getter(*args, **kwargs):
             try:
-                # todo: if resolve case return coroutine function
-                # we need add exception handler on future 
-                return self._resolve_case(*args, **kwargs)(instance, *args)
+                result = self._resolve_case(*args, **kwargs)(instance, *args, **kwargs)
+
+                if iscoroutine(result) or isfuture(result):
+                    future = ensure_future(result)
+                    future.add_done_callback(lambda future:
+                        self._handle_future_exception(future, instance, args, kwargs))
+                    return future
+
+                return result
             except Exception as error:
                 return self._resolve_exception_case(error)(instance, error)
 
@@ -65,6 +75,13 @@ class casemethod:
 
     def __set__(self, *args):
         raise TypeError
+
+    def _handle_future_exception(self, future, instance, args, kwargs):
+        err = future.exception()
+        if err is not None:
+            handler = self._resolve_exception_case(err)(instance, err, *args, **kwargs)
+            if iscoroutine(handler):
+                ensure_future(handler)
 
     def _resolve_exception_case(self, error):
         for ErrorClass, catcher in self._exceptions:
@@ -127,13 +144,16 @@ class PubSubSupport:
             raise ValueError('group or/and hid must be not None')
 
         if group:
-            del self.__handlers[group]
+            try:
+                del self.__handlers[group]
+            except KeyError:
+                pass
 
         if hid:
-            for _group, handlers in self.__handlers.items():
-                for etype, handler, _hid in handlers[:]:
-                    if _hid == hid:
-                        self.__handlers[_group].remove((etype, handler, _hid))
+            for group_, handlers in self.__handlers.items():
+                for etype, handler, hid_ in handlers[:]:
+                    if hid_ == hid:
+                        self.__handlers[group_].remove((etype, handler, hid_))
 
     def fire(self, event):
         for handlers in self.__handlers.values():
@@ -142,7 +162,7 @@ class PubSubSupport:
                     handler(event)
 
     class Event:
-        ...
+        pass
 
 
 class LimitedDict(OrderedDict):

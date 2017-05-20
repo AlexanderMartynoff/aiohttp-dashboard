@@ -59,8 +59,7 @@
             }
         },
         created: function() {
-            this.send('fetch.routes',
-                response => this.items = response.data);
+            this.send('fetch.routes', response => this.items = response.data);
         }
     }
 </script>

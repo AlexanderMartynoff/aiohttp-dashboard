@@ -1,7 +1,7 @@
 {
   "name": "aiohttp_debug",
   "version": "1.0.0",
-  "author": "Мартынов Александр <triplustri@mail.ru>",
+  "author": "Martynov Alexander <triplustri@mail.ru>",
   "scripts": {
     "build": "./node_modules/.bin/webpack",
     "watch": "./node_modules/.bin/webpack --watch"

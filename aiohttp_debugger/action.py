@@ -7,6 +7,7 @@ from . import endpoint as api
 from uuid import uuid4
 import os
 
+
 debugger_dir = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -17,11 +18,11 @@ async def dashboard(request):
 
 async def websocket(request):
     response = await WsResponseHelper.instance(request)
-    sender = api.Sender(response)
+    sender = api.Sender(response, api.DebuggerApi())
     proxy = api.WsMsgDispatcherProxy(api.WsMsgDispatcher(sender), sender)
 
     async for msg in response:
-        ensure_future(proxy.recive(msg))
+        proxy.recive(msg)
 
     proxy.close()
     return response

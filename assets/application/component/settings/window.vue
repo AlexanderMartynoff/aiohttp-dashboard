@@ -10,30 +10,10 @@
             </b-form-fieldset>
         </span>
 
-        <span class="setting-window-item">
-            <b-form-fieldset
-                label="websocket message queue size"
-                state="default"
-                :horizontal="true"
-                :label-size="9">
-                <b-form-input v-model="wsQueueSize"></b-form-input>
-            </b-form-fieldset>
-        </span>
-
-        <span class="setting-window-item">
-            <b-form-fieldset
-                label="http requests queue size"
-                state="default"
-                :horizontal="true"
-                :label-size="9">
-                <b-form-input v-model="httpQueueSize"></b-form-input>
-            </b-form-fieldset>
-        </span>
-
         <hr/>
 
         <span class="setting-window-item">
-            <b-form-checkbox v-model="showWsLastPage" @change="onShowWsLastPageChange">
+            <b-form-checkbox v-model="showWsLastPage">
                 follow for the last page on websocket messages
             </b-form-checkbox>
         </span>
@@ -49,19 +29,35 @@
     export default {
         data: () => ({
             record: {},
+            configuration: {},
             showWsLastPage: false,
-            wsPageUpdateDelay: 2,
-            wsQueueSize: 50000,
-            httpQueueSize: 50000
+            wsPageUpdateDelay: 2
         }),
         mixins: [WebSocketService.mixin],
+        watch: {
+            showWsLastPage: function() {
+                this.emitSettingsChange();
+            },
+            wsPageUpdateDelay: function() {
+                this.emitSettingsChange();
+            },
+        },
         methods: {
+            emitSettingsChange: function() {
+                return eventBus.$emit('settings:change', {
+                    showWsLastPage: this.showWsLastPage,
+                    wsPageUpdateDelay: this.wsPageUpdateDelay
+                });
+            },
             show: function() {
                 this.$refs.settingsWindow.show();
             },
-            onShowWsLastPageChange: function() {
-                eventBus.$emit('onShowWsLastPageChange', this.showWsLastPage);
+            onConfigurationChange: function() {
+                return this.emitSettingsChange();
             }
+        },
+        created: function(){
+            eventBus.$on('settings:fire', event => this.emitSettingsChange())
         }
     }
 </script>

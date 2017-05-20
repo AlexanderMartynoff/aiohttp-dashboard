@@ -200,8 +200,9 @@
         created: function() {
             this.wsSubscribe();
             this.requestSubscribe();
-            eventBus.$on('onShowWsLastPageChange',
-                value => this.showWsLastPageSetting = value);
+            eventBus.$on('settings:change', configuration => console.log(configuration));
+            // fetch configuration
+            eventBus.$emit('settings:fire');
         },
         destroyed: function() {
             this.wsUnsubscribe();

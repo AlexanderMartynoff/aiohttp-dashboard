@@ -33,6 +33,4 @@ const components = {
 }
 
 for (const key in components) Vue.component(key, components[key]);
-const application = new Vue({
-    router, el: ".enterpoint"
-});
+const application = new Vue({router, el: ".enterpoint"});

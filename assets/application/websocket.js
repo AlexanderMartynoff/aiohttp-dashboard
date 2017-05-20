@@ -37,7 +37,14 @@ class WebSocketService {
         };
         
         this._ws.onmessage = rawMsg => {
-            const msg = JSON.parse(rawMsg.data);
+            let msg;
+            try {
+                msg = JSON.parse(rawMsg.data);
+            } catch (error) {
+                console.log(`error while parse msg ${error.toString()}`);
+                return;
+            }
+
             const callbackObject = this._responseHandlres[msg.uid];
 
             if (!callbackObject) {
@@ -140,7 +147,8 @@ const instance = WebSocketService.instance = new WebSocketService(config.wsApiEn
 
 WebSocketService.mixin = {
     methods: {
-        send: (...args) => instance.send.apply(instance, args)
+        send: (...args) => instance.send.apply(instance, args),
+        subscribe: (...args) => instance.subscribe.apply(instance, args),
     }
 };
 

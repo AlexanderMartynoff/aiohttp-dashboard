@@ -1,6 +1,6 @@
 from datetime import datetime
 from asyncio import ensure_future
-from aiohttp.web import WebSocketResponse
+from aiohttp.web import WebSocketResponse, Response
 from .helper import PubSubSupport
 from .helper import LimitedDict
 from queue import Queue
@@ -10,8 +10,12 @@ import sys
 from enum import Enum
 import ruamel
 import aiohttp_jinja2
-import jinja2
+from jinja2 import FileSystemLoader
 import inspect
+import logging
+
+
+log = logging.getLogger("aiohttp_debugger.debugger")
 
 
 class Debugger(PubSubSupport):
@@ -22,17 +26,13 @@ class Debugger(PubSubSupport):
         from . import action
 
         if cls.instance is None:
-
             cls.instance = cls(application, action.routes, action.static_routes)
-            aiohttp_jinja2.setup(
-                application,
-                loader=jinja2.FileSystemLoader(f"{action.debugger_dir}/static"))
+            aiohttp_jinja2.setup(application, loader=FileSystemLoader(f"{action.debugger_dir}/static"))
+            log.info('debugger setup success')
         return cls.instance
 
     def __init__(self, application, routes, static_routes):
-        self._application = self._configure_application(
-            application, routes, static_routes)
-
+        self._application = self._configure_application(application, routes, static_routes)
         self._state = State(application)
         self._api = Api(self._state)
 
@@ -74,7 +74,9 @@ class Debugger(PubSubSupport):
                     done=True,
                     resheaders=dict(response.headers),
                     status=response.status,
-                    reason=response.reason)
+                    reason=response.reason,
+                    iswebsocket=True if isinstance(response, WebSocketResponse) else False,
+                    body=response.text if isinstance(response, Response) else None)
 
             self.fire(HttpResponse(id(request)))
 
@@ -87,44 +89,28 @@ class Debugger(PubSubSupport):
     def _ws_resposne_do_monkey_patching(self, request, response):
 
         def ping_overload(data):
-            """ for catch outbound message """
-
-            self._handle_ws_msg(
-                MsgDirection.INCOMING,
-                request, data, self._out_msg_mapper, WsMsgOutbound())
+            self._handle_ws_msg(MsgDirection.INCOMING, request, data, self._out_msg_mapper, WsMsgOutbound())
             return response.__aiohttp_debugger_ping__(data)
 
         response.__aiohttp_debugger_ping__ = response.ping
         response.pong = ping_overload
 
         def pong_overload(data):
-            """ for catch outbound message """
-
-            self._handle_ws_msg(
-                MsgDirection.INCOMING,
-                request, data, self._out_msg_mapper, WsMsgOutbound())
+            self._handle_ws_msg(MsgDirection.INCOMING, request, data, self._out_msg_mapper, WsMsgOutbound())
             return response.__aiohttp_debugger_pong__(data)
 
         response.__aiohttp_debugger_pong__ = response.pong
         response.pong = pong_overload
 
         def send_str_overload(data):
-            """ for catch outbound message """
-
-            self._handle_ws_msg(
-                MsgDirection.INCOMING,
-                request, data, self._out_msg_mapper, WsMsgOutbound())
+            self._handle_ws_msg(MsgDirection.INCOMING, request, data, self._out_msg_mapper, WsMsgOutbound())
             return response.__aiohttp_debugger_send_str__(data)
 
         response.__aiohttp_debugger_send_str__ = response.send_str
         response.send_str = send_str_overload
 
         def send_bytes_overload(data):
-            """ for catch outbound message """
-
-            self._handle_ws_msg(
-                MsgDirection.INCOMING,
-                request, data, self._out_msg_mapper, WsMsgOutbound())
+            self._handle_ws_msg(MsgDirection.INCOMING, request, data, self._out_msg_mapper, WsMsgOutbound())
             return response.__aiohttp_debugger_send_str__(data)
 
         response.__aiohttp_debugger_send_bytes__ = response.send_bytes
@@ -132,12 +118,8 @@ class Debugger(PubSubSupport):
 
         # outbound
         async def receive_overload():
-            """ for catch incoming message """
-
             msg = await response.__aiohttp_debugger_receive__()
-            self._handle_ws_msg(
-                MsgDirection.OUTBOUND,
-                request, msg, self._in_msg_mapper, WsMsgIncoming())
+            self._handle_ws_msg(MsgDirection.OUTBOUND, request, msg, self._in_msg_mapper, WsMsgIncoming())
             return msg
 
         response.__aiohttp_debugger_receive__ = response.receive
@@ -201,10 +183,7 @@ class Api:
         return list(self._state.requests.values())
 
     def request(self, rid):
-        record = next((request for request in self.requests()
-                       if request['id'] == rid), None)
-
-        return record
+        return next((request for request in self.requests() if request['id'] == rid), None)
 
     def messages(self, rid, page=1, perpage=-1):
 
@@ -223,8 +202,7 @@ class Api:
 
     def count_by_direction(self, rid, direction=None):
         if direction is None:
-            return self._state.incoming_msg_counter[rid] + \
-                self._state.outbound_msg_counter[rid]
+            return self._state.incoming_msg_counter[rid] + self._state.outbound_msg_counter[rid]
         elif direction is MsgDirection.OUTBOUND:
             return self._state.outbound_msg_counter[rid]
         elif MsgDirection.INCOMING:
@@ -233,19 +211,16 @@ class Api:
             return None
 
     def routes(self):
-        return [dict(
+        return list(dict(
             name=route.name,
             method=route.method,
             info=self._extract_route_info(route),
             handler=route.handler.__name__,
             source=inspect.getsource(route.handler)
-        ) for route in self._state.application.router.routes()]
+        ) for route in self._state.application.router.routes())
 
     def _extract_route_info(self, route):
-        return {
-            str(key): str(value)
-            for key, value in route.get_info().items()
-        }
+        return {str(key): str(value) for key, value in route.get_info().items()}
 
 
 class State:
@@ -254,8 +229,8 @@ class State:
         self._maxlen = maxlen
         self._requests = LimitedDict(maxlen=self._maxlen)
         self._messages = LimitedDict(maxlen=self._maxlen)
-        self._incoming_msg_counter = defaultdict(lambda: 0)
-        self._outbound_msg_counter = defaultdict(lambda: 0)
+        self._incoming_msg_counter = defaultdict(int)
+        self._outbound_msg_counter = defaultdict(int)
 
     def put_request(self, request):
         rid = id(request)
@@ -276,6 +251,7 @@ class State:
         """
         :param req: request id
         """
+
         if rid not in self._messages:
             self._messages[rid] = deque(maxlen=self._maxlen)
 
@@ -351,8 +327,8 @@ class HttpResponse(DebuggerAbstractWebEvent):
 
 
 class WsMsgIncoming(DebuggerAbstractWebEvent):
-    ...
+    pass
 
 
 class WsMsgOutbound(DebuggerAbstractWebEvent):
-    ...
+    pass
