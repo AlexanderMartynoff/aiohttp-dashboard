@@ -36,9 +36,6 @@ class Debugger(PubSubSupport):
         self._state = State(application)
         self._api = Api(self._state)
 
-    async def __call__(self, *args, **kwargs):
-        return await self._middleware_factory(*args, **kwargs)
-
     def _configure_application(self, application, routes, static_routes):
         self._add_middlewares(application)
         self._add_routes(application, routes)
@@ -47,7 +44,7 @@ class Debugger(PubSubSupport):
         return application
 
     def _add_middlewares(self, application):
-        application.middlewares.append(self)
+        application.middlewares.append(self._middleware_factory)
 
     def _add_static_routes(self, application, static_routes):
         for url, path in static_routes:
@@ -116,7 +113,6 @@ class Debugger(PubSubSupport):
         response.__aiohttp_debugger_send_bytes__ = response.send_bytes
         response.send_bytes = send_bytes_overload
 
-        # outbound
         async def receive_overload():
             msg = await response.__aiohttp_debugger_receive__()
             self._handle_ws_msg(MsgDirection.OUTBOUND, request, msg, self._in_msg_mapper, WsMsgIncoming())
@@ -134,7 +130,7 @@ class Debugger(PubSubSupport):
         return msg
 
     def _handle_ws_msg(self, direction, req, msg, msg_mapper, event):
-        # refact this and move to Debugger._State class
+        # TODO: refact this and move to Debugger._State class
 
         if self._is_sutable_req(req):
             rid, mid = id(req), id(msg)
@@ -160,7 +156,7 @@ class Debugger(PubSubSupport):
 
 class Api:
     """ Facade API for `Debugger`
-        Presentation layer for `State` data
+        Presentation layer for data in `State`
     """
 
     def __init__(self, state):
@@ -282,7 +278,7 @@ class State:
         return self._requests
 
     @property
-    def messages(self) -> LimitedDict:
+    def messages(self) -> dict:
         return self._messages
 
     @property

@@ -6,7 +6,6 @@ import {WebSocketService} from '@/websocket';
 import {router} from '@/router';
 import {port} from '@/utils'; 
 
-// component block
 import TopMenu from '@/component/menu/top';
 import SettingsWindow from '@/component/settings/window';
 import IndexGrid from '@/component/requests/grid';

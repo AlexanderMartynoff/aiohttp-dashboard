@@ -13,7 +13,6 @@
 <script>
 import Tether from 'tether';
 
-
 export default {
     props: {
         attachment: {

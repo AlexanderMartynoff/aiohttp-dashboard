@@ -23,7 +23,6 @@
                         <span class="key-name">Scheme:</span> <code>{{record.scheme}}</code>
                     </li>
                 </ul>
-
                 <alert v-else message="Records not found"></alert>
             </b-card>
         </div>
@@ -68,7 +67,6 @@
                         <alert v-else message="Records not found"></alert>
                     </b-tab>
                 </b-tabs>
-
                 <div slot="footer">
                     <div class="container-fluid">
                         <div class="row" v-if="wsCollection && wsCollection.length > 0">
@@ -107,6 +105,7 @@
     import {eventBus} from '@/utils';
 
     export default {
+        mixins: [WebSocketService.mixin],
         data: function() {
             return {
                 record: {},
@@ -173,14 +172,14 @@
                 }
             },
             requestSubscribe: function() {
-                return this.httpSubscription = WebSocketService.instance.subscribe(
+                return this.httpSubscription = this.subscribe(
                     "sibsribe.request",
                     msg => this.onRequestRecive(msg.data),
                     {"id": parseInt(this.id)}
                 );
             },
             wsSubscribe: function() {
-                return this.wsSubscription = WebSocketService.instance.subscribe(
+                return this.wsSubscription = this.subscribe(
                     "sibsribe.request.messages",
                     msg => this.onWsMessagesRecive(msg.data),
                     {
@@ -191,10 +190,10 @@
                 );
             },
             wsUnsubscribe: function(onComplete) {
-                WebSocketService.instance.unsibscribe(this.wsSubscription, onComplete);
+                this.unsibscribe(this.wsSubscription, onComplete);
             },
             httpUnsubscribe: function(onComplete) {
-                WebSocketService.instance.unsibscribe(this.httpSubscription, onComplete);
+                this.unsibscribe(this.httpSubscription, onComplete);
             }
         },
         created: function() {

@@ -35,6 +35,7 @@
     import {router} from '@/router';
 
     export default {
+        mixins: [WebSocketService.mixin],
         data: () => ({
             fields: {
                 path: {label: 'Path'},
@@ -54,12 +55,12 @@
             }
         },
         created: function() {
-            this.subscription = WebSocketService.instance.subscribe("sibsribe.requests", msg => {
+            this.subscription = this.subscribe("sibsribe.requests", msg => {
                 this.items = msg.data;
             });
         },
         destroyed: function() {
-            WebSocketService.instance.unsibscribe(this.subscription);
+            this.unsibscribe(this.subscription);
         }
     }
 </script>

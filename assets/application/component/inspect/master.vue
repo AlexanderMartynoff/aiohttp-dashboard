@@ -14,7 +14,7 @@
             </template>
         </b-table>
 
-        <alert v-else message="Записей не найдено"></alert>
+        <alert v-else message="Records not found"></alert>
 
         <span slot="header">
             <i class="fa fa-globe" aria-hidden="true"></i> Inspection

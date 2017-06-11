@@ -1,21 +1,6 @@
 from aiohttp import web
 from aiohttp_debugger import Debugger
-from pytest import fixture
 import asyncio
-
-
-@fixture
-def application():
-
-    async def index(request):
-        return web.Response(text='Hello, world!')
-
-    application = web.Application()
-    application.router.add_get('/index', index)
-
-    Debugger.setup(application)
-
-    return application
 
 
 async def test_debugger_requests_number(loop, test_client, application):

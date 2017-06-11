@@ -3,7 +3,7 @@ from collections import defaultdict, OrderedDict
 from uuid import uuid4
 from functools import lru_cache
 import asyncio
-from asyncio import iscoroutine, isfuture, ensure_future
+from asyncio import iscoroutine, isfuture, ensure_future, gather
 
 
 class WsResponseHelper(WebSocketResponse):
@@ -28,6 +28,11 @@ class WsResponseHelper(WebSocketResponse):
         def __init__(self, msg):
             self._original = msg
             self._dict = self._original.json()
+            self._body = self._Body(self)
+
+        @property
+        def body(self):
+            return self._body
 
         @property
         def data(self):
@@ -45,6 +50,27 @@ class WsResponseHelper(WebSocketResponse):
         def endpoint(self):
             return self._dict.get('endpoint', None)
 
+        class _Body:
+            def __init__(self, msg):
+                self.__msg = msg
+
+            def __getattr__(self, name):
+                return self._Attribute(self.__msg.data[name])
+
+            class _Attribute:
+                def __init__(self, value):
+                    self.__value = value
+
+                def __rshift__(self, typemapper):
+                    return typemapper(self.__value)
+
+                def __matmul__(self, typemapper):
+                    return typemapper(self.__value)
+
+                @property
+                def raw(self):
+                    return self.__value
+
 
 class casemethod:
     def __init__(self, unapply):
@@ -56,7 +82,7 @@ class casemethod:
     def __get__(self, instance, owner):
         # check exception handling in `getter`
         # maybe it not wotk as need
-        
+
         def getter(*args, **kwargs):
             try:
                 result = self._resolve_case(*args, **kwargs)(instance, *args, **kwargs)
@@ -69,12 +95,12 @@ class casemethod:
 
                 return result
             except Exception as error:
-                return self._resolve_exception_case(error)(instance, error)
+                return self._resolve_exception_case(error)(instance, error, *args, **kwargs)
 
         return getter
 
     def __set__(self, *args):
-        raise TypeError
+        raise self.IllegalOpearationException
 
     def _handle_future_exception(self, future, instance, args, kwargs):
         err = future.exception()
@@ -84,8 +110,8 @@ class casemethod:
                 ensure_future(handler)
 
     def _resolve_exception_case(self, error):
-        for ErrorClass, catcher in self._exceptions:
-            if type(error) is ErrorClass:
+        for err_type, catcher in self._exceptions:
+            if isinstance(error, err_type):
                 return catcher
         raise error
 
@@ -94,6 +120,8 @@ class casemethod:
         return unapply if isinstance(unapply, (tuple, list)) else (unapply,)
 
     def _resolve_case(self, *args, **kwargs):
+        """ resolve first match method """
+        
         for values, method in self._matchers:
             if values == self._parseunapply(*args, **kwargs):
                 return method
@@ -103,8 +131,8 @@ class casemethod:
         self._matchers += (values, method),
         return self
 
-    def _register_exception(self, ExceptionClass, catcher):
-        self._exceptions += (ExceptionClass, catcher),
+    def _register_exception(self, err_type, catcher):
+        self._exceptions += (err_type, catcher),
         return self
 
     def _not_implemented_noop(self, *args, **kwargs):
@@ -121,8 +149,10 @@ class casemethod:
         self._default_case = method
         return self
 
-    def catch(self, ExceptionClass):
-        return lambda catcher: self._register_exception(ExceptionClass, catcher)
+    def catch(self, err_type):
+        return lambda catcher: self._register_exception(err_type, catcher)
+
+    class IllegalOpearationException(Exception): pass
 
 
 class PubSubSupport:

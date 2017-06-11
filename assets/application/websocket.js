@@ -12,7 +12,7 @@ class WebSocketService {
         this._subscribeHistory = [];
     }
 
-    _resetState () {
+    _resetState() {
         this._ws = null;
         this._onOpenWaiters = [];
         this._responseHandlres = {};
@@ -74,7 +74,7 @@ class WebSocketService {
         return this;
     }
 
-    _tryReconnect (delay) {
+    _tryReconnect(delay) {
         this._resetState();
         setTimeout(() => this._restoreSubscribe(), delay);
     };
@@ -88,23 +88,22 @@ class WebSocketService {
     }
 
     _sendToWs(json) {
-      this._ws.send(JSON.stringify(json));
+        this._ws.send(JSON.stringify(json));
     };
 
     _getUid(prefix=(new Date()).getTime()) {
-      const makeUid = length => Math.floor((1 + Math.random()) * Math.pow(10, length)).toString(16);
-      return [prefix].concat([10].map(makeUid)).join('.');
+        const makeUid = length => Math.floor((1 + Math.random()) * Math.pow(10, length)).toString(16);
+        return [prefix].concat([10].map(makeUid)).join('.');
     };
 
     _prepareMsg(reqMsg) {
         reqMsg.uid = this._getUid();
         return reqMsg;
     }
-
-    send(reqMsg, callback, persistent=false) {
-        const preparedReqMsg = this._prepareMsg(
-            typeof reqMsg === 'string' ? {endpoint: reqMsg} : reqMsg
-        );
+    
+    send(reqMsgOrEndpoint, callback, persistent=false) {
+        const preparedReqMsg = this._prepareMsg(typeof reqMsgOrEndpoint === 'string' ?
+            {endpoint: reqMsgOrEndpoint} : reqMsgOrEndpoint);
 
         this._do(() => {
             this._responseHandlres[preparedReqMsg.uid] = {
@@ -130,14 +129,14 @@ class WebSocketService {
         delete this._responseHandlres[uid];
     }
 
-    _doSubscribe (endpoint, callback, data) {
+    _doSubscribe(endpoint, callback, data) {
         return this.send({
             endpoint: endpoint,
             data: data
         }, callback, true);
     }
 
-    _restoreSubscribe () {
+    _restoreSubscribe() {
         this._subscribeHistory.forEach(record => this._doSubscribe(
             record.endpoint, record.callback, record.data));
     }
@@ -149,6 +148,7 @@ WebSocketService.mixin = {
     methods: {
         send: (...args) => instance.send.apply(instance, args),
         subscribe: (...args) => instance.subscribe.apply(instance, args),
+        unsibscribe: (...args) => instance.unsibscribe.apply(instance, args)
     }
 };
 

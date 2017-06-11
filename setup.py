@@ -5,6 +5,7 @@ import subprocess
 from aiohttp_debugger import __version__
 from setuptools.command.test import test as TestCommand
 import sys
+import os
 
 
 class Test(TestCommand):
@@ -23,12 +24,12 @@ class Npm(Command):
     def run(self):
         # `npm install` in any case
         subprocess.run(args=['npm', 'install'], cwd=r'./assets')
-        # run build task
+        # run assets build task
         subprocess.run(args=['npm', 'run', 'build'], cwd=r'./assets')
 
-    def initialize_options(self): pass
+    def initialize_options(self): ...
 
-    def finalize_options(self): pass
+    def finalize_options(self): ...
 
 
 prod_requires = [
@@ -47,9 +48,9 @@ setup(
     name='aiohttp-debugger',
     version=__version__,
     install_requires=prod_requires,
-    extras_require=dict(
-        dev=dev_requires
-    ),
+    extras_require={
+        'dev': dev_requires
+    },
     packages=['aiohttp_debugger'],
     package_data=dict(aiohttp_debugger=[
         'static/*',

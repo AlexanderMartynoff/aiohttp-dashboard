@@ -7,6 +7,8 @@ from collections import defaultdict
 import warnings
 import ujson
 import logging
+import concurrent.futures
+from collections import namedtuple
 
 
 log = logging.getLogger("aiohttp_debugger.debugger")
@@ -31,6 +33,7 @@ class WsMsgDispatcherProxy:
 class WsMsgDispatcher:
     """ Endpoints for websocket message processing.
         For more info see `.helper.casemethod`.
+        For more info about `rid = inmsg.body.id @ int` see `helper.WsResponseHelper`
     """
 
     @casemethod
@@ -44,47 +47,46 @@ class WsMsgDispatcher:
 
     @recive.case('sibsribe.request')
     def recive(self, inmsg):
-        rid = int(inmsg.data['id'])
+        rid = inmsg.body.id @ int
 
-        def on(event):
-            if event.rid == rid:
-                self._sender.on(inmsg)
+        def handler(event):
+            if event.rid == rid: self._sender.on(inmsg)
 
-        self._debugger.on(HttpRequest, on, group=self._sender.id, hid=inmsg.uid)
-        self._debugger.on(HttpResponse, on, group=self._sender.id, hid=inmsg.uid)
+        self._debugger.on(HttpRequest, handler, group=self._sender.id, hid=inmsg.uid)
+        self._debugger.on(HttpResponse, handler, group=self._sender.id, hid=inmsg.uid)
 
         return self._debugger_api.request(rid)
 
     @recive.case('sibsribe.request.messages')
     def recive(self, inmsg):
-        rid = int(inmsg.data['id'])
-        page = int(inmsg.data['page'])
-        perpage = int(inmsg.data['perpage'])
+        rid = inmsg.body.id >> int
+        page = inmsg.body.page >> int
+        perpage = inmsg.body.perpage >> int
 
-        def on(event: WsMsgIncoming or WsMsgOutbound):
+        def handler(event: (WsMsgIncoming, WsMsgOutbound)):
             if event.rid == rid:
                 self._sender.on(inmsg)
 
-        self._debugger.on(WsMsgIncoming, on, group=self._sender.id, hid=inmsg.uid)
-        self._debugger.on(WsMsgOutbound, on, group=self._sender.id, hid=inmsg.uid)
+        self._debugger.on(WsMsgIncoming, handler, group=self._sender.id, hid=inmsg.uid)
+        self._debugger.on(WsMsgOutbound, handler, group=self._sender.id, hid=inmsg.uid)
 
         return self._debugger_api.messages(rid, page, perpage)
 
     @recive.case('sibsribe.requests')
     def recive(self, inmsg):
-
-        def on(event):
+        
+        def handler(event):
             self._sender.on(inmsg)
 
-        self._debugger.on(HttpRequest, on, group=self._sender.id, hid=inmsg.uid)
-        self._debugger.on(HttpResponse, on, group=self._sender.id, hid=inmsg.uid)
+        self._debugger.on(HttpRequest, handler, group=self._sender.id, hid=inmsg.uid)
+        self._debugger.on(HttpResponse, handler, group=self._sender.id, hid=inmsg.uid)
 
         return self._debugger_api.requests()
 
     @recive.case('unsibscribe')
     def recive(self, inmsg):
         """ with this `hid` probably exist multiple handlers """
-        self._debugger.off(hid=inmsg.data['id'])
+        self._debugger.off(hid=inmsg.body.id.raw)
 
     @recive.case('fetch.info')
     def recive(self, inmsg):
@@ -100,10 +102,10 @@ class WsMsgDispatcher:
 
     @recive.catch(Exception)
     def recive(self, exception, inmsg):
-        self._sender.on(f'{inmsg.endpoint}.error', lambda: ({
+        self._sender.on_soon(inmsg, {
             'status': 'error',
             'cause': str(exception)
-        }, inmsg))
+        })
 
     def close(self):
         self._debugger.off(group=self._sender.id)
@@ -124,14 +126,13 @@ class Sender:
 
     @_handler.case('sibsribe.request')
     def _handler(self, inmsg):
-        rid = int(inmsg.data['id'])
-        self._send(self._debugapi.request(rid), inmsg)
+        self._send(self._debugapi.request(inmsg.body.id @ int), inmsg)
 
     @_handler.case('sibsribe.request.messages')
     def _handler(self, inmsg):
-        rid = int(inmsg.data['id'])
-        page = int(inmsg.data['page'])
-        perpage = int(inmsg.data['perpage'])
+        rid = inmsg.body.id >> int
+        page = inmsg.body.page >> int
+        perpage = inmsg.body.perpage >> int
         self._send(self._debugapi.messages(rid, page, perpage), inmsg)
 
     @_handler.case('sibsribe.requests')
@@ -214,7 +215,8 @@ class Sender:
 
 
 class DebuggerApi:
-    """ Presentation layer for WEB. """
+    """ Presentation layer for WEB.
+    """
     
     def __init__(self):
         self._debugger = Debugger.instance
