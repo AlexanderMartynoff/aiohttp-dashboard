@@ -4,6 +4,59 @@ from uuid import uuid4
 from functools import lru_cache
 import asyncio
 from asyncio import iscoroutine, isfuture, ensure_future, gather
+from inspect import iscoroutinefunction, isfunction, ismethod, isclass
+import logging
+
+
+elog = logging.getLogger("aiohttp_debugger.helper").error
+
+
+def catch(*args):
+
+    def catcher(function):
+
+        if iscoroutinefunction(function):
+            async def decorator(*args, **kwargs):
+                try:
+                    return await function(*args, **kwargs)
+                except BaseException as e:
+                    if isinstance(e, etypes):
+                        return ehandler(e)
+                    raise e
+        else:
+            def decorator(*args, **kwargs):
+                try:
+                    return function(*args, **kwargs)
+                except BaseException as e:
+                    if isinstance(e, etypes):
+                        return ehandler(e)
+                    raise e
+
+        return decorator
+
+    # if first args is function or method
+    # @catch
+    # def function():
+    #   ...
+    function, *_ = args
+
+    if isfunction(function) or ismethod(function):
+        etypes, ehandler = Exception, elog
+        return catcher(function)
+
+    # if args is exception types and/or handler
+    # @catch(Exception):
+    # def function():
+    #   ...
+    *etypes, ehandler = args
+
+    if isclass(ehandler) and issubclass(ehandler, BaseException):
+        etypes = args
+        ehandler = elog
+
+    etypes = tuple(etypes)
+    
+    return catcher
 
 
 class WsResponseHelper(WebSocketResponse):

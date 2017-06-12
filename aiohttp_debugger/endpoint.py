@@ -47,7 +47,7 @@ class WsMsgDispatcher:
 
     @recive.case('sibsribe.request')
     def recive(self, inmsg):
-        rid = inmsg.body.id @ int
+        rid = inmsg.body.id >> int
 
         def handler(event):
             if event.rid == rid: self._sender.on(inmsg)
@@ -165,10 +165,10 @@ class Sender:
             token.handle_later(inmsg)
 
     def _send(self, out, inmsg):
-        if not self._socket.closed:
+        try:
             self._socket.send_json(self._prepare_ws_response(out, inmsg), dumps=ujson.dumps)
-        else:
-            log.warning('try send into closed websocket connection')
+        except RuntimeError as error:
+            log.error(f"an error while: {error|s}")
 
     def _prepare_ws_response(self, out, inmsg):
         return dict(data=out, uid=inmsg.uid, endpoint=inmsg.endpoint)

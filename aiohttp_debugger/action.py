@@ -2,14 +2,13 @@ from aiohttp import hdrs
 from aiohttp_jinja2 import template
 from aiohttp.web import Response, WebSocketResponse
 from asyncio import ensure_future, sleep
-from .helper import WsResponseHelper
+from .helper import WsResponseHelper, catch
 from . import endpoint as api
 from uuid import uuid4
 import os
 
 
 debugger_dir = os.path.dirname(os.path.abspath(__file__))
-
 
 @template('index.html')
 async def dashboard(request):

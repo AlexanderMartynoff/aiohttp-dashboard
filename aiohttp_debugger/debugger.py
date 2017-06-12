@@ -2,7 +2,7 @@ from datetime import datetime
 from asyncio import ensure_future
 from aiohttp.web import WebSocketResponse, Response
 from .helper import PubSubSupport
-from .helper import LimitedDict
+from .helper import LimitedDict, catch
 from queue import Queue
 from collections import deque, defaultdict
 import os
@@ -17,6 +17,9 @@ import logging
 
 log = logging.getLogger("aiohttp_debugger.debugger")
 
+
+# разобраться с тем что ERROR - name 'self' is not defined
+# только однажды
 
 class Debugger(PubSubSupport):
     instance = None
@@ -62,6 +65,7 @@ class Debugger(PubSubSupport):
             return await handler(request)
         return middleware_handler
 
+    @catch
     async def _on_response_prepare(self, request, response):
         if self._is_sutable_req(request):
             rid = id(request)
@@ -72,14 +76,15 @@ class Debugger(PubSubSupport):
                     resheaders=dict(response.headers),
                     status=response.status,
                     reason=response.reason,
-                    iswebsocket=True if isinstance(response, WebSocketResponse) else False,
+                    iswebsocket=isinstance(response, WebSocketResponse),
                     body=response.text if isinstance(response, Response) else None)
 
-            self.fire(HttpResponse(id(request)))
+            self._try_fire(HttpResponse(id(request)))
 
             if isinstance(response, WebSocketResponse):
                 self._ws_resposne_do_monkey_patching(request, response)
 
+    @catch
     def _is_sutable_req(self, req):
         return not req.path.startswith("/_debugger")
 
@@ -129,6 +134,7 @@ class Debugger(PubSubSupport):
     def _out_msg_mapper(self, msg):
         return msg
 
+    @catch
     def _handle_ws_msg(self, direction, req, msg, msg_mapper, event):
         # TODO: refact this and move to Debugger._State class
 
@@ -143,11 +149,16 @@ class Debugger(PubSubSupport):
                 direction=direction
             ))
 
-            self.fire(event)
-
+            self._try_fire(event)
+    
+    @catch
     def _handle_request(self, request):
         self._state.put_request(request)
-        self.fire(HttpRequest(id(request)))
+        self._try_fire(HttpRequest(id(request)))
+    
+    @catch
+    def _try_fire(self, *args, **kwargs):
+        return self.fire(*args, **kwargs)
 
     @property
     def api(self):
