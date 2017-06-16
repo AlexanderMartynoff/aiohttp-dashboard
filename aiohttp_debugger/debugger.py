@@ -18,9 +18,6 @@ import logging
 log = logging.getLogger("aiohttp_debugger.debugger")
 
 
-# разобраться с тем что ERROR - name 'self' is not defined
-# только однажды
-
 class Debugger(PubSubSupport):
     instance = None
 

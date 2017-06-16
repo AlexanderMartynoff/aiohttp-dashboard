@@ -19,18 +19,18 @@ def catch(*args):
             async def decorator(*args, **kwargs):
                 try:
                     return await function(*args, **kwargs)
-                except BaseException as e:
-                    if isinstance(e, etypes):
-                        return ehandler(e)
-                    raise e
+                except BaseException as err:
+                    if isinstance(err, etypes):
+                        return ehandler(err)
+                    raise err
         else:
             def decorator(*args, **kwargs):
                 try:
                     return function(*args, **kwargs)
-                except BaseException as e:
-                    if isinstance(e, etypes):
-                        return ehandler(e)
-                    raise e
+                except BaseException as err:
+                    if isinstance(err, etypes):
+                        return ehandler(err)
+                    raise err
 
         return decorator
 
@@ -51,8 +51,7 @@ def catch(*args):
     *etypes, ehandler = args
 
     if isclass(ehandler) and issubclass(ehandler, BaseException):
-        etypes = args
-        ehandler = elog
+        etypes, handler = args, elog
 
     etypes = tuple(etypes)
     

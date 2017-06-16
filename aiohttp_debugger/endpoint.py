@@ -110,7 +110,7 @@ class WsMsgDispatcher:
     def close(self):
         self._debugger.off(group=self._sender.id)
 
-
+# TODO: rename this maybe to `Gateway`?
 class Sender:
     """ Use for deferred sending websocket message """
 
@@ -126,7 +126,7 @@ class Sender:
 
     @_handler.case('sibsribe.request')
     def _handler(self, inmsg):
-        self._send(self._debugapi.request(inmsg.body.id @ int), inmsg)
+        self._send(self._debugapi.request(inmsg.body.id >> int), inmsg)
 
     @_handler.case('sibsribe.request.messages')
     def _handler(self, inmsg):
@@ -168,7 +168,7 @@ class Sender:
         try:
             self._socket.send_json(self._prepare_ws_response(out, inmsg), dumps=ujson.dumps)
         except RuntimeError as error:
-            log.error(f"an error while: {error|s}")
+            log.error(f"an error while send data to debugger client: {error}")
 
     def _prepare_ws_response(self, out, inmsg):
         return dict(data=out, uid=inmsg.uid, endpoint=inmsg.endpoint)

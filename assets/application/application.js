@@ -4,7 +4,7 @@ import VueRouter from 'vue-router';
 
 import {WebSocketService} from '@/websocket';
 import {router} from '@/router';
-import {port} from '@/utils'; 
+import {port} from '@/utils';
 
 import TopMenu from '@/component/menu/top';
 import SettingsWindow from '@/component/settings/window';

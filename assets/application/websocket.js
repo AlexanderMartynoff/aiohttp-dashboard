@@ -106,10 +106,7 @@ class WebSocketService {
             {endpoint: reqMsgOrEndpoint} : reqMsgOrEndpoint);
 
         this._do(() => {
-            this._responseHandlres[preparedReqMsg.uid] = {
-                callback,
-                persistent
-            };
+            this._responseHandlres[preparedReqMsg.uid] = {callback, persistent};
             this._sendToWs(preparedReqMsg);
         });
         return preparedReqMsg.uid;
@@ -144,6 +141,7 @@ class WebSocketService {
 
 const instance = WebSocketService.instance = new WebSocketService(config.wsApiEndpoint);
 
+// for use as mixin
 WebSocketService.mixin = {
     methods: {
         send: (...args) => instance.send.apply(instance, args),
