@@ -13,6 +13,8 @@ import aiohttp_jinja2
 from jinja2 import FileSystemLoader
 import inspect
 import logging
+import platform
+import aiohttp
 
 
 log = logging.getLogger("aiohttp_debugger.debugger")
@@ -171,11 +173,6 @@ class Api:
         self._state = state
 
     def platform_info(self):
-        import platform
-        import sys
-        import aiohttp
-        from . import __version__
-
         return dict(
             platform=platform.platform(),
             python=sys.version,

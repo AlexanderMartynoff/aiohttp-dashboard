@@ -8,7 +8,7 @@ from inspect import iscoroutinefunction, isfunction, ismethod, isclass
 import logging
 
 
-elog = logging.getLogger("aiohttp_debugger.helper").error
+elog = logging.getLogger("aiohttp_debugger.helper").exception
 
 
 def catch(*args):
@@ -21,7 +21,7 @@ def catch(*args):
                     return await function(*args, **kwargs)
                 except BaseException as err:
                     if isinstance(err, etypes):
-                        return ehandler(err)
+                        return ehandler(str(err))
                     raise err
         else:
             def decorator(*args, **kwargs):
@@ -29,7 +29,7 @@ def catch(*args):
                     return function(*args, **kwargs)
                 except BaseException as err:
                     if isinstance(err, etypes):
-                        return ehandler(err)
+                        return ehandler(str(err))
                     raise err
 
         return decorator

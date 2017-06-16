@@ -178,7 +178,7 @@ class Sender:
         return self._socket.id
 
     class _Token:
-        _delay = 2
+        _delay = 1
         _handler = None
         _last_send_time = None
         _handler_wait_for_send = None

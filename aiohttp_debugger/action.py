@@ -10,6 +10,7 @@ import os
 
 debugger_dir = os.path.dirname(os.path.abspath(__file__))
 
+
 @template('index.html')
 async def dashboard(request):
     return dict(nocache=hash(uuid4()))
