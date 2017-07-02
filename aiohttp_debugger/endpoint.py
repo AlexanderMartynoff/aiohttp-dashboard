@@ -9,22 +9,31 @@ import ujson
 import logging
 import concurrent.futures
 from collections import namedtuple
+from time import sleep
+import re
 
 
-log = logging.getLogger("aiohttp_debugger.debugger")
+log = logging.getLogger("aiohttp_debugger.endpoint")
 
 
 class WsMsgDispatcherProxy:
     """ Passing websocket meessage
         into target method for processing.
     """
+    _counter = 0
     
     def __init__(self, dispatcher, sender):
         self._dispatcher = dispatcher
         self._sender = sender
 
+        self.__class__._counter += 1
+
     def recive(self, inmsg):
         self._sender.on_soon(inmsg, self._dispatcher.recive(inmsg))
+
+    @property
+    def counter(self):
+        return self.__class__._counter
 
     def close(self):
         return self._dispatcher.close()
@@ -36,15 +45,15 @@ class WsMsgDispatcher:
         For more info about `rid = inmsg.body.id @ int` see `helper.WsResponseHelper`
     """
 
-    @casemethod
-    def recive(inmsg):
-        return inmsg.endpoint
-
     def __init__(self, sender):
         self._debugger_api = DebuggerApi()
         self._debugger = Debugger.instance
         self._sender = sender
-
+    
+    @casemethod
+    def recive(inmsg):
+        return inmsg.endpoint
+    
     @recive.case('sibsribe.request')
     def recive(self, inmsg):
         rid = inmsg.body.id >> int
@@ -74,7 +83,6 @@ class WsMsgDispatcher:
 
     @recive.case('sibsribe.requests')
     def recive(self, inmsg):
-        
         def handler(event):
             self._sender.on(inmsg)
 
@@ -108,7 +116,9 @@ class WsMsgDispatcher:
         })
 
     def close(self):
+        log.info(f"will off for debugger handlers - {self._debugger.subscribers_len}")
         self._debugger.off(group=self._sender.id)
+        log.info(f"was off for debugger handlers - {self._debugger.subscribers_len}")
 
 # TODO: rename this maybe to `Gateway`?
 class Sender:
@@ -120,22 +130,22 @@ class Sender:
         self._endpoints = defaultdict(lambda: None)
 
     @casemethod
-    def _handler(inmsg):
+    def handler(inmsg):
         """ For handle debugger state change. """
         return inmsg.endpoint
 
-    @_handler.case('sibsribe.request')
+    @handler.case('sibsribe.request')
     def _handler(self, inmsg):
         self._send(self._debugapi.request(inmsg.body.id >> int), inmsg)
 
-    @_handler.case('sibsribe.request.messages')
+    @handler.case('sibsribe.request.messages')
     def _handler(self, inmsg):
         rid = inmsg.body.id >> int
         page = inmsg.body.page >> int
         perpage = inmsg.body.perpage >> int
         self._send(self._debugapi.messages(rid, page, perpage), inmsg)
 
-    @_handler.case('sibsribe.requests')
+    @handler.case('sibsribe.requests')
     def _handler(self, inmsg):
         self._send(self._debugapi.requests(), inmsg)
 
@@ -166,6 +176,7 @@ class Sender:
 
     def _send(self, out, inmsg):
         try:
+            # await self._socket.close()
             self._socket.send_json(self._prepare_ws_response(out, inmsg), dumps=ujson.dumps)
         except RuntimeError as error:
             log.error(f"an error while send data to debugger client: {error}")
@@ -176,6 +187,9 @@ class Sender:
     @property
     def id(self):
         return self._socket.id
+
+    # not for use from out
+    del handler
 
     class _Token:
         _delay = 1
@@ -215,7 +229,7 @@ class Sender:
 
 
 class DebuggerApi:
-    """ Presentation layer for WEB.
+    """ Facade layer for WEB.
     """
     
     def __init__(self):

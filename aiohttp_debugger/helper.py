@@ -102,6 +102,9 @@ class WsResponseHelper(WebSocketResponse):
         def endpoint(self):
             return self._dict.get('endpoint', None)
 
+        def __repr__(self):
+            return f"<{self.endpoint}>"
+
         class _Body:
             def __init__(self, msg):
                 self.__msg = msg
@@ -242,6 +245,10 @@ class PubSubSupport:
             for etype, handler, hid in handlers:
                 if isinstance(event, etype):
                     handler(event)
+
+    @property
+    def subscribers_len(self):
+        return sum(len(handlers) for handlers in self.__handlers.values())
 
     class Event:
         pass

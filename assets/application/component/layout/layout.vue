@@ -66,7 +66,7 @@ export default {}
     .card.flex-card.grey-card-bg .card-block
         background rgba(247, 247, 249, 0.48)
             
-    .card.flex-card .tabs 
+    .card.flex-card .tabs
         flex auto
         flex-direction column
         display flex

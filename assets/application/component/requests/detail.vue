@@ -48,8 +48,8 @@
                     <b-tab title="WebSocket messages" :disabled="isNotWs">
                         <ul class="list-group" v-if="record">
                             <li class="list-group-item aiodebugger__ws-list-group-item" v-for="(key, index) in wsCollection">
-                                <i class="fa fa-arrow-circle-up" aria-hidden="true" v-if="key.direction.name == 'OUTBOUND'"></i>
-                                <i class="fa fa-arrow-circle-down" aria-hidden="true" v-else></i>
+                                <i class="fa fa-arrow-up" aria-hidden="true" v-if="key.direction.name == 'OUTBOUND'"></i>
+                                <i class="fa fa-arrow-down" aria-hidden="true" v-else></i>
                                 <code>{{key.time}}</code>
                                 <div class="pull-right">
                                     <b-btn size="sm" class="pointer" @click="showWsDetail(index)">

@@ -81,37 +81,40 @@ class Debugger(PubSubSupport):
             self._try_fire(HttpResponse(id(request)))
 
             if isinstance(response, WebSocketResponse):
-                self._ws_resposne_do_monkey_patching(request, response)
+                # self._ws_resposne_do_monkey_patching(request, response)
+                pass
 
     @catch
     def _is_sutable_req(self, req):
         return not req.path.startswith("/_debugger")
 
     def _ws_resposne_do_monkey_patching(self, request, response):
+        
+        INCOMING, OUTBOUND = MsgDirection.INCOMING, MsgDirection.OUTBOUND
 
         def ping_overload(data):
-            self._handle_ws_msg(MsgDirection.INCOMING, request, data, self._out_msg_mapper, WsMsgOutbound())
+            self._handle_ws_msg(INCOMING, request, data, self._out_msg_mapper, WsMsgOutbound())
             return response.__aiohttp_debugger_ping__(data)
 
         response.__aiohttp_debugger_ping__ = response.ping
         response.pong = ping_overload
 
         def pong_overload(data):
-            self._handle_ws_msg(MsgDirection.INCOMING, request, data, self._out_msg_mapper, WsMsgOutbound())
+            self._handle_ws_msg(INCOMING, request, data, self._out_msg_mapper, WsMsgOutbound())
             return response.__aiohttp_debugger_pong__(data)
 
         response.__aiohttp_debugger_pong__ = response.pong
         response.pong = pong_overload
 
         def send_str_overload(data):
-            self._handle_ws_msg(MsgDirection.INCOMING, request, data, self._out_msg_mapper, WsMsgOutbound())
+            self._handle_ws_msg(INCOMING, request, data, self._out_msg_mapper, WsMsgOutbound())
             return response.__aiohttp_debugger_send_str__(data)
 
         response.__aiohttp_debugger_send_str__ = response.send_str
         response.send_str = send_str_overload
 
         def send_bytes_overload(data):
-            self._handle_ws_msg(MsgDirection.INCOMING, request, data, self._out_msg_mapper, WsMsgOutbound())
+            self._handle_ws_msg(INCOMING, request, data, self._out_msg_mapper, WsMsgOutbound())
             return response.__aiohttp_debugger_send_str__(data)
 
         response.__aiohttp_debugger_send_bytes__ = response.send_bytes
@@ -119,7 +122,7 @@ class Debugger(PubSubSupport):
 
         async def receive_overload():
             msg = await response.__aiohttp_debugger_receive__()
-            self._handle_ws_msg(MsgDirection.OUTBOUND, request, msg, self._in_msg_mapper, WsMsgIncoming())
+            self._handle_ws_msg(OUTBOUND, request, msg, self._in_msg_mapper, WsMsgIncoming())
             return msg
 
         response.__aiohttp_debugger_receive__ = response.receive

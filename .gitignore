@@ -5,3 +5,4 @@ dist
 *.sublime*
 /assets/node_modules/*
 /aiohttp_debugger/static/bundle
+.idea

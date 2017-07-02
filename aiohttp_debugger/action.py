@@ -21,10 +21,13 @@ async def websocket(request):
     sender = api.Sender(response, api.DebuggerApi())
     proxy = api.WsMsgDispatcherProxy(api.WsMsgDispatcher(sender), sender)
 
-    async for msg in response:
-        proxy.recive(msg)
+    # TODO: refact try - except
+    try:
+        async for msg in response:
+            proxy.recive(msg)
+    finally:
+        proxy.close()
 
-    proxy.close()
     return response
 
 
