@@ -9,7 +9,7 @@ import ujson
 import logging
 import concurrent.futures
 from collections import namedtuple
-from time import sleep
+from time import sleep, time
 import re
 
 
@@ -29,7 +29,7 @@ class WsMsgDispatcherProxy:
         self.__class__._counter += 1
 
     def recive(self, inmsg):
-        self._sender.on_soon(inmsg, self._dispatcher.recive(inmsg))
+        self._sender.send_soon(inmsg, self._dispatcher.recive(inmsg))
 
     @property
     def counter(self):
@@ -59,7 +59,8 @@ class WsMsgDispatcher:
         rid = inmsg.body.id >> int
 
         def handler(event):
-            if event.rid == rid: self._sender.on(inmsg)
+            if event.rid == rid:
+                self._sender.send(inmsg)
 
         self._debugger.on(HttpRequest, handler, group=self._sender.id, hid=inmsg.uid)
         self._debugger.on(HttpResponse, handler, group=self._sender.id, hid=inmsg.uid)
@@ -74,7 +75,7 @@ class WsMsgDispatcher:
 
         def handler(event: (WsMsgIncoming, WsMsgOutbound)):
             if event.rid == rid:
-                self._sender.on(inmsg)
+                self._sender.send(inmsg)
 
         self._debugger.on(WsMsgIncoming, handler, group=self._sender.id, hid=inmsg.uid)
         self._debugger.on(WsMsgOutbound, handler, group=self._sender.id, hid=inmsg.uid)
@@ -84,7 +85,7 @@ class WsMsgDispatcher:
     @recive.case('sibsribe.requests')
     def recive(self, inmsg):
         def handler(event):
-            self._sender.on(inmsg)
+            self._sender.send(inmsg)
 
         self._debugger.on(HttpRequest, handler, group=self._sender.id, hid=inmsg.uid)
         self._debugger.on(HttpResponse, handler, group=self._sender.id, hid=inmsg.uid)
@@ -110,7 +111,7 @@ class WsMsgDispatcher:
 
     @recive.catch(Exception)
     def recive(self, exception, inmsg):
-        self._sender.on_soon(inmsg, {
+        self._sender.send_soon(inmsg, {
             'status': 'error',
             'cause': str(exception)
         })
@@ -120,7 +121,7 @@ class WsMsgDispatcher:
         self._debugger.off(group=self._sender.id)
         log.info(f"was off for debugger handlers - {self._debugger.subscribers_len}")
 
-# TODO: rename this maybe to `Gateway`?
+
 class Sender:
     """ Use for deferred sending websocket message """
 
@@ -149,30 +150,33 @@ class Sender:
     def _handler(self, inmsg):
         self._send(self._debugapi.requests(), inmsg)
 
-    def newtoken(self):
-        return self._Token(handler=self._handler)
+    @property
+    def _endpoint_state(self):
+        return self._EndpointState(handler=self._handler)
 
-    def on_soon(self, inmsg, out):
-        token = self._endpoints[inmsg.endpoint]
+    def send_soon(self, inmsg, out):
+        endpoint = self._endpoints[inmsg.endpoint]
 
-        if token is None:
-            token = self._endpoints[inmsg.endpoint] = self.newtoken()
+        if endpoint is None:
+            endpoint = self._endpoints[inmsg.endpoint] = self._endpoint_state
 
-        token.handle_soon_with_handler(inmsg, out, self._send)
+        endpoint.handle_soon_with_handler(inmsg, out, self._send)
 
-    def on(self, inmsg):
+    def send(self, inmsg):
         """ :inmsg: incoming websocket message
         """
+        
+        log.info("try to send data for {inmsg.endpoint}")
 
-        token = self._endpoints[inmsg.endpoint]
+        endpoint = self._endpoints[inmsg.endpoint]
 
-        if token is None:
-            token = self._endpoints[inmsg.endpoint] = self.newtoken()
-            token.handle_soon(inmsg)
-        elif token.isready:
-            token.handle_soon(inmsg)
+        if endpoint is None:
+            endpoint = self._endpoints[inmsg.endpoint] = self._endpoint_state
+            endpoint.handle_soon(inmsg)
+        elif endpoint.isfree:
+            endpoint.handle_soon(inmsg)
         else:
-            token.handle_later(inmsg)
+            endpoint.handle_later(inmsg)
 
     def _send(self, out, inmsg):
         try:
@@ -191,20 +195,27 @@ class Sender:
     # not for use from out
     del handler
 
-    class _Token:
-        _delay = 1
+    class _EndpointState:
+        _delay = 4
         _handler = None
         _last_send_time = None
         _handler_wait_for_send = None
 
         def __init__(self, handler):
             self._handler = handler
-            self._last_send_time = get_event_loop().time()
+            self._last_send_time = self.time
 
-        def _handler_caller(self, inmsg):
+        @property
+        def time(self):
+            return time()
+
+        def _handler_caller(self, inmsg, task=None):
+            if task:
+                log.info(f"send from task {id(task)}")
+            
             self._handler(inmsg)
             self._handler_wait_for_send = None
-            self._last_send_time = get_event_loop().time()
+            self._last_send_time = self.time
 
         def handle_soon_with_handler(self, inmsg, out, handler):
             handler(out, inmsg)
@@ -213,19 +224,24 @@ class Sender:
             self._handler_caller(inmsg)
 
         def handle_later(self, inmsg):
-
             if self._handler_wait_for_send:
                 self._handler_wait_for_send.cancel()
+                log.info(f"cancel deferred task {id(self._handler_wait_for_send)}")
 
             self._handler_wait_for_send = self._do_send_later(inmsg)
 
         def _do_send_later(self, inmsg):
-            return get_event_loop().call_at(
-                self._last_send_time + self._delay, lambda: self._handler_caller(inmsg))
+            when = self._last_send_time + self._delay
+            task = get_event_loop().call_at(when, lambda: self._handler_caller(inmsg, task))
+            log.info(f"put deferred task {id(task)} call at {when} seconds to {inmsg.endpoint}")
+            return task
 
         @property
-        def isready(self):
-            return (get_event_loop().time() - self._last_send_time) >= self._delay
+        def isfree(self):
+            passed = self.time - self._last_send_time
+            isfree = passed >= self._delay
+            log.info(f"passed time {passed}, isfree: {'Yes' if isfree else 'No'}")
+            return isfree
 
 
 class DebuggerApi:

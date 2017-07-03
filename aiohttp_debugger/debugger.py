@@ -81,8 +81,7 @@ class Debugger(PubSubSupport):
             self._try_fire(HttpResponse(id(request)))
 
             if isinstance(response, WebSocketResponse):
-                # self._ws_resposne_do_monkey_patching(request, response)
-                pass
+                self._ws_resposne_do_monkey_patching(request, response)
 
     @catch
     def _is_sutable_req(self, req):

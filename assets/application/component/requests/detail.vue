@@ -45,7 +45,7 @@
                         </ul>
                         <alert v-else message="Records not found"></alert>
                     </b-tab>
-                    <b-tab title="WebSocket messages" :disabled="isNotWs">
+                    <b-tab title="WebSocket messages" :disabled="isNotWs" v-if="!isNotWs">
                         <ul class="list-group" v-if="record">
                             <li class="list-group-item aiodebugger__ws-list-group-item" v-for="(key, index) in wsCollection">
                                 <i class="fa fa-arrow-up" aria-hidden="true" v-if="key.direction.name == 'OUTBOUND'"></i>
