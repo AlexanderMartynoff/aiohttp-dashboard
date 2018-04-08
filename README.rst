@@ -1,5 +1,5 @@
-Dashboard panel for aiohttp applications
-========================================
+Dashboard panel for `aiohttp` applications
+==========================================
 
 
 Features
