@@ -16,8 +16,8 @@ Install
         
     pip install aiohttp_debugger
 
-Integrate with application
-**************************
+Embedding in the application
+****************************
 
 .. code-block:: python
         
@@ -25,7 +25,7 @@ Integrate with application
 
     application = ...
     
-    aiohttp_debugger.setup('/dasboard_home_page', application)
+    aiohttp_debugger.setup('/aiohttp_debugger', application)
 
 
-The panel is available at ``<root_url>/dasboard_home_page``
+The panel is available at ``<application_url>/aiohttp_debugger``
