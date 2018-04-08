@@ -1,25 +1,35 @@
-from aiohttp import web
-from aiohttp_debugger import Debugger
-from pytest import fixture
-from aiohttp_debugger.helper import WsResponseHelper
-import asyncio
+import pytest
+import aiohttp
+import aiohttp_debugger
 
 
-@fixture
-def application():
+@pytest.fixture
+def prefix():
+    return '/_debugger'
 
-    async def index(request):
-        return web.Response(text='Hello, world!')
 
-    async def socket(request):
-        response = await WsResponseHelper.instance(request)
-        for message in response: pass
-        return response
+@pytest.fixture
+def full_application(prefix):
+    
+    async def http_handler(request):
+        return aiohttp.web.Response(text='Hello, World!')
+    
+    async def websocket_handler(request):
+        websocket = aiohttp.web.WebSocketResponse()
+        
+        await websocket.prepare(request)
 
-    application = web.Application()
-    application.router.add_get('/index', index)
-    application.router.add_get('/socket', socket)
+        async for message in websocket:
+            await websocket.send_json(message)
+            
+        return websocket
 
-    Debugger.setup(application)
+    application = aiohttp.web.Application()
+
+    application.router.add_get('/test-http', http_handler)
+    application.router.add_get('/test-websocket', websocket_handler)
+    application.router.add_get('/test-websocket/return/{return}', websocket_handler)
+    
+    aiohttp_debugger.setup(prefix, application)
 
     return application

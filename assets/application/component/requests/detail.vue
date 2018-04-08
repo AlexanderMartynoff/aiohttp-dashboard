@@ -1,36 +1,36 @@
 <template>
-    <div class="row d-flex">
-        <div class="col-5 d-flex align-items-stretch">
-            <b-card header="Request info" class="flex-card"> 
-                <ul class="list-group" v-if="record">
-                    <li class="list-group-item list-group-item-warning block" v-if="record.status || record.reason">
+    <div class="row ad-content">
+        <div class="col-5">
+            <b-card header="Request info" class="flex-card" no-body> 
+                <ul class="list-group flex-auto overflow-auto" v-if="record">
+                    <li class="list-group-item list-group-item-warning block border-top-0 border-left-0 border-right-0" v-if="record.status || record.reason">
                         <div><span>{{record.status}}</span></div>
                         <div><small class="text-muted">{{record.reason}}</small></div>
                     </li>
-                    <li class="list-group-item">
+                    <li class="list-group-item border-left-0 border-right-0">
                         <span class="key-name">Client IP:</span> <code>{{record.ip}}</code>
                     </li>
-                    <li class="list-group-item">
+                    <li class="list-group-item border-left-0 border-right-0">
                         <span class="key-name">Path:</span> <code>{{record.path}}</code> 
                     </li>
-                    <li class="list-group-item">
+                    <li class="list-group-item border-left-0 border-right-0">
                         <span class="key-name">Begin time:</span> <code>{{record.begintime}}</code> 
                     </li>
-                    <li class="list-group-item">
+                    <li class="list-group-item border-left-0 border-right-0">
                         <span class="key-name">Done time:</span> <code>{{record.donetime}}</code>
                     </li>
-                    <li class="list-group-item">
+                    <li class="list-group-item border-bottom-0 border-left-0 border-right-0">
                         <span class="key-name">Scheme:</span> <code>{{record.scheme}}</code>
                     </li>
                 </ul>
                 <alert v-else message="Records not found"></alert>
             </b-card>
         </div>
-        <div class="col-7 d-flex align-items-stretch">
-            <b-card no-block class="flex-card" show-footer>
-                <b-tabs small card no-fade>
+        <div class="col-7">
+            <b-card no-block class="flex-card" show-footer no-body>
+                <b-tabs small card no-fade class="flex-parent-column flex-auto" content-class="flex-auto overflow-auto">
                     <b-tab title="Request headers">
-                        <ul class="list-group" v-if="record">
+                        <ul class="list-group flex-auto overflow-auto" v-if="record">
                             <li class="list-group-item" v-for="value, key in record.reqheaders">
                                 <span class="key-name">{{key}}:</span> <code>{{value}}</code> 
                             </li>
@@ -45,17 +45,15 @@
                         </ul>
                         <alert v-else message="Records not found"></alert>
                     </b-tab>
-                    <b-tab title="WebSocket messages" :disabled="isNotWs" v-if="!isNotWs">
+                    <b-tab title="WebSocket messages" v-if="!isNotWs">
                         <ul class="list-group" v-if="record">
                             <li class="list-group-item aiodebugger__ws-list-group-item" v-for="(key, index) in wsCollection">
-                                <i class="fa fa-arrow-up" aria-hidden="true" v-if="key.direction.name == 'OUTBOUND'"></i>
+                                <i class="fa fa-arrow-up" aria-hidden="true" v-if="key.direction == 'OUTBOUND'"></i>
                                 <i class="fa fa-arrow-down" aria-hidden="true" v-else></i>
                                 <code>{{key.time}}</code>
-                                <div class="pull-right">
-                                    <b-btn size="sm" class="pointer" @click="showWsDetail(index)">
-                                        <i class="fa fa-eye" aria-hidden="true"></i>
-                                    </b-btn>
-                                </div>
+                                
+                                <i class="fa fa-eye pointer align-middle float-right" @click="showWsDetail(index)" aria-hidden="true"></i>
+                                
                                 <b-modal ref="wsDetail" title="Detail websocket message info"
                                          @shown="onDetailShown"
                                          @hidden="onDetailHidden"
@@ -67,7 +65,7 @@
                         <alert v-else message="Records not found"></alert>
                     </b-tab>
                 </b-tabs>
-                <div slot="footer">
+                <div slot="footer" v-if="!isNotWs">
                     <div class="container-fluid">
                         <div class="row" v-if="wsCollection && wsCollection.length > 0">
                             <div class="col-md-auto">
@@ -102,7 +100,7 @@
 
 <script>
     import {WebSocketService} from '@/websocket';
-    import {eventBus} from '@/utils';
+    import {ps} from '@/utils';
 
     export default {
         mixins: [WebSocketService.mixin],
@@ -110,7 +108,7 @@
             return {
                 record: {},
                 wsCurrentPage: 1,
-                wsPerPage: 30,
+                wsPerPage: 25,
                 wsTotal: 0,
                 wsCollection: [],
                 goToNextWsPage: false,
@@ -199,9 +197,10 @@
         created: function() {
             this.wsSubscribe();
             this.requestSubscribe();
-            eventBus.$on('settings:change', configuration => console.log(configuration));
-            // fetch configuration
-            eventBus.$emit('settings:fire');
+            ps.$on('settings:change', configuration => {
+                this.showWsLastPageSetting = configuration.showWsLastPage;
+            });
+            ps.$emit('settings:fire')
         },
         destroyed: function() {
             this.wsUnsubscribe();

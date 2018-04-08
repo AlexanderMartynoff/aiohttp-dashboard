@@ -16,6 +16,10 @@ import Alert from '@/component/widget/alert';
 import Layout from '@/component/layout/layout';
 
 
+import "@/style/layout.styl"
+import "@/style/global.styl"
+
+
 Vue.use(VueRouter);
 // register boostrap as global components
 Vue.use(BootstrapVue);

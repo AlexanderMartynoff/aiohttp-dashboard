@@ -1,31 +1,37 @@
 <template>
-  <b-card class="flex-card grey-card-bg" show-footer show-header>
-        <b-table v-if="items.length"
-                 @row-clicked="(item, index) => details(item.id, index)"
-                 :items="items"
-                 :fields="fields"
-                 :current-page="currentPage"
-                 :per-page="perPage"
-                 class="table-pinter table-hover"
-                 striped>
 
-            <template slot="status" scope="item">
-                {{item.item.status}}/{{item.item.reason}}
-            </template>
-        </b-table>
+    <div class="row ad-content">
+        <div class="col">
+            <b-card class="flex-card grey-card-bg" show-footer show-header>
+            <b-table v-if="items.length"
+                     @row-clicked="(item, index) => details(item.id, index)"
+                     :items="items"
+                     :fields="fields"
+                     :current-page="currentPage"
+                     :per-page="perPage"
+                     class="table-pinter table-hover fixed-table"
+                     striped>
 
-        <alert v-else message="Записей не найдено"></alert>
+                <template slot="status" scope="item">
+                    {{item.item.status}}/{{item.item.reason}}
+                </template>
+            </b-table>
 
-        <span slot="header">
-            <i class="fa fa-globe" aria-hidden="true"></i> Requests
-        </span>
+            <alert v-else message="Записей не найдено"></alert>
 
-        <small slot="footer">
-            <div v-if="items.length" class="justify-content-center row">
-                <b-pagination size="md" :total-rows="this.items.length" :per-page="perPage" v-model="currentPage"/>
-            </div>
-        </small>
-    </b-card>
+            <span slot="header">
+                <i class="fa fa-globe" aria-hidden="true"></i> Requests
+            </span>
+
+            <small slot="footer">
+                <div v-if="items.length" class="justify-content-center row">
+                    <b-pagination size="md" :total-rows="this.items.length" :per-page="perPage" v-model="currentPage"/>
+                </div>
+            </small>
+        </b-card>
+        </div>
+    </div>
+  
 </template>
 
 

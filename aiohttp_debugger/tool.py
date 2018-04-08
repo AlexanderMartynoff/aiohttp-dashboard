@@ -8,56 +8,6 @@ from inspect import iscoroutinefunction, isfunction, ismethod, isclass
 import logging
 
 
-elog = logging.getLogger("aiohttp_debugger.helper").exception
-
-
-def catch(*args):
-
-    def catcher(function):
-
-        if iscoroutinefunction(function):
-            async def decorator(*args, **kwargs):
-                try:
-                    return await function(*args, **kwargs)
-                except BaseException as err:
-                    if isinstance(err, etypes):
-                        return ehandler(str(err))
-                    raise err
-        else:
-            def decorator(*args, **kwargs):
-                try:
-                    return function(*args, **kwargs)
-                except BaseException as err:
-                    if isinstance(err, etypes):
-                        return ehandler(str(err))
-                    raise err
-
-        return decorator
-
-    # if first args is function or method
-    # @catch
-    # def function():
-    #   ...
-    function, *_ = args
-
-    if isfunction(function) or ismethod(function):
-        etypes, ehandler = Exception, elog
-        return catcher(function)
-
-    # if args is exception types and/or handler
-    # @catch(Exception):
-    # def function():
-    #   ...
-    *etypes, ehandler = args
-
-    if isclass(ehandler) and issubclass(ehandler, BaseException):
-        etypes, handler = args, elog
-
-    etypes = tuple(etypes)
-    
-    return catcher
-
-
 class WsResponseHelper(WebSocketResponse):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -119,6 +69,7 @@ class WsResponseHelper(WebSocketResponse):
                 def __rshift__(self, typemapper):
                     return typemapper(self.__value)
 
+                # TODO - deprecated, remove
                 def __matmul__(self, typemapper):
                     return typemapper(self.__value)
 
@@ -210,45 +161,51 @@ class casemethod:
     class IllegalOpearationException(Exception): pass
 
 
-class PubSubSupport:
-    """
-    Use as mixin. Example:
-    PubSubSupport().on('event', lambda event: ...)
-    """
-
-    def __init_subclass__(self):
-        self.__handlers = defaultdict(list)
+class Bus:
+    def __init__(self):
+        self._handlers = defaultdict(list)
 
     def on(self, etype, handler, *, group=uuid4(), hid=uuid4()):
-        self.__handlers[group] += (etype, handler, hid),
+        if not isinstance(etype, (list, tuple, set)):
+            etype = [etype]
+
+        for _ in etype:
+            self._on(_, handler, group=group, hid=hid)
+
         return self
 
-    def off(self, *, group=None, hid=None):
+    def _on(self, etype, handler, *, group, hid):
+        self._handlers[group] += (etype, handler, hid),
 
+    def off(self, *, group=None, hid=None):
         if group is None and hid is None:
             raise ValueError('group or/and hid must be not None')
 
         if group:
             try:
-                del self.__handlers[group]
+                del self._handlers[group]
             except KeyError:
                 pass
 
         if hid:
-            for group_, handlers in self.__handlers.items():
+            for group_, handlers in self._handlers.items():
                 for etype, handler, hid_ in handlers[:]:
                     if hid_ == hid:
-                        self.__handlers[group_].remove((etype, handler, hid_))
+                        self._handlers[group_].remove((etype, handler, hid_))
 
     def fire(self, event):
-        for handlers in self.__handlers.values():
+        for handlers in self._handlers.values():
             for etype, handler, hid in handlers:
                 if isinstance(event, etype):
                     handler(event)
 
     @property
     def subscribers_len(self):
-        return sum(len(handlers) for handlers in self.__handlers.values())
+        return self.size
+
+    @property
+    def size(self):
+        return sum(len(handlers) for handlers in self._handlers.values())
 
     class Event:
         pass

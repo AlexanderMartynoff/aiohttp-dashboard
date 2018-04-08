@@ -1,186 +1,92 @@
 from datetime import datetime
 from asyncio import ensure_future
 from aiohttp.web import WebSocketResponse, Response
-from .helper import PubSubSupport
-from .helper import LimitedDict, catch
 from queue import Queue
 from collections import deque, defaultdict
 import os
 import sys
-from enum import Enum
-import ruamel
-import aiohttp_jinja2
-from jinja2 import FileSystemLoader
-import inspect
 import logging
 import platform
 import aiohttp
+from functools import partial
+
+from .tool import Bus, LimitedDict
+from .event import (HttpRequest, HttpResponse,
+                    WsMsgIncoming, WsMsgOutbound, MsgDirection)
 
 
-log = logging.getLogger("aiohttp_debugger.debugger")
+logger = logging.getLogger("aiohttp_debugger.debugger")
 
 
-class Debugger(PubSubSupport):
-    instance = None
+DEBUGGER_KEY = __name__
+JINJA_KEY = '{}.jinja2'.format(__name__)
 
-    @classmethod
-    def setup(cls, application):
-        from . import action
 
-        if cls.instance is None:
-            cls.instance = cls(application, action.routes, action.static_routes)
-            aiohttp_jinja2.setup(application, loader=FileSystemLoader(f"{action.debugger_dir}/static"))
-            log.info('debugger setup success')
-        return cls.instance
+class Debugger(Bus):
+    """ Facade API """
 
-    def __init__(self, application, routes, static_routes):
-        self._application = self._configure_application(application, routes, static_routes)
-        self._state = State(application)
+    # NOTE: remove application from debugger
+    # NOTE: application in debugger need just for return route list
+    # NOTE: move this functional in endpoint.py
+    def __init__(self):
+        Bus.__init__(self)
+
+        self._state = State()
         self._api = Api(self._state)
 
-    def _configure_application(self, application, routes, static_routes):
-        self._add_middlewares(application)
-        self._add_routes(application, routes)
-        self._add_static_routes(application, static_routes)
-        application.on_response_prepare.append(self._on_response_prepare)
-        return application
+    def register_request(self, request):
+        self.state.put_request(request)
+        self.fire(HttpRequest(id(request)))
 
-    def _add_middlewares(self, application):
-        application.middlewares.append(self._middleware_factory)
-
-    def _add_static_routes(self, application, static_routes):
-        for url, path in static_routes:
-            application.router.add_static(url, path)
-
-    def _add_routes(self, application, routes):
-        for method, path, handler in routes:
-            application.router.add_route(method, path, handler)
-
-    async def _middleware_factory(self, application, handler):
-
-        async def middleware_handler(request):
-            if self._is_sutable_req(request):
-                self._handle_request(request)
-            return await handler(request)
-        return middleware_handler
-
-    @catch
-    async def _on_response_prepare(self, request, response):
-        if self._is_sutable_req(request):
-            rid = id(request)
-            if rid in self._state.requests.keys():
-                self._state.requests[rid].update(
-                    donetime=self._state.now,
-                    done=True,
-                    resheaders=dict(response.headers),
-                    status=response.status,
-                    reason=response.reason,
-                    iswebsocket=isinstance(response, WebSocketResponse),
-                    body=response.text if isinstance(response, Response) else None)
-
-            self._try_fire(HttpResponse(id(request)))
-
-            if isinstance(response, WebSocketResponse):
-                self._ws_resposne_do_monkey_patching(request, response)
-
-    @catch
-    def _is_sutable_req(self, req):
-        return not req.path.startswith("/_debugger")
-
-    def _ws_resposne_do_monkey_patching(self, request, response):
+    def register_response(self, request, response):
+        requst_id = id(request)
         
-        INCOMING, OUTBOUND = MsgDirection.INCOMING, MsgDirection.OUTBOUND
+        if requst_id in self.state.requests.keys():
+            self.state.requests[requst_id].update({
+                'donetime': self.state.now,
+                'done': True,
+                'resheaders': dict(response.headers),
+                'status': response.status,
+                'reason': response.reason,
+                'iswebsocket': isinstance(response, WebSocketResponse),
+                'body': response.text if isinstance(response, Response) else None})
 
-        def ping_overload(data):
-            self._handle_ws_msg(INCOMING, request, data, self._out_msg_mapper, WsMsgOutbound())
-            return response.__aiohttp_debugger_ping__(data)
+        self.fire(HttpResponse(id(request)))
 
-        response.__aiohttp_debugger_ping__ = response.ping
-        response.pong = ping_overload
+    def register_websocket_message(self, direction, request, msg, msg_mapper, event):
+        requst_id, message_id = id(request), id(msg)
+        event.rid = requst_id
 
-        def pong_overload(data):
-            self._handle_ws_msg(INCOMING, request, data, self._out_msg_mapper, WsMsgOutbound())
-            return response.__aiohttp_debugger_pong__(data)
+        self.state.put_ws_message(requst_id, {
+            'id': message_id,
+            'msg': msg_mapper(msg),
+            'time': self.state.now,
+            'direction': direction.name
+        })
 
-        response.__aiohttp_debugger_pong__ = response.pong
-        response.pong = pong_overload
-
-        def send_str_overload(data):
-            self._handle_ws_msg(INCOMING, request, data, self._out_msg_mapper, WsMsgOutbound())
-            return response.__aiohttp_debugger_send_str__(data)
-
-        response.__aiohttp_debugger_send_str__ = response.send_str
-        response.send_str = send_str_overload
-
-        def send_bytes_overload(data):
-            self._handle_ws_msg(INCOMING, request, data, self._out_msg_mapper, WsMsgOutbound())
-            return response.__aiohttp_debugger_send_str__(data)
-
-        response.__aiohttp_debugger_send_bytes__ = response.send_bytes
-        response.send_bytes = send_bytes_overload
-
-        async def receive_overload():
-            msg = await response.__aiohttp_debugger_receive__()
-            self._handle_ws_msg(OUTBOUND, request, msg, self._in_msg_mapper, WsMsgIncoming())
-            return msg
-
-        response.__aiohttp_debugger_receive__ = response.receive
-        response.receive = receive_overload
-
-        return response
-
-    def _in_msg_mapper(self, msg):
-        return msg.data
-
-    def _out_msg_mapper(self, msg):
-        return msg
-
-    @catch
-    def _handle_ws_msg(self, direction, req, msg, msg_mapper, event):
-        # TODO: refact this and move to Debugger._State class
-
-        if self._is_sutable_req(req):
-            rid, mid = id(req), id(msg)
-            event.rid = rid
-
-            self._state.put_ws_message(rid, dict(
-                id=mid,
-                msg=msg_mapper(msg),
-                time=self._state.now,
-                direction=direction
-            ))
-
-            self._try_fire(event)
-    
-    @catch
-    def _handle_request(self, request):
-        self._state.put_request(request)
-        self._try_fire(HttpRequest(id(request)))
-    
-    @catch
-    def _try_fire(self, *args, **kwargs):
-        return self.fire(*args, **kwargs)
+        self.fire(event)
 
     @property
     def api(self):
         return self._api
 
+    @property
+    def state(self):
+        return self._state
 
+
+# NOTE: merge this class with Debugger
 class Api:
-    """ Facade API for `Debugger`
-        Presentation layer for data in `State`
-    """
-
     def __init__(self, state):
         self._state = state
 
     def platform_info(self):
-        return dict(
-            platform=platform.platform(),
-            python=sys.version,
-            aiohttp=aiohttp.__version__,
-            debugger=__version__
-        )
+        return {
+            'platform': platform.platform(),
+            'python': sys.version,
+            'aiohttp': aiohttp.__version__,
+            'debugger': __version__
+        }
 
     def requests(self, *args, **kwargs):
         return list(self._state.requests.values())
@@ -210,25 +116,10 @@ class Api:
             return self._state.outbound_msg_counter[rid]
         elif MsgDirection.INCOMING:
             return self._state.incoming_msg_counter[rid]
-        else:
-            return None
-
-    def routes(self):
-        return list(dict(
-            name=route.name,
-            method=route.method,
-            info=self._extract_route_info(route),
-            handler=route.handler.__name__,
-            source=inspect.getsource(route.handler)
-        ) for route in self._state.application.router.routes())
-
-    def _extract_route_info(self, route):
-        return {str(key): str(value) for key, value in route.get_info().items()}
 
 
 class State:
-    def __init__(self, application, maxlen=50_000):
-        self._application = application
+    def __init__(self, maxlen=50_000):
         self._maxlen = maxlen
         self._requests = LimitedDict(maxlen=self._maxlen)
         self._messages = LimitedDict(maxlen=self._maxlen)
@@ -238,17 +129,17 @@ class State:
     def put_request(self, request):
         rid = id(request)
         ip, _ = request.transport.get_extra_info('peername')
-        self._requests[rid] = dict(
-            id=rid,
-            scheme=request.scheme,
-            host=request.host,
-            path=request.raw_path,
-            method=request.method,
-            begintime=self.now,
-            done=False,
-            reqheaders=dict(request.headers),
-            ip=ip
-        )
+        self._requests[rid] = {
+            'id': rid,
+            'scheme': request.scheme,
+            'host': request.host,
+            'path': request.raw_path,
+            'method': request.method,
+            'begintime': self.now,
+            'done': False,
+            'reqheaders': dict(request.headers),
+            'ip': ip
+        }
 
     def put_ws_message(self, rid, message):
         """
@@ -263,7 +154,7 @@ class State:
         if self._outbound_msg_counter[rid] + self._incoming_msg_counter[rid] >= self._maxlen:
             return
 
-        if message['direction'] is MsgDirection.OUTBOUND:
+        if message['direction'] == MsgDirection.OUTBOUND.name:
             self._outbound_msg_counter[rid] += 1
         else:
             self._incoming_msg_counter[rid] += 1
@@ -287,51 +178,3 @@ class State:
     @property
     def messages(self) -> dict:
         return self._messages
-
-    @property
-    def application(self):
-        return self._application
-
-
-class MsgDirection(Enum):
-    OUTBOUND = 1
-    INCOMING = 2
-
-
-class DebuggerAbstractWebEvent(PubSubSupport.Event):
-    # request id
-    _rid = None
-
-    def __init__(self, rid=None):
-        self._rid = rid
-
-    @property
-    def rid(self):
-        return self._rid
-
-    @rid.setter
-    def rid(self, rid):
-        self._rid = rid
-
-
-class DebuggerAbstractReqResEvent(DebuggerAbstractWebEvent):
-    def __init__(self, rid):
-        self.rid = rid
-
-
-class HttpRequest(DebuggerAbstractReqResEvent):
-    def __init__(self, rid):
-        super().__init__(rid)
-
-
-class HttpResponse(DebuggerAbstractWebEvent):
-    def __init__(self, rid):
-        super().__init__(rid)
-
-
-class WsMsgIncoming(DebuggerAbstractWebEvent):
-    pass
-
-
-class WsMsgOutbound(DebuggerAbstractWebEvent):
-    pass

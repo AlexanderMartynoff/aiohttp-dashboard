@@ -1,7 +1,7 @@
-var path = require('path')
-var CopyWebpackPlugin = require('copy-webpack-plugin')
+let path = require('path')
+let CopyWebpackPlugin = require('copy-webpack-plugin')
 
-function resolve(dir) {
+let resolve = (dir) => {
     return path.join(__dirname, dir)
 }
 
@@ -25,6 +25,10 @@ module.exports = {
     module: {
         rules: [
             {
+                test: /\.styl$/i,
+                use: ['style-loader', 'css-loader', 'stylus-loader']
+            },
+            {
                 test: /\.vue$/,
                 loader: 'vue-loader'
             },
@@ -32,16 +36,22 @@ module.exports = {
                 test: /\.js$/,
                 loader: 'babel-loader',
                 include: [resolve('application')],
-                query: {presets: 'es2015'}
+                query: {
+                    presets: 'es2015',
+                    plugins: ['transform-es2015-destructuring', 'transform-object-rest-spread']
+                }
+            },
+            {
+                test: /\.css$/,
+                use: ['style-loader', 'css-loader']
             }
         ]
     },
     plugins: [
         new CopyWebpackPlugin([
-            {from: resolve('node_modules/bootstrap/dist/css/bootstrap.css')},
-            {from: resolve('node_modules/bootstrap-vue/dist/bootstrap-vue.css')},
-            {from: resolve('node_modules/font-awesome/css'), to: "font-awesome/css", ignore: ["*.map"]},
-            {from: resolve('node_modules/font-awesome/fonts'), to: "font-awesome/fonts"},
+            { from: resolve('node_modules/bootstrap/dist/css/bootstrap.css') },
+            { from: resolve('node_modules/@fortawesome/fontawesome-free-webfonts/css'), to: "font-awesome/css", ignore: ["*.map"] },
+            { from: resolve('node_modules/@fortawesome/fontawesome-free-webfonts/webfonts'), to: "font-awesome/webfonts" },
         ])
     ]
 }

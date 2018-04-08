@@ -1,35 +1,41 @@
 <template>
-  <b-card class="flex-card grey-card-bg" show-footer show-header>
-        <b-table v-if="items.length"
-                 @row-clicked="(item, index) => details(item, index)"
-                 :items="items"
-                 :fields="fields"
-                 :current-page="currentPage"
-                 :per-page="perPage"
-                 class="table-pinter table-hover"
-                 striped>
 
-            <template slot="path" scope="item">
-                {{item.item.info.path || item.item.info.prefix + ' -> ' + item.item.info.directory}}
-            </template>
-        </b-table>
+        <div class="row ad-content">
+            <div class="col">
+                <b-card class="flex-card grey-card-bg" show-footer show-header>
+                    <b-table v-if="items.length"
+                             @row-clicked="(item, index) => details(item, index)"
+                             :items="items"
+                             :fields="fields"
+                             :current-page="currentPage"
+                             :per-page="perPage"
+                             class="table-pinter table-hover"
+                             striped>
 
-        <alert v-else message="Records not found"></alert>
+                        <template slot="path" scope="item">
+                            {{item.item.info.path || item.item.info.prefix + ' -> ' + item.item.info.directory}}
+                        </template>
+                    </b-table>
 
-        <span slot="header">
-            <i class="fa fa-globe" aria-hidden="true"></i> Inspection
-        </span>
+                    <alert v-else message="Records not found"></alert>
 
-        <small slot="footer">
-            <div v-if="items.length" class="justify-content-center row">
-                <b-pagination size="md" :total-rows="this.items.length" :per-page="perPage" v-model="currentPage"/>
+                    <span slot="header">
+                        <i class="fa fa-globe" aria-hidden="true"></i> Inspection
+                    </span>
+
+                    <small slot="footer">
+                        <div v-if="items.length" class="justify-content-center row">
+                            <b-pagination size="md" :total-rows="this.items.length" :per-page="perPage" v-model="currentPage"/>
+                        </div>
+                    </small>
+
+                    <b-modal ref="sourceDetail" title="Source code" size="lg" class="modal-huge" hide-footer>
+                        <pre><code>{{selected.source}}</code></pre>
+                    </b-modal>
+                </b-card>
             </div>
-        </small>
-
-        <b-modal ref="sourceDetail" title="Source code" size="lg" class="modal-huge" hide-footer>
-            <pre><code>{{selected.source}}</code></pre>
-        </b-modal>
-    </b-card>
+        </div>
+  
 </template>
 
 

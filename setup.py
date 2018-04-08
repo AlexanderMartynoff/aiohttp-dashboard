@@ -5,16 +5,17 @@ import subprocess
 from aiohttp_debugger import __version__
 from setuptools.command.test import test as TestCommand
 import sys
-import os
 
+
+try:
+    import pytest
+except ImportError:
+    pass
 
 class Test(TestCommand):
-    _args = ['tests']
-
+    
     def run_tests(self):
-        import pytest
-
-        if pytest.main(self._args) > 0:
+        if pytest.main(['tests', '-v', '-s']) > 0:
             sys.exit(0)
 
 
@@ -23,9 +24,12 @@ class Npm(Command):
 
     def run(self):
         # `npm install` in any case
-        subprocess.run(args=['npm', 'install'], cwd=r'./assets')
+        self._run('npm', 'install')
         # run assets build task
-        subprocess.run(args=['npm', 'run', 'build'], cwd=r'./assets')
+        self._run('npm', 'run', 'build')
+
+    def _run(self, *args):
+        return subprocess.run(args=args, cwd=r'./assets')
 
     def initialize_options(self): ...
 
@@ -34,8 +38,7 @@ class Npm(Command):
 
 prod_requires = [
     'aiohttp',
-    'aiohttp_jinja2',
-    'ujson'
+    'aiohttp_jinja2'
 ]
 
 dev_requires = prod_requires + [
@@ -52,12 +55,14 @@ setup(
         'dev': dev_requires
     },
     packages=['aiohttp_debugger'],
-    package_data=dict(aiohttp_debugger=[
-        'static/*',
-        'static/bundle/*',
-        'static/bundle/font-awesome/css/*',
-        'static/bundle/font-awesome/fonts/*',
-    ]),
+    package_data={
+        'aiohttp_debugger': [
+            'static/*',
+            'static/bundle/*',
+            'static/bundle/font-awesome/css/*',
+            'static/bundle/font-awesome/webfonts/*',
+        ]
+    },
     include_package_data=True,
-    cmdclass=dict(static=Npm, test=Test)
+    cmdclass={'static': Npm, 'test': Test}
 )

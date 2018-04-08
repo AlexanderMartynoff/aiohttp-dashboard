@@ -1,13 +1,14 @@
 <template type="text/html">
     <b-modal ref="settingsWindow" title="Settings" size="md" hide-footer>
         <span class="setting-window-item">
-            <b-form-fieldset
-                label="websocket page update delay"
-                state="default"
-                :horizontal="true"
-                :label-size="9">
-                <b-form-input v-model="wsPageUpdateDelay"></b-form-input>
-            </b-form-fieldset>
+            <b-form-group
+                horizontal
+                :label-cols="6"
+                breakpoint="md"
+                label="Websocket page update delay"
+                label-for="ws_page_update_delay">
+                <b-form-input id="ws_page_update_delay" v-model="wsPageUpdateDelay"></b-form-input>
+            </b-form-group>
         </span>
 
         <hr/>
@@ -24,7 +25,7 @@
 
 <script type="text/javascript">
     import {WebSocketService} from '@/websocket';
-    import {eventBus} from '@/utils';
+    import {ps} from '@/utils';
 
     export default {
         data: () => ({
@@ -44,7 +45,7 @@
         },
         methods: {
             emitSettingsChange: function() {
-                return eventBus.$emit('settings:change', {
+                return ps.$emit('settings:change', {
                     showWsLastPage: this.showWsLastPage,
                     wsPageUpdateDelay: this.wsPageUpdateDelay
                 });
@@ -56,8 +57,8 @@
                 return this.emitSettingsChange();
             }
         },
-        created: function(){
-            eventBus.$on('settings:fire', event => this.emitSettingsChange())
+        created: function() {
+            ps.$on('settings:fire', event => this.emitSettingsChange())
         }
     }
 </script>

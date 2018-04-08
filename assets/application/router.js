@@ -6,7 +6,7 @@ import NotFound from '@/component/special/404';
 import InspectMaster from '@/component/inspect/master';
 
 
-const router = new VueRouter({
+export const router = new VueRouter({
     routes: [
         {path: "/", component: IndexGrid},
         {path: "/request/detail/:id", component: RequestDetail, props: true},
@@ -14,5 +14,3 @@ const router = new VueRouter({
         {path: "*", component: NotFound}
     ]
 });
-
-export {router};

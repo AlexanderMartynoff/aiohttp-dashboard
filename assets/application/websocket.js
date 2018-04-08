@@ -38,6 +38,7 @@ class WebSocketService {
         
         this._ws.onmessage = rawMsg => {
             let msg;
+            
             try {
                 msg = JSON.parse(rawMsg.data);
             } catch (error) {
@@ -97,13 +98,16 @@ class WebSocketService {
     };
 
     _prepareMsg(reqMsg) {
-        reqMsg.uid = this._getUid();
-        return reqMsg;
+        return {
+            ...reqMsg,
+            uid: this._getUid()
+        };
     }
     
     send(reqMsgOrEndpoint, callback, persistent=false) {
-        const preparedReqMsg = this._prepareMsg(typeof reqMsgOrEndpoint === 'string' ?
-            {endpoint: reqMsgOrEndpoint} : reqMsgOrEndpoint);
+        const preparedReqMsg = this._prepareMsg(typeof reqMsgOrEndpoint === 'string' ? {
+            endpoint: reqMsgOrEndpoint
+        } : reqMsgOrEndpoint);
 
         this._do(() => {
             this._responseHandlres[preparedReqMsg.uid] = {callback, persistent};
