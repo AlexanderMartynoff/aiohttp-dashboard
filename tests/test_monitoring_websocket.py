@@ -72,5 +72,5 @@ async def test_websocket_request_status(aiohttp_client, full_application):
 
     http_response, *_ = full_application[DEBUGGER_KEY].state.requests.values()
 
-    # don't now how extract status code from ClientWebSocketResponse
+    # I don't know how extract status code from ClientWebSocketResponse
     assert http_response['status'] == 101
