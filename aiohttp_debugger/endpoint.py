@@ -164,7 +164,7 @@ class Sender:
     def _handler(self, msg):
         self._send(self._debugger_api.requests(), msg)
     
-    # not for use from out
+    # not for use from public
     del handler
     
     # NOTE: refact this
@@ -211,7 +211,7 @@ class Sender:
         return self._socket.id
 
     class _EndpointState:
-        _delay = 3
+        _delay = 5
         _handler = None
         _last_send_time = None
         _handler_wait_for_send = None
@@ -252,7 +252,9 @@ class Sender:
         def isfree(self):
             passed = self.time - self._last_send_time
             isfree = passed >= self._delay
+
             logger.info(f"passed time {passed}, isfree: {'Yes' if isfree else 'No'}")
+
             return isfree
 
         def close(self):

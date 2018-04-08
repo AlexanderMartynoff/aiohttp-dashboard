@@ -27,7 +27,7 @@ async def websocket(request):
     proxy = WsMsgDispatcherProxy(socket, debugger, request)
 
     try:
-        async for msg in response:
+        async for msg in socket:
             proxy.recive(msg)
     except Exception:
         logger.exception('An error occurred during execution')
