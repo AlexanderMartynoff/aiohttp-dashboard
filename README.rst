@@ -1,5 +1,5 @@
-Dashboard panel for `aiohttp` applications
-==========================================
+Dashboard panel for ``aiohttp`` applications
+============================================
 
 
 Features
@@ -8,3 +8,8 @@ Features
 - Fully reactive interface
 - Viewing HTTP activity 
 - Viewing WebSocket activity 
+
+
+Install
+*******
+
