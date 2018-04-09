@@ -181,8 +181,7 @@ class Sender:
         endpoint.handle_soon_with_handler(msg, out, self._send)
 
     def send(self, msg):
-        """ :inmsg: incoming websocket message """
-        
+
         logger.info(f"try to send data for {msg.endpoint}")
 
         endpoint = self._endpoints[msg.endpoint]

@@ -15,8 +15,7 @@ except ImportError:
 class Test(TestCommand):
     
     def run_tests(self):
-        if pytest.main(['tests', '-v', '-s']) > 0:
-            sys.exit(0)
+        raise SystemExit(subprocess.call([sys.executable, '-m', 'pytest', 'tests', '-v', '-s', '--cov=aiohttp_debugger']))
 
 
 class Npm(Command):
@@ -44,6 +43,7 @@ prod_requires = [
 dev_requires = prod_requires + [
     'pytest-aiohttp',
     'pytest',
+    'pytest-cov',
     'coverage'
 ]
 
@@ -64,5 +64,8 @@ setup(
         ]
     },
     include_package_data=True,
-    cmdclass={'static': Npm, 'test': Test}
+    cmdclass={
+        'static': Npm,
+        'test': Test
+    }
 )

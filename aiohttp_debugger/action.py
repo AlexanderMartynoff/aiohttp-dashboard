@@ -2,6 +2,7 @@ from aiohttp import hdrs
 from aiohttp_jinja2 import template
 from aiohttp.web import Response, WebSocketResponse
 from asyncio import ensure_future, sleep
+from functools import wraps
 from uuid import uuid4
 import os
 import logging
