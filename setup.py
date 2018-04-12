@@ -12,6 +12,7 @@ try:
 except ImportError:
     pass
 
+
 class Test(TestCommand):
     
     def run_tests(self):
@@ -30,9 +31,11 @@ class Npm(Command):
     def _run(self, *args):
         return subprocess.run(args=args, cwd=r'./assets')
 
-    def initialize_options(self): ...
+    def initialize_options(self):
+        pass
 
-    def finalize_options(self): ...
+    def finalize_options(self):
+        pass
 
 
 prod_requires = [

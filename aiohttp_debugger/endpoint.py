@@ -37,8 +37,8 @@ class WsMsgDispatcherProxy:
         self._sender = sender = Sender(socket, debugger_api)
         self._dispatcher = WsMsgDispatcher(sender, debugger_api, debugger)
 
-    def recive(self, msg):
-        self._sender.send_soon(msg, self._dispatcher.recive(msg))
+    def recive(self, message):
+        self._sender.send_soon(message, self._dispatcher.recive(message))
 
     def close(self):
         self._dispatcher.close()
@@ -59,7 +59,7 @@ class WsMsgDispatcher:
     @casemethod
     def recive(msg):
         return msg.endpoint
-    
+
     @recive.case('sibsribe.request')
     def recive(self, msg):
         rid = msg.body.id >> int
