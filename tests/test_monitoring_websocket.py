@@ -42,7 +42,6 @@ async def test_websocket_messages_count_outbound(aiohttp_client, full_applicatio
 
 
 async def test_websocket_messages_strucutre(aiohttp_client, full_application):
-    strucuture = 'id', 'msg', 'time', 'direction'
     client = await aiohttp_client(full_application)
     websocket = await client.ws_connect('/test-websocket')
 
@@ -57,7 +56,7 @@ async def test_websocket_messages_strucutre(aiohttp_client, full_application):
     websocket_message = next(_ for _ in debugger.api.messages(http_response['id'])
                              if json.loads(_['msg']) == message)
 
-    for key in strucuture:
+    for key in 'id', 'msg', 'time', 'direction':
         assert key in websocket_message.keys()
 
 

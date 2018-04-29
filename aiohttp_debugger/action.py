@@ -8,7 +8,7 @@ import os
 import logging
 
 from .endpoint import WsMsgDispatcherProxy
-from .tool import WsResponseHelper
+from .helper import WsResponseHelper
 from .debugger import DEBUGGER_KEY, JINJA_KEY
 
 
@@ -28,8 +28,8 @@ async def websocket(request):
     proxy = WsMsgDispatcherProxy(socket, debugger, request)
 
     try:
-        async for msg in socket:
-            proxy.recive(msg)
+        async for message in socket:
+            proxy.recive(message)
     except Exception:
         logger.exception('An error occurred during execution')
     finally:

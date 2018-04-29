@@ -1,12 +1,3 @@
-"""
-Need refact:
-    1 - Maybe remove casemethod?
-    2 - Remove DebuggerApi.
-    3 - Replace msg.body.id >> int with message schema.
-
-Cover tests after refact!
-"""
-
 from operator import itemgetter
 from asyncio import sleep, ensure_future, get_event_loop
 from time import time
@@ -20,16 +11,14 @@ import re
 import inspect
 
 from .event import WsMsgIncoming, WsMsgOutbound, HttpRequest, HttpResponse, MsgDirection
-from .tool import casemethod
+from .router import Router, route
 
 
-logger = logging.getLogger("aiohttp_debugger.endpoint")
+logger = logging.getLogger(__name__)
 
 
 class WsMsgDispatcherProxy:
-    """ Passing websocket meessage
-        into target method for processing.
-    """
+    """ Passing websocket meessage into target method for processing """
 
     def __init__(self, socket, debugger, request):
         debugger_api = DebuggerApi(debugger, request)
@@ -38,105 +27,99 @@ class WsMsgDispatcherProxy:
         self._dispatcher = WsMsgDispatcher(sender, debugger_api, debugger)
 
     def recive(self, message):
-        self._sender.send_soon(message, self._dispatcher.recive(message))
+        self._sender.send_soon(message, self._dispatcher.router(message.endpoint, message))
 
     def close(self):
         self._dispatcher.close()
         self._sender.close()
 
 
-class WsMsgDispatcher:
+class WsMsgDispatcher(Router):
     """ Endpoints for websocket message processing.
-        For more info see `.helper.casemethod`.
-        For more info about `rid = inmsg.body.id @ int` see `helper.WsResponseHelper`
+        For more info about `rid = inmsg.body.id @ int` see `helper.WsResponseHelper`.
     """
 
     def __init__(self, sender, debugger_api, debugger):
         self._debugger = debugger
         self._sender = sender
         self._debugger_api = debugger_api
-    
-    @casemethod
-    def recive(msg):
-        return msg.endpoint
 
-    @recive.case('sibsribe.request')
-    def recive(self, msg):
-        rid = msg.body.id >> int
+    @route('sibsribe.request')
+    def sibsribe_request(self, message):
+        rid = message.body.id >> int
 
         def handler(event):
             if event.rid == rid:
-                self._sender.send(msg)
+                self._sender.send(message)
 
         self._debugger.on([
             HttpRequest,
             HttpResponse
-        ], handler, group=self._sender.id, hid=msg.uid)
+        ], handler, group=self._sender.id, hid=message.uid)
 
         return self._debugger_api.request(rid)
 
-    @recive.case('sibsribe.request.messages')
-    def recive(self, msg):
-        rid = msg.body.id >> int
-        page = msg.body.page >> int
-        perpage = msg.body.perpage >> int
+    @route('sibsribe.request.messages')
+    def sibsribe_request_messages(self, message):
+        rid = message.body.id >> int
+        page = message.body.page >> int
+        perpage = message.body.perpage >> int
 
-        def handler(event: (WsMsgIncoming, WsMsgOutbound)):
+        def handler(event):
             if event.rid == rid:
-                self._sender.send(msg)
+                self._sender.send(message)
 
         self._debugger.on([
             WsMsgIncoming,
             WsMsgOutbound
-        ], handler, group=self._sender.id, hid=msg.uid)
+        ], handler, group=self._sender.id, hid=message.uid)
 
         return self._debugger_api.messages(rid, page, perpage)
 
-    @recive.case('sibsribe.requests')
-    def recive(self, msg):
+    @route('sibsribe.requests')
+    def sibsribe_requests(self, message):
 
         def handler(event):
-            self._sender.send(msg)
+            self._sender.send(message)
 
         self._debugger.on([
             HttpRequest,
             HttpResponse
-        ], handler, group=self._sender.id, hid=msg.uid)
+        ], handler, group=self._sender.id, hid=message.uid)
 
         return self._debugger_api.requests()
 
-    @recive.case('unsibscribe')
-    def recive(self, msg):
-        """ with this `hid` probably exist multiple handlers """
+    @route('unsibscribe')
+    def unsibscribe(self, message):
+        """ With this `hid` probably exist multiple handlers """
 
-        self._debugger.off(hid=msg.body.id.raw)
+        self._debugger.off(hid=message.body.id >> str)
 
-    @recive.case('fetch.info')
-    def recive(self, msg):
+    @route('fetch.info')
+    def fetch_info(self, _message):
         return self._debugger_api.platform_info()
 
-    @recive.case('fetch.routes')
-    def recive(self, msg):
+    @route('fetch.routes')
+    def fetch_routes(self, _message):
         return self._debugger_api.routes()
 
-    @recive.default
-    def recive(self, msg):
+    @route.default
+    def default(self, _message):
         return {'status': 'endpoint not found'}
 
-    @recive.catch(Exception)
-    def recive(self, exception, msg):
-        self._sender.send_soon(msg, {
+    @route.error(Exception)
+    def exception(self, exception, message):
+        self._sender.send_soon(message, {
             'status': 'error',
             'cause': str(exception)
         })
 
     def close(self):
-        logger.info(f"before remove debugger handlers - {self._debugger.subscribers_len}")
         self._debugger.off(group=self._sender.id)
         logger.info(f"after remove debugger handlers - {self._debugger.subscribers_len}")
 
 
-class Sender:
+class Sender(Router):
     """ Use for deferred sending websocket message """
 
     def __init__(self, socket, debugger_api):
@@ -144,66 +127,54 @@ class Sender:
         self._debugger_api = debugger_api
         self._endpoints = defaultdict(lambda: None)
 
-    @casemethod
-    def handler(msg):
-        """ For handle debugger state change """
-        return msg.endpoint
+    @route('sibsribe.request')
+    def _sibsribe_request(self, message):
+        self._send(self._debugger_api.request(message.body.id >> int), message)
 
-    @handler.case('sibsribe.request')
-    def _handler(self, msg):
-        self._send(self._debugger_api.request(msg.body.id >> int), msg)
+    @route('sibsribe.request.messages')
+    def _sibsribe_request_messages(self, message):
+        rid = message.body.id >> int
+        page = message.body.page >> int
+        perpage = message.body.perpage >> int
+        self._send(self._debugger_api.messages(rid, page, perpage), message)
 
-    @handler.case('sibsribe.request.messages')
-    def _handler(self, msg):
-        rid = msg.body.id >> int
-        page = msg.body.page >> int
-        perpage = msg.body.perpage >> int
-        self._send(self._debugger_api.messages(rid, page, perpage), msg)
-
-    @handler.case('sibsribe.requests')
-    def _handler(self, msg):
-        self._send(self._debugger_api.requests(), msg)
+    @route('sibsribe.requests')
+    def _sibsribe_requests(self, message):
+        self._send(self._debugger_api.requests(), message)
     
-    # not for use from public
-    del handler
-    
-    # NOTE: refact this
-    @property
-    def _endpoint_state(self):
-        return self._EndpointState(handler=self._handler)
-
-    def send_soon(self, msg, out):
-        endpoint = self._endpoints[msg.endpoint]
+    # NOTE: refact this!
+    def send_soon(self, message, out):
+        endpoint = self._endpoints[message.endpoint]
 
         if endpoint is None:
-            endpoint = self._endpoints[msg.endpoint] = self._endpoint_state
+            endpoint = self._endpoints[message.endpoint] = self._EndpointState(handler=self.router)
 
-        endpoint.handle_soon_with_handler(msg, out, self._send)
+        endpoint.handle_soon(message, out, self._send)
 
-    def send(self, msg):
+    def send(self, message):
 
-        logger.info(f"try to send data for {msg.endpoint}")
+        logger.info(f"try to send data for {message.endpoint}")
 
-        endpoint = self._endpoints[msg.endpoint]
+        endpoint = self._endpoints[message.endpoint]
 
         if endpoint is None:
-            endpoint = self._endpoints[msg.endpoint] = self._endpoint_state
-            endpoint.handle_soon(msg)
+            endpoint = self._endpoints[message.endpoint] = self._EndpointState(handler=self.router)
+            endpoint.handle_soon(message)
         elif endpoint.isfree:
-            endpoint.handle_soon(msg)
+            endpoint.handle_soon(message)
         else:
-            endpoint.handle_later(msg)
+            endpoint.handle_later(message)
 
     def close(self):
         for endpoint_state in self._endpoints.values():
             endpoint_state.close()
 
-    def _send(self, out, msg):
-        logger.info(f'send websocket to chanel {msg.endpoint}')
-        return ensure_future(self._socket.send_json(self._prepare_ws_response(out, msg)))
+    def _send(self, out, message):
+        logger.info(f'send websocket to chanel {message.endpoint}')
+        return ensure_future(self._socket.send_json(self._prepare_ws_response(out, message)))
 
-    def _prepare_ws_response(self, out, msg):
-        return {'data': out, 'uid': msg.uid, 'endpoint': msg.endpoint}
+    def _prepare_ws_response(self, out, message):
+        return {'data': out, 'uid': message.uid, 'endpoint': message.endpoint}
 
     @property
     def id(self):
@@ -223,28 +194,28 @@ class Sender:
         def time(self):
             return get_event_loop().time()
 
-        def _handler_caller(self, msg):
-            self._handler(msg)
+        def _handler_caller(self, message):
+            self._handler(message.endpoint, message)
             self._handler_wait_for_send = None
             self._last_send_time = self.time
 
-        def handle_soon_with_handler(self, msg, out, handler):
-            handler(out, msg)
+        def handle_soon(self, message, out=None, handler=None):
+            if handler is not None:
+                return handler(out, message)
 
-        def handle_soon(self, msg):
-            self._handler_caller(msg)
+            return self._handler_caller(message)
 
-        def handle_later(self, msg):
+        def handle_later(self, message):
             if self._handler_wait_for_send:
                 self._handler_wait_for_send.cancel()
                 logger.info(f"cancel deferred task {id(self._handler_wait_for_send)}")
 
-            self._handler_wait_for_send = self._do_send_later(msg)
+            self._handler_wait_for_send = self._do_send_later(message)
 
-        def _do_send_later(self, msg):
+        def _do_send_later(self, message):
             when = self._last_send_time + self._delay
-            task = get_event_loop().call_at(when, lambda: self._handler_caller(msg))
-            logger.info(f"put deferred task {id(task)} call at {when} seconds to {msg.endpoint}")
+            task = get_event_loop().call_at(when, lambda: self._handler_caller(message))
+            logger.info(f"put deferred task {id(task)} call at {when} seconds to {message.endpoint}")
             return task
 
         @property
@@ -295,7 +266,6 @@ class DebuggerApi:
             })
 
         return routes
-
 
     def _extract_route_info(self, route):
         return {str(key): str(value) for key, value in route.get_info().items()}

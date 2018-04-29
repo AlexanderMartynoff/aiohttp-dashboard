@@ -5,7 +5,7 @@ Dashboard panel for ``aiohttp`` applications
 Features
 ********
 
-- Fully reactive interface
+- Fully reactive user interface
 - Viewing HTTP activity 
 - Viewing WebSocket activity 
 

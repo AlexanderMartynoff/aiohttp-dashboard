@@ -1,25 +1,25 @@
 <template>
     <div class="row ad-content">
         <div class="col-5">
-            <b-card header="Request info" class="flex-card" no-body> 
+            <b-card header="Request info" class="flex-card firefox-fix"> 
                 <ul class="list-group flex-auto overflow-auto" v-if="record">
-                    <li class="list-group-item list-group-item-warning block border-top-0 border-left-0 border-right-0" v-if="record.status || record.reason">
+                    <li class="list-group-item list-group-item-warning block" v-if="record.status || record.reason">
                         <div><span>{{record.status}}</span></div>
                         <div><small class="text-muted">{{record.reason}}</small></div>
                     </li>
-                    <li class="list-group-item border-left-0 border-right-0">
+                    <li class="list-group-item">
                         <span class="key-name">Client IP:</span> <code>{{record.ip}}</code>
                     </li>
-                    <li class="list-group-item border-left-0 border-right-0">
+                    <li class="list-group-item">
                         <span class="key-name">Path:</span> <code>{{record.path}}</code> 
                     </li>
-                    <li class="list-group-item border-left-0 border-right-0">
+                    <li class="list-group-item">
                         <span class="key-name">Begin time:</span> <code>{{record.begintime}}</code> 
                     </li>
-                    <li class="list-group-item border-left-0 border-right-0">
+                    <li class="list-group-item">
                         <span class="key-name">Done time:</span> <code>{{record.donetime}}</code>
                     </li>
-                    <li class="list-group-item border-bottom-0 border-left-0 border-right-0">
+                    <li class="list-group-item">
                         <span class="key-name">Scheme:</span> <code>{{record.scheme}}</code>
                     </li>
                 </ul>
@@ -27,8 +27,8 @@
             </b-card>
         </div>
         <div class="col-7">
-            <b-card no-block class="flex-card" show-footer no-body>
-                <b-tabs small card no-fade class="flex-parent-column flex-auto" content-class="flex-auto overflow-auto">
+            <b-card no-block class="flex-card firefox-fix" show-footer no-body>
+                <b-tabs small pills card no-fade class="flex-parent-column flex-auto" content-class="flex-auto overflow-auto">
                     <b-tab title="Request headers">
                         <ul class="list-group flex-auto overflow-auto" v-if="record">
                             <li class="list-group-item" v-for="value, key in record.reqheaders">
@@ -44,6 +44,12 @@
                             </li>
                         </ul>
                         <alert v-else message="Records not found"></alert>
+                    </b-tab>
+                    <b-tab title="Filter test">
+                        <div class="ad-grid">
+                            <div class="ad-grid__line"></div>
+                            <div class="ad-grid__body"></div>
+                        </div>
                     </b-tab>
                     <b-tab title="WebSocket messages" v-if="!isNotWs">
                         <ul class="list-group" v-if="record">
@@ -143,9 +149,15 @@
             }
         },
         methods: {
+
+            securityButtonVisible() {
+                return this.$hasAccess("document");
+            },
+
             onRequestRecive: function(data) {
                 this.record = data.item;
             },
+
             onWsMessagesRecive: function(data) {
                 this.goToNextWsPage = this.isWsOnLastPage && this.showWsLastPageSetting;
                 this.wsCollection = data.collection;
@@ -153,15 +165,19 @@
                 this.wsIncomingTotal = data.incoming;
                 this.wsOutboundTotal = data.outbound;
             },
+
             showWsDetail: function(index) {
                 this.$refs.wsDetail[index].show();
             },
+
             onDetailShown: function() {
                 this.wsUnsubscribe();
             },
+
             onDetailHidden: function() {
                 this.wsSubscribe();
             },
+
             format: function (code) {
                 try {
                     return JSON.stringify(JSON.parse(code), null, 2);
@@ -169,6 +185,7 @@
                     return code;
                 }
             },
+
             requestSubscribe: function() {
                 return this.httpSubscription = this.subscribe(
                     "sibsribe.request",
@@ -176,6 +193,7 @@
                     {"id": parseInt(this.id)}
                 );
             },
+
             wsSubscribe: function() {
                 return this.wsSubscription = this.subscribe(
                     "sibsribe.request.messages",
@@ -187,13 +205,16 @@
                     }
                 );
             },
+
             wsUnsubscribe: function(onComplete) {
                 this.unsibscribe(this.wsSubscription, onComplete);
             },
+
             httpUnsubscribe: function(onComplete) {
                 this.unsibscribe(this.httpSubscription, onComplete);
             }
         },
+
         created: function() {
             this.wsSubscribe();
             this.requestSubscribe();
@@ -202,6 +223,7 @@
             });
             ps.$emit('settings:fire')
         },
+        
         destroyed: function() {
             this.wsUnsubscribe();
             this.httpUnsubscribe();

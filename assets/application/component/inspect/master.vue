@@ -2,7 +2,7 @@
 
         <div class="row ad-content">
             <div class="col">
-                <b-card class="flex-card grey-card-bg" show-footer show-header>
+                <b-card class="flex-card grey-card-bg firefox-fix" show-footer show-header>
                     <b-table v-if="items.length"
                              @row-clicked="(item, index) => details(item, index)"
                              :items="items"

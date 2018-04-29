@@ -10,8 +10,8 @@ import platform
 import aiohttp
 from functools import partial
 
-from .tool import Bus, LimitedDict
-from .event import (HttpRequest, HttpResponse,
+from .helper import LimitedDict
+from .event import (Bus, HttpRequest, HttpResponse,
                     WsMsgIncoming, WsMsgOutbound, MsgDirection)
 
 
@@ -25,9 +25,6 @@ JINJA_KEY = '{}.jinja2'.format(__name__)
 class Debugger(Bus):
     """ Facade API """
 
-    # NOTE: remove application from debugger
-    # NOTE: application in debugger need just for return route list
-    # NOTE: move this functional in endpoint.py
     def __init__(self):
         Bus.__init__(self)
 
@@ -40,7 +37,7 @@ class Debugger(Bus):
 
     def register_response(self, request, response):
         requst_id = id(request)
-        
+
         if requst_id in self.state.requests.keys():
             self.state.requests[requst_id].update({
                 'donetime': self.state.now,
@@ -53,13 +50,13 @@ class Debugger(Bus):
 
         self.fire(HttpResponse(id(request)))
 
-    def register_websocket_message(self, direction, request, msg, msg_mapper, event):
-        requst_id, message_id = id(request), id(msg)
+    def register_websocket_message(self, direction, request, message, event):
+        requst_id, message_id = id(request), id(message)
         event.rid = requst_id
 
         self.state.put_ws_message(requst_id, {
             'id': message_id,
-            'msg': msg_mapper(msg),
+            'msg': message,
             'time': self.state.now,
             'direction': direction.name
         })
@@ -91,8 +88,8 @@ class Api:
     def requests(self, *args, **kwargs):
         return list(self._state.requests.values())
 
-    def request(self, rid):
-        return next((request for request in self.requests() if request['id'] == rid), None)
+    def request(self, id):
+        return self._state.requests.get(id, None)
 
     def messages(self, rid, page=1, perpage=-1):
 
@@ -119,10 +116,10 @@ class Api:
 
 
 class State:
-    def __init__(self, maxlen=50_000):
-        self._maxlen = maxlen
-        self._requests = LimitedDict(maxlen=self._maxlen)
-        self._messages = LimitedDict(maxlen=self._maxlen)
+    def __init__(self, limit=50_000):
+        self._limit = limit
+        self._requests = LimitedDict(limit=self._limit)
+        self._messages = LimitedDict(limit=self._limit)
         self._incoming_msg_counter = defaultdict(int)
         self._outbound_msg_counter = defaultdict(int)
 
@@ -147,11 +144,11 @@ class State:
         """
 
         if rid not in self._messages:
-            self._messages[rid] = deque(maxlen=self._maxlen)
+            self._messages[rid] = deque(maxlen=self._limit)
 
         self._messages[rid] += message,
 
-        if self._outbound_msg_counter[rid] + self._incoming_msg_counter[rid] >= self._maxlen:
+        if self._outbound_msg_counter[rid] + self._incoming_msg_counter[rid] >= self._limit:
             return
 
         if message['direction'] == MsgDirection.OUTBOUND.name:

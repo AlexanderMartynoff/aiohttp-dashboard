@@ -4,8 +4,13 @@ const ps = new Vue({});
 const port = getPort();
 
 
+const portsMap = {
+    'http:': 80,
+    'https:': 443
+};
+
 function getPort() {
-    return window.location.port ? window.location.port : window.location.protocol == "http:" ? 80 : 443
+    return window.location.port ? window.location.port : portsMap[window.location.protocol]
 }
 
 export {port, ps}

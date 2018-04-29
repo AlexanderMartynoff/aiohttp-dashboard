@@ -14,10 +14,12 @@ import DropdpownPane from '@/component/widget/dropdpown-pane';
 import InspectMaster from '@/component/inspect/master';
 import Alert from '@/component/widget/alert';
 import Layout from '@/component/layout/layout';
+import Predicat from '@/component/predicat/index';
 
 
 import "@/style/layout.styl"
 import "@/style/global.styl"
+import "@/style/firefox.styl"
 
 
 Vue.use(VueRouter);
@@ -32,7 +34,8 @@ const components = {
     Alert,
     InspectMaster,
     Layout,
-    SettingsWindow
+    SettingsWindow,
+    Predicat
 }
 
 for (const key in components) Vue.component(key, components[key]);

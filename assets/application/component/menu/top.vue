@@ -6,7 +6,7 @@
                     <i class="fa fa-bars" aria-hidden="true"></i>
                 </a>
                 <div slot="content">
-                    <b-card title="<code>aiohttp_dashboard</code>" class="aiohttp_dashbord_menu_dropdown">
+                    <b-card title="<code>[aiohttp_dashboard]</code>" class="aiohttp_dashbord_menu_dropdown">
                         <b-list-group>
                             <router-link to="/" class="list-group-item list-group-item-action">Requests</router-link>
                             <router-link to="/inspect" class="list-group-item list-group-item-action">Inspect</router-link>
