@@ -36,7 +36,6 @@ class WsMsgDispatcherProxy:
 
 class WsMsgDispatcher(Router):
     """ Endpoints for websocket message processing.
-        For more info about `rid = inmsg.body.id @ int` see `helper.WsResponseHelper`.
     """
 
     def __init__(self, sender, debugger_api, debugger):
@@ -116,7 +115,7 @@ class WsMsgDispatcher(Router):
 
     def close(self):
         self._debugger.off(group=self._sender.id)
-        logger.info(f"after remove debugger handlers - {self._debugger.subscribers_len}")
+        logger.info(f"after remove debugger handlers - {self._debugger.size}")
 
 
 class Sender(Router):
@@ -136,6 +135,7 @@ class Sender(Router):
         rid = message.body.id >> int
         page = message.body.page >> int
         perpage = message.body.perpage >> int
+        
         self._send(self._debugger_api.messages(rid, page, perpage), message)
 
     @route('sibsribe.requests')
@@ -160,7 +160,7 @@ class Sender(Router):
         if endpoint is None:
             endpoint = self._endpoints[message.endpoint] = self._EndpointState(handler=self.router)
             endpoint.handle_soon(message)
-        elif endpoint.isfree:
+        elif endpoint.is_free():
             endpoint.handle_soon(message)
         else:
             endpoint.handle_later(message)
@@ -215,11 +215,14 @@ class Sender(Router):
         def _do_send_later(self, message):
             when = self._last_send_time + self._delay
             task = get_event_loop().call_at(when, lambda: self._handler_caller(message))
+            
             logger.info(f"put deferred task {id(task)} call at {when} seconds to {message.endpoint}")
+            
             return task
 
-        @property
-        def isfree(self):
+        # NOTE: remove logging from there
+        # and return tuple(passed, isfree)
+        def is_free(self):
             passed = self.time - self._last_send_time
             isfree = passed >= self._delay
 

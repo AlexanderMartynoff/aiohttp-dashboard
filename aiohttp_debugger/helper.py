@@ -26,7 +26,6 @@ class WsResponseHelper(WebSocketResponse):
         return self._Msg(await super().__anext__())
 
     @property
-    @lru_cache()
     def id(self):
         return id(self)
 

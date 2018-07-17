@@ -73,7 +73,7 @@ def _ws_resposne_do_monkey_patching(request, response):
     # NOTE: не сохранять оригинальные версии как поля response
     # просто за счет замыкания можно сделать
     response.__aiohttp_debugger_ping__ = response.ping
-    response.pong = ping_overload
+    response.ping = ping_overload
 
     async def pong_overload(message):
         _on_websocket_msg(INCOMING, request, message, WsMsgOutbound())

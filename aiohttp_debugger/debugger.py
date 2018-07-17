@@ -23,7 +23,6 @@ JINJA_KEY = '{}.jinja2'.format(__name__)
 
 
 class Debugger(Bus):
-    """ Facade API """
 
     def __init__(self):
         Bus.__init__(self)

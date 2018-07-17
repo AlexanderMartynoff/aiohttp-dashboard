@@ -78,7 +78,7 @@ class WebSocketService {
     _tryReconnect(delay) {
         this._resetState();
         setTimeout(() => this._restoreSubscribe(), delay);
-    };
+    }
 
     _do(success, fail=() => {}) {
         switch(this._getState()) {
@@ -90,12 +90,12 @@ class WebSocketService {
 
     _sendToWs(json) {
         this._ws.send(JSON.stringify(json));
-    };
+    }
 
     _getUid(prefix=(new Date()).getTime()) {
         const makeUid = length => Math.floor((1 + Math.random()) * Math.pow(10, length)).toString(16);
         return [prefix].concat([10].map(makeUid)).join('.');
-    };
+    }
 
     _prepareMsg(reqMsg) {
         return {

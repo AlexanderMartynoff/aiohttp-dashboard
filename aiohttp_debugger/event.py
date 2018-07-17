@@ -7,17 +7,17 @@ class Bus:
     def __init__(self):
         self._handlers = defaultdict(list)
 
-    def on(self, type, handler, *, group=uuid4(), hid=uuid4()):
-        if not isinstance(type, Sequence):
-            type = [type]
+    def on(self, event, handler, *, group=uuid4(), hid=uuid4()):
+        if not isinstance(event, Sequence):
+            event = [event]
 
-        for _ in type:
+        for _ in event:
             self._on(_, handler, group=group, hid=hid)
 
         return self
 
-    def _on(self, type, handler, *, group, hid):
-        self._handlers[group] += (type, handler, hid),
+    def _on(self, event, handler, *, group, hid):
+        self._handlers[group] += (event, handler, hid),
 
     def off(self, *, group=None, hid=None):
         if group is None and hid is None:
@@ -40,10 +40,6 @@ class Bus:
             for type, handler, hid in handlers:
                 if isinstance(event, type):
                     handler(event)
-
-    @property
-    def subscribers_len(self):
-        return self.size
 
     @property
     def size(self):

@@ -19,16 +19,14 @@ Used for websocket message dispatching
 
 
 from functools import update_wrapper
+from inspect import iscoroutinefunction, iscoroutine
+from asyncio import ensure_future, Future
 from .helper import to_list
 
 
 class Router:
     
     def router(self, name, *args, **kwargs):
-        """
-        Wrapper for self._routes for catch and handle errors
-        """
-        
         try:
             return self._router(name, *args, **kwargs)
         except RouteNotFoundError:
@@ -42,7 +40,7 @@ class Router:
                 return route(self, *args, **kwargs)
 
         raise RouteNotFoundError
-
+        
     @property
     def routes(self):
         """
@@ -63,11 +61,28 @@ class Router:
 
     def error_route(self, error):
         for route in self.routes:
-            if isinstance(route, _ErrorRoute) and type(error) in route._types:
+            if isinstance(route, _ErrorRoute) and type(error) in route._error_types:
                 return route(self, error)
 
         raise error
 
+
+class AsyncRouter(Router):
+    async def router(self, name, *args, **kwargs):
+        
+        try:
+            return await self._ensure_coroutine(self._router(name, *args, **kwargs))
+        except RouteNotFoundError:
+            return await self._ensure_coroutine(self.default_route(*args, **kwargs))
+        except Exception as error:
+            return await self._ensure_coroutine(self.error_route(error))
+
+    def _ensure_coroutine(self, coroutine):
+        
+        async def ensure_coroutine(_):
+            return _
+
+        return coroutine if iscoroutine(coroutine) else ensure_coroutine(coroutine)
 
 def route(name):
     def decorator(handler):
@@ -88,6 +103,7 @@ def error(*types):
 # shortcuts
 route.default = default
 route.error = error
+Router.Async = AsyncRouter
 
 
 class _Route:
@@ -108,11 +124,11 @@ class _DefaultRoute(_Route):
 
 
 class _ErrorRoute(_Route):
-    _types = None
+    _error_types = None
 
-    def __init__(self, types, handler):
+    def __init__(self, error_types, handler):
         super().__init__(None, handler)
-        self._types = types
+        self._error_types = error_types
 
 
 class RouterError(Exception):

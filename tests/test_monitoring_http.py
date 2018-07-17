@@ -46,7 +46,7 @@ async def test_statistics_requests_status(aiohttp_client, full_application):
     assert response_404.status == statistics_404['status']
 
 
-# NOTE: do more complex equals case in separated function
+# NOTE: do more complex equals case in separate function
 async def test_statistics_requests_simple_equals(aiohttp_client, full_application):
     client = await aiohttp_client(full_application)
     

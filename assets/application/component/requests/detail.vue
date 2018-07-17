@@ -45,12 +45,6 @@
                         </ul>
                         <alert v-else message="Records not found"></alert>
                     </b-tab>
-                    <b-tab title="Filter test">
-                        <div class="ad-grid">
-                            <div class="ad-grid__line"></div>
-                            <div class="ad-grid__body"></div>
-                        </div>
-                    </b-tab>
                     <b-tab title="WebSocket messages" v-if="!isNotWs">
                         <ul class="list-group" v-if="record">
                             <li class="list-group-item aiodebugger__ws-list-group-item" v-for="(key, index) in wsCollection">

@@ -2,11 +2,13 @@ import pytest
 import aiohttp.web
 from aiohttp_debugger.debugger import DEBUGGER_KEY
 from aiohttp_debugger.router import Router, route, RouteNotFoundError
+from asyncio import sleep
 
 
 def test_routing():
 
     class Controller(Router):
+        
         @route('/hello-world')
         def hello_world(self):
             return 'Hello, World!'
@@ -14,7 +16,7 @@ def test_routing():
         @route('/self')
         def self(self):
             return self
-            
+
     controller = Controller()
 
     assert controller.router('/self') == controller
@@ -60,7 +62,7 @@ def test_default_with_arguments():
 
     controller = Controller()
 
-    assert controller.router('/404', 'default') == 'default'
+    assert controller.router('/404', 'default') is 'default'
 
 
 def test_route_without_default():
@@ -77,9 +79,6 @@ def test_route_without_default():
 def test_routes_length():
 
     class Controller(Router):
-        
-        def hello_world(self):
-            pass
 
         @route('/1')
         def _1(self):
@@ -93,21 +92,36 @@ def test_routes_length():
         def _3(self):
             pass
 
-    assert len(Controller().routes) == 3
+        def _0(self):
+            pass
 
+    assert len(Controller().routes) == 3
 
 def test_route_error():
 
+    class CatchError(Exception):
+        pass
+
+    class UncatchError(Exception):
+        pass
+
     class Controller(Router):
         
-        @route('/hello-world')
-        def hello_world(self):
-            raise Exception
+        @route('/catch')
+        def catch(self):
+            raise CatchError
 
-        @route.error(Exception)
-        def error(self, error):
-            return 'error'
+        @route('/uncatch')
+        def uncatch(self):
+            raise UncatchError
+
+        @route.error(CatchError)
+        def error(self, _error):
+            return 'catch'
 
     controller = Controller()
     
-    assert controller.router('/hello-world') == 'error'
+    assert controller.router('/catch') == 'catch'
+
+    with pytest.raises(UncatchError):
+        controller.router('/uncatch')
