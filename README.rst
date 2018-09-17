@@ -28,4 +28,4 @@ Embedding in the application
     aiohttp_debugger.setup('/aiohttp_debugger', application)
 
 
-The panel is available at ``<application_url>/aiohttp_debugger``
+The dashboard is available at ``<application_url>/aiohttp_debugger``

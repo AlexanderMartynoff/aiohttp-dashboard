@@ -1,11 +1,15 @@
 <template>
-    <div class="row ad-content">
-        <div class="col-5">
-            <b-card header="Request info" class="flex-card firefox-fix"> 
-                <ul class="list-group flex-auto overflow-auto" v-if="record">
+    <div class="row box box-direction-row">
+        <div class="col-5 box box-direction-column">
+            <b-card header="Request info" class="box box-direction-column"> 
+                <ul class="list-group overflow-auto" v-if="record">
                     <li class="list-group-item list-group-item-warning block" v-if="record.status || record.reason">
-                        <div><span>{{record.status}}</span></div>
-                        <div><small class="text-muted">{{record.reason}}</small></div>
+                        <div>
+                            <span>{{record.status}}</span>
+                        </div>
+                        <div>
+                            <small class="text-muted">{{record.reason}}</small>
+                        </div>
                     </li>
                     <li class="list-group-item">
                         <span class="key-name">Client IP:</span> <code>{{record.ip}}</code>
@@ -26,11 +30,11 @@
                 <alert v-else message="Records not found"></alert>
             </b-card>
         </div>
-        <div class="col-7">
-            <b-card no-block class="flex-card firefox-fix" show-footer no-body>
-                <b-tabs small pills card no-fade class="flex-parent-column flex-auto" content-class="flex-auto overflow-auto">
+        <div class="col-7 box box-direction-column">
+            <b-card no-block show-footer no-body class="box box-direction-column">
+                <b-tabs small pills card no-fade>
                     <b-tab title="Request headers">
-                        <ul class="list-group flex-auto overflow-auto" v-if="record">
+                        <ul class="list-group" v-if="record">
                             <li class="list-group-item" v-for="value, key in record.reqheaders">
                                 <span class="key-name">{{key}}:</span> <code>{{value}}</code> 
                             </li>
@@ -81,7 +85,7 @@
                                 </span>
                             </div>
                             <div class="col-10">
-                                <div class="justify-content-center row">
+                                <div class="justify-content-center">
                                     <b-pagination :limit="5"
                                                   :total-rows="wsTotal"
                                                   :per-page="wsPerPage"
@@ -194,7 +198,7 @@
                     msg => this.onWsMessagesRecive(msg.data),
                     {
                         "id": parseInt(this.id),
-                        "perpage": this.wsPerPage,
+                        "page.size": this.wsPerPage,
                         "page": this.wsCurrentPage
                     }
                 );

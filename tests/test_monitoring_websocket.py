@@ -1,6 +1,5 @@
 import aiohttp
 from aiohttp_debugger.debugger import DEBUGGER_KEY, MsgDirection
-import asyncio
 import json
 
 

@@ -21,6 +21,7 @@ Used for websocket message dispatching
 from functools import update_wrapper
 from inspect import iscoroutinefunction, iscoroutine
 from asyncio import ensure_future, Future
+
 from .helper import to_list
 
 
@@ -46,11 +47,12 @@ class Router:
         """
         Return all routes registering on this class
         """
+        
+        IGNORED = ['routes']
 
         # NOTE: for fix RecursionError - ignore routes methods
-        return [member for member in [getattr(self, name) for name in dir(self) if name not in [
-            'routes'
-        ]] if isinstance(member, _Route)]
+        return [member for member in [getattr(self, name) for name in dir(self) if name not in IGNORED]
+            if isinstance(member, _Route)]
 
     def default_route(self, *args, **kwargs):
         for route in self.routes:
@@ -80,9 +82,9 @@ class AsyncRouter(Router):
     def _ensure_coroutine(self, coroutine):
         
         async def ensure_coroutine(_):
-            return _
+            return await _ if iscoroutine(_) else _
 
-        return coroutine if iscoroutine(coroutine) else ensure_coroutine(coroutine)
+        return ensure_coroutine(coroutine)
 
 def route(name):
     def decorator(handler):

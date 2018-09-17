@@ -12,6 +12,17 @@
         <script type="text/javascript" src="/_debugger/static/bundle/application.js?nocache={{nocache}}" defer></script>
     </head>
     <body>
-        <layout class="enterpoint"></layout>
+        <box class="application box-direction-column">
+            <box-header>
+                <div class="container-fluid box">
+                    <top-menu></top-menu>
+                </div>
+            </box-header>
+            <box-body>
+                <div class="container-fluid box">
+                    <router-view></router-view>
+                </div>
+            </box-body>
+        </box>
     </body>
 </html>

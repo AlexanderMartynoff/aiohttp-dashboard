@@ -1,11 +1,9 @@
-from . import action
-from . import embedding
-
-
 __version__ = '3.0.0a0'
 
 
 def setup(prefix, application):
+    from . import action, embedding
+
     return embedding.setup(
         prefix,
         application,

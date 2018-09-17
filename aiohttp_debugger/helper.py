@@ -1,10 +1,7 @@
 from aiohttp.web import WebSocketResponse
-from collections import defaultdict, OrderedDict
-from functools import lru_cache
 from asyncio import iscoroutine, isfuture, ensure_future, gather
 from inspect import iscoroutinefunction, isfunction, ismethod, isclass
 from collections import defaultdict, OrderedDict, Sequence
-import logging
 import asyncio
 
 
@@ -23,58 +20,33 @@ class WsResponseHelper(WebSocketResponse):
         return self
 
     async def __anext__(self):
-        return self._Msg(await super().__anext__())
+        return self._Message(await super().__anext__())
 
     @property
     def id(self):
         return id(self)
 
-    class _Msg:
+    class _Message:
         def __init__(self, message):
-            self._original = message
-            self._dict = self._original.json()
-            self._body = self._Body(self)
-
-        @property
-        def body(self):
-            return self._body
+            self._message = message
+            self._json = self._message.json()
 
         @property
         def data(self):
-            return self._dict.get('data', defaultdict(lambda: None))
+            return self._json.get('data', defaultdict(lambda: None))
 
         @property
         def uid(self):
-            return self._dict.get('uid', None)
-
-        @property
-        def original(self):
-            return self._original
+            return self._json.get('uid', None)
 
         @property
         def endpoint(self):
-            return self._dict.get('endpoint', None)
+            return self._json.get('endpoint', None)
 
         def __repr__(self):
             return f"<{self.endpoint}>"
 
-        class _Body:
-            def __init__(self, msg):
-                self._msg = msg
 
-            def __getattr__(self, name):
-                return self._Attribute(self._msg.data[name])
-
-            class _Attribute:
-                def __init__(self, value):
-                    self._value = value
-
-                def __rshift__(self, typemapper):
-                    return typemapper(self._value)
-
-                # TODO - deprecated, remove
-                def __matmul__(self, typemapper):
-                    return typemapper(self._value)
 
 
 class LimitedDict(OrderedDict):

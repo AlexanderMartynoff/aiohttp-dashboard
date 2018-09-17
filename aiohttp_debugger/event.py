@@ -3,16 +3,16 @@ from uuid import uuid4
 from collections import defaultdict, OrderedDict, Sequence
 
 
-class Bus:
+class EventDriven:
     def __init__(self):
         self._handlers = defaultdict(list)
 
-    def on(self, event, handler, *, group=uuid4(), hid=uuid4()):
-        if not isinstance(event, Sequence):
-            event = [event]
+    def on(self, events, handler, *, group=uuid4(), hid=uuid4()):
+        if not isinstance(events, Sequence):
+            events = [events]
 
-        for _ in event:
-            self._on(_, handler, group=group, hid=hid)
+        for event in events:
+            self._on(event, handler, group=group, hid=hid)
 
         return self
 
@@ -49,39 +49,23 @@ class Bus:
         pass
 
 
-class DebuggerAbstractWebEvent(Bus.Event):
-    _rid = None
+class DebuggerAbstractWebEvent(EventDriven.Event):
 
-    def __init__(self, rid=None):
+    def __init__(self, rid):
         self._rid = rid
 
     @property
     def rid(self):
         return self._rid
 
-    @rid.setter
-    def rid(self, rid):
-        self._rid = rid
-
-
-class DebuggerAbstractReqResEvent(DebuggerAbstractWebEvent):
-    def __init__(self, rid):
-        self.rid = rid
-
-
-class HttpRequest(DebuggerAbstractReqResEvent):
-    def __init__(self, rid):
-        super().__init__(rid)
-
+class HttpRequest(DebuggerAbstractWebEvent):
+    pass
 
 class HttpResponse(DebuggerAbstractWebEvent):
-    def __init__(self, rid):
-        super().__init__(rid)
-
+    pass
 
 class WsMsgIncoming(DebuggerAbstractWebEvent):
     pass
-
 
 class WsMsgOutbound(DebuggerAbstractWebEvent):
     pass

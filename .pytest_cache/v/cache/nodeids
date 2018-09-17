@@ -1,0 +1,23 @@
+[
+  "tests/test_embedding_mechanism.py::test_debugger",
+  "tests/test_embedding_mechanism.py::test_middlewares",
+  "tests/test_embedding_mechanism.py::test_signals",
+  "tests/test_embedding_mechanism.py::test_routes",
+  "tests/test_monitoring_http.py::test_statistics_requests_structure[pyloop]",
+  "tests/test_monitoring_http.py::test_statistics_requests_number[pyloop]",
+  "tests/test_monitoring_http.py::test_statistics_requests_status[pyloop]",
+  "tests/test_monitoring_http.py::test_statistics_requests_simple_equals[pyloop]",
+  "tests/test_monitoring_websocket.py::test_websocket_messages_count_incoming[pyloop]",
+  "tests/test_monitoring_websocket.py::test_websocket_messages_count_outbound[pyloop]",
+  "tests/test_monitoring_websocket.py::test_websocket_messages_strucutre[pyloop]",
+  "tests/test_monitoring_websocket.py::test_websocket_request_status[pyloop]",
+  "tests/test_router.py::test_routing",
+  "tests/test_router.py::test_arguments",
+  "tests/test_router.py::test_default",
+  "tests/test_router.py::test_default_with_arguments",
+  "tests/test_router.py::test_route_without_default",
+  "tests/test_router.py::test_routes_length",
+  "tests/test_router.py::test_route_error",
+  "tests/test_router_async.py::test_route_async",
+  "tests/test_router_async.py::test_route_async_error"
+]

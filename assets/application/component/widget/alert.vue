@@ -18,9 +18,8 @@
 
 <style lang="stylus">
     .aiohttp-debugger__alert
-        width 100%
-        height 100%
-        display flex
+        width 50%
+        margin 0 auto
         
         .aiohttp-debugger__alert__content-block
             margin auto

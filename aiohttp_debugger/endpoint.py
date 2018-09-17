@@ -9,6 +9,7 @@ from collections import namedtuple
 from time import sleep, time
 import re
 import inspect
+import itertools
 
 from .event import WsMsgIncoming, WsMsgOutbound, HttpRequest, HttpResponse, MsgDirection
 from .router import Router, route
@@ -35,8 +36,7 @@ class WsMsgDispatcherProxy:
 
 
 class WsMsgDispatcher(Router):
-    """ Endpoints for websocket message processing.
-    """
+    """ Endpoints for websocket message processing """
 
     def __init__(self, sender, debugger_api, debugger):
         self._debugger = debugger
@@ -45,10 +45,10 @@ class WsMsgDispatcher(Router):
 
     @route('sibsribe.request')
     def sibsribe_request(self, message):
-        rid = message.body.id >> int
+        request_id = message.data['id']
 
         def handler(event):
-            if event.rid == rid:
+            if event.rid == request_id:
                 self._sender.send(message)
 
         self._debugger.on([
@@ -56,16 +56,16 @@ class WsMsgDispatcher(Router):
             HttpResponse
         ], handler, group=self._sender.id, hid=message.uid)
 
-        return self._debugger_api.request(rid)
+        return self._debugger_api.request(request_id)
 
     @route('sibsribe.request.messages')
     def sibsribe_request_messages(self, message):
-        rid = message.body.id >> int
-        page = message.body.page >> int
-        perpage = message.body.perpage >> int
+        request_id = message.data['id']
+        page_size = message.data['page.size']
+        page = message.data['page']
 
         def handler(event):
-            if event.rid == rid:
+            if event.rid == request_id:
                 self._sender.send(message)
 
         self._debugger.on([
@@ -73,7 +73,7 @@ class WsMsgDispatcher(Router):
             WsMsgOutbound
         ], handler, group=self._sender.id, hid=message.uid)
 
-        return self._debugger_api.messages(rid, page, perpage)
+        return self._debugger_api.messages(request_id, page, page_size)
 
     @route('sibsribe.requests')
     def sibsribe_requests(self, message):
@@ -90,9 +90,9 @@ class WsMsgDispatcher(Router):
 
     @route('unsibscribe')
     def unsibscribe(self, message):
-        """ With this `hid` probably exist multiple handlers """
+        # NOTE: with this `hid` probably exist multiple handlers
 
-        self._debugger.off(hid=message.body.id >> str)
+        self._debugger.off(hid=message.data['id'])
 
     @route('fetch.info')
     def fetch_info(self, _message):
@@ -128,28 +128,31 @@ class Sender(Router):
 
     @route('sibsribe.request')
     def _sibsribe_request(self, message):
-        self._send(self._debugger_api.request(message.body.id >> int), message)
+        self._send(self._debugger_api.request(message.data['id']), message)
 
     @route('sibsribe.request.messages')
     def _sibsribe_request_messages(self, message):
-        rid = message.body.id >> int
-        page = message.body.page >> int
-        perpage = message.body.perpage >> int
+        request_id = message.data['id']
+        page_size = message.data['page.size']
+        page = message.data['page']
         
-        self._send(self._debugger_api.messages(rid, page, perpage), message)
+        self._send(self._debugger_api.messages(request_id, page, page_size), message)
 
     @route('sibsribe.requests')
     def _sibsribe_requests(self, message):
         self._send(self._debugger_api.requests(), message)
     
-    # NOTE: refact this!
-    def send_soon(self, message, out):
-        endpoint = self._endpoints[message.endpoint]
+    def _take_endpoint(self, name):
+        endpoint = self._endpoints[name]
 
         if endpoint is None:
-            endpoint = self._endpoints[message.endpoint] = self._EndpointState(handler=self.router)
+            endpoint = self._endpoints[name] = self._EndpointState(handler=self.router)
 
-        endpoint.handle_soon(message, out, self._send)
+        return endpoint
+
+    # NOTE: refact this!
+    def send_soon(self, message, out):
+        self._take_endpoint(message.endpoint).handle_soon(message, out, self._send)
 
     def send(self, message):
 
@@ -158,12 +161,16 @@ class Sender(Router):
         endpoint = self._endpoints[message.endpoint]
 
         if endpoint is None:
-            endpoint = self._endpoints[message.endpoint] = self._EndpointState(handler=self.router)
-            endpoint.handle_soon(message)
-        elif endpoint.is_free():
-            endpoint.handle_soon(message)
+            self._take_endpoint(message.endpoint).handle_soon(message)
         else:
-            endpoint.handle_later(message)
+            waiting, free = endpoint.is_free()
+
+            if free:
+                endpoint.handle_soon(message)
+            else:
+                endpoint.handle_later(message)
+
+            logger.info(f"passed time {waiting}, is free: {'Yes' if free else 'No'}")
 
     def close(self):
         for endpoint_state in self._endpoints.values():
@@ -184,7 +191,7 @@ class Sender(Router):
         _delay = 5
         _handler = None
         _last_send_time = None
-        _handler_wait_for_send = None
+        _send_waiting_task = None
 
         def __init__(self, handler):
             self._handler = handler
@@ -196,7 +203,8 @@ class Sender(Router):
 
         def _handler_caller(self, message):
             self._handler(message.endpoint, message)
-            self._handler_wait_for_send = None
+
+            self._send_waiting_task = None
             self._last_send_time = self.time
 
         def handle_soon(self, message, out=None, handler=None):
@@ -206,41 +214,41 @@ class Sender(Router):
             return self._handler_caller(message)
 
         def handle_later(self, message):
-            if self._handler_wait_for_send:
-                self._handler_wait_for_send.cancel()
-                logger.info(f"cancel deferred task {id(self._handler_wait_for_send)}")
+            if self._send_waiting_task:
+                self._send_waiting_task.cancel()
+                
+                logger.info(f"cancel deferred task {id(self._send_waiting_task)}")
 
-            self._handler_wait_for_send = self._do_send_later(message)
+            when, task = self._do_send_later(message)
+            self._send_waiting_task = task
+
+            logger.info(f"put deferred task {id(task)} call at {when} seconds to {message.endpoint}")
 
         def _do_send_later(self, message):
             when = self._last_send_time + self._delay
-            task = get_event_loop().call_at(when, lambda: self._handler_caller(message))
+            task = get_event_loop().call_at(when, self._handler_caller, message)
             
-            logger.info(f"put deferred task {id(task)} call at {when} seconds to {message.endpoint}")
-            
-            return task
+            return when, task
 
-        # NOTE: remove logging from there
-        # and return tuple(passed, isfree)
         def is_free(self):
-            passed = self.time - self._last_send_time
-            isfree = passed >= self._delay
+            """ Return tuple (pased the time, maker of free) """
 
-            logger.info(f"passed time {passed}, isfree: {'Yes' if isfree else 'No'}")
+            waiting = self.time - self._last_send_time
+            free = waiting >= self._delay
 
-            return isfree
+            return waiting, free
 
         def close(self):
-            if self._handler_wait_for_send:
-                self._handler_wait_for_send.cancel()
+            if self._send_waiting_task:
+                self._send_waiting_task.cancel()
 
 
 class DebuggerApi:
     """ Facade layer for WEB """
     
-    def __init__(self, debugger, http_request):
+    def __init__(self, debugger, request):
         self._debugger = debugger
-        self._http_request = http_request
+        self._request = request
 
     def request(self, rid):
         return {'item': self._debugger.api.request(rid)}
@@ -259,7 +267,7 @@ class DebuggerApi:
     def routes(self):
         routes = []
 
-        for route in self._http_request.app.router.routes():
+        for route in self._request.app.router.routes():
             routes.append({
                 'name': route.name,
                 'method': route.method,
@@ -269,6 +277,7 @@ class DebuggerApi:
             })
 
         return routes
+        # return itertools.groupby(routes, lambda _: _['name'])
 
     def _extract_route_info(self, route):
         return {str(key): str(value) for key, value in route.get_info().items()}

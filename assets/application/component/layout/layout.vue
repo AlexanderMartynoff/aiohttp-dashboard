@@ -1,6 +1,6 @@
 <template>
-    <div class="ad-container container-fluid">
-        <div class="row ad-header">
+    <div class="container-fluid">
+        <div class="row">
             <div class="col">
                 <top-menu></top-menu>
             </div>

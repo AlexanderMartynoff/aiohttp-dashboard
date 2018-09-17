@@ -11,7 +11,7 @@ import aiohttp
 from functools import partial
 
 from .helper import LimitedDict
-from .event import (Bus, HttpRequest, HttpResponse,
+from .event import (EventDriven, HttpRequest, HttpResponse,
                     WsMsgIncoming, WsMsgOutbound, MsgDirection)
 
 
@@ -19,13 +19,13 @@ logger = logging.getLogger("aiohttp_debugger.debugger")
 
 
 DEBUGGER_KEY = __name__
-JINJA_KEY = '{}.jinja2'.format(__name__)
+JINJA_KEY = __name__ + '.jinja2'
 
 
-class Debugger(Bus):
+class Debugger(EventDriven):
 
     def __init__(self):
-        Bus.__init__(self)
+        EventDriven.__init__(self)
 
         self._state = State()
         self._api = Api(self._state)
@@ -47,20 +47,24 @@ class Debugger(Bus):
                 'iswebsocket': isinstance(response, WebSocketResponse),
                 'body': response.text if isinstance(response, Response) else None})
 
-        self.fire(HttpResponse(id(request)))
+        self.fire(HttpResponse(requst_id))
 
-    def register_websocket_message(self, direction, request, message, event):
-        requst_id, message_id = id(request), id(message)
-        event.rid = requst_id
+    # NOTE: maybe split in and out mesages store?
+    def register_websocket_message(self, direction, request, message):
+        request_id, message_id = id(request), id(message)
 
-        self.state.put_ws_message(requst_id, {
+        self.state.put_ws_message(request_id, {
             'id': message_id,
             'msg': message,
             'time': self.state.now,
             'direction': direction.name
         })
 
-        self.fire(event)
+        assert direction in (MsgDirection.INCOMING, MsgDirection.OUTBOUND), \
+            RuntimeError(f'Unknown websoket message direction {direction!s}')
+
+        self.fire((WsMsgOutbound if direction is MsgDirection.OUTBOUND else WsMsgIncoming)(request_id))
+
 
     @property
     def api(self):

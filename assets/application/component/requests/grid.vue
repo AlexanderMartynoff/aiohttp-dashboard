@@ -1,15 +1,15 @@
 <template>
 
-    <div class="row ad-content">
-        <div class="col">
-            <b-card class="flex-card grey-card-bg firefox-fix" show-footer show-header>
+    <div class="row box box-direction-column">
+        <div class="col box box-direction-column">
+            <b-card class="grey-card-bg box box-direction-column" show-footer show-header>
                 <b-table v-if="items.length"
                          @row-clicked="(item, index) => details(item.id, index)"
                          :items="items"
                          :fields="fields"
                          :current-page="currentPage"
                          :per-page="perPage"
-                         class="table-pinter table-hover fixed-table"
+                         class="table-pinter table-hover"
                          striped>
 
                     <template slot="status" scope="item">
@@ -25,7 +25,7 @@
 
                 <small slot="footer">
                     <div v-if="items.length" class="justify-content-center row">
-                        <b-pagination size="md" :total-rows="this.items.length" :per-page="perPage" v-model="currentPage"/>
+                        <b-pagination size="md" :total-rows="items.length" :per-page="perPage" v-model="currentPage"/>
                     </div>
                 </small>
         </b-card>

@@ -1,40 +1,40 @@
 <template>
 
-        <div class="row ad-content">
-            <div class="col">
-                <b-card class="flex-card grey-card-bg firefox-fix" show-footer show-header>
-                    <b-table v-if="items.length"
-                             @row-clicked="(item, index) => details(item, index)"
-                             :items="items"
-                             :fields="fields"
-                             :current-page="currentPage"
-                             :per-page="perPage"
-                             class="table-pinter table-hover"
-                             striped>
+    <div class="row box box-direction-column">
+        <div class="col box box-direction-column">
+            <b-card class="box box-direction-column grey-card-bg" show-footer show-header>
+                <b-table v-if="items.length"
+                         @row-clicked="(item, index) => details(item, index)"
+                         :items="items"
+                         :fields="fields"
+                         :current-page="currentPage"
+                         :per-page="perPage"
+                         striped
+                         class="table-pinter table-hover">
 
-                        <template slot="path" scope="item">
-                            {{item.item.info.path || item.item.info.prefix + ' -> ' + item.item.info.directory}}
-                        </template>
-                    </b-table>
+                    <template slot="path" scope="item">
+                        {{item.item.info.path || item.item.info.prefix + ' -> ' + item.item.info.directory}}
+                    </template>
+                </b-table>
 
-                    <alert v-else message="Records not found"></alert>
+                <alert v-else message="Records not found"></alert>
 
-                    <span slot="header">
-                        <i class="fa fa-globe" aria-hidden="true"></i> Inspection
-                    </span>
+                <span slot="header">
+                    <i class="fa fa-globe" aria-hidden="true"></i> Inspection
+                </span>
 
-                    <small slot="footer">
-                        <div v-if="items.length" class="justify-content-center row">
-                            <b-pagination size="md" :total-rows="this.items.length" :per-page="perPage" v-model="currentPage"/>
-                        </div>
-                    </small>
+                <small slot="footer">
+                    <div v-if="items.length" class="justify-content-center row">
+                        <b-pagination size="md" :total-rows="this.items.length" :per-page="perPage" v-model="currentPage"/>
+                    </div>
+                </small>
 
-                    <b-modal ref="sourceDetail" title="Source code" size="lg" class="modal-huge" hide-footer>
-                        <pre><code>{{selected.source}}</code></pre>
-                    </b-modal>
-                </b-card>
-            </div>
+                <b-modal ref="sourceDetail" title="Source code" size="lg" class="modal-huge" hide-footer>
+                    <pre><code>{{selected.source}}</code></pre>
+                </b-modal>
+            </b-card>
         </div>
+    </div>
   
 </template>
 
