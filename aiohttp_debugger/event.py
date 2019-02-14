@@ -16,9 +16,11 @@ class EventDriven:
 
         return self
 
+
     def _on(self, event, handler, *, group, hid):
         self._handlers[group] += (event, handler, hid),
 
+    # NOTE: add prefix `target_` to name for `group` and `hid`
     def off(self, *, group=None, hid=None):
         if group is None and hid is None:
             raise ValueError('group or/and hid must be not None')
@@ -58,17 +60,22 @@ class DebuggerAbstractWebEvent(EventDriven.Event):
     def rid(self):
         return self._rid
 
+
 class HttpRequest(DebuggerAbstractWebEvent):
     pass
+
 
 class HttpResponse(DebuggerAbstractWebEvent):
     pass
 
+
 class WsMsgIncoming(DebuggerAbstractWebEvent):
     pass
 
+
 class WsMsgOutbound(DebuggerAbstractWebEvent):
     pass
+
 
 # ticket for web socket messages
 class MsgDirection(Enum):

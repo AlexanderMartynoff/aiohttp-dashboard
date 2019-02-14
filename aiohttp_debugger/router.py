@@ -7,14 +7,14 @@ Used for websocket message dispatching
 
 .. code-block:: python
     
-    class Controller(Router):
-        @route('/')
-        def index(self, argument):
-            return argument
+    >>> class Controller(Router):
+    >>>    @route('/')
+    >>>    def index(self, argument):
+    >>>        return argument
 
-    controller = Controller()
+    >>> controller = Controller()
 
-    assert controller.router('/', 'Hello, World!') == 'Hello, World!'
+    >>> assert controller.router('/', 'Hello, World!') == 'Hello, World!'
 """
 
 
@@ -81,8 +81,8 @@ class AsyncRouter(Router):
 
     def _ensure_coroutine(self, coroutine):
         
-        async def ensure_coroutine(_):
-            return await _ if iscoroutine(_) else _
+        async def ensure_coroutine(coroutine):
+            return await coroutine if iscoroutine(coroutine) else coroutine
 
         return ensure_coroutine(coroutine)
 

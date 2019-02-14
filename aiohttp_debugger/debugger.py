@@ -49,7 +49,7 @@ class Debugger(EventDriven):
 
         self.fire(HttpResponse(requst_id))
 
-    # NOTE: maybe split in and out mesages store?
+    # NOTE: maybe split in and out messages store?
     def register_websocket_message(self, direction, request, message):
         request_id, message_id = id(request), id(message)
 
@@ -64,7 +64,6 @@ class Debugger(EventDriven):
             RuntimeError(f'Unknown websoket message direction {direction!s}')
 
         self.fire((WsMsgOutbound if direction is MsgDirection.OUTBOUND else WsMsgIncoming)(request_id))
-
 
     @property
     def api(self):

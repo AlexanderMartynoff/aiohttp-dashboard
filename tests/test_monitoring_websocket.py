@@ -36,7 +36,7 @@ async def test_websocket_messages_count_outbound(aiohttp_client, full_applicatio
     response, *_ = debugger.state.requests.values()
 
     # When counting the number of messages, we must take into account the message with the code 1001,
-    # which is sent when the connection is closed - await websocket.close()
+    # which is sent when the connection is closed - `await websocket.close()`
     assert len(messages) + 1 == debugger.api.count_by_direction(response['id'], MsgDirection.OUTBOUND)
 
 

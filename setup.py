@@ -7,8 +7,6 @@ from setuptools.command.test import test as TestCommand
 import sys
 
 
-
-
 try:
     import pytest
 except ImportError:
@@ -16,7 +14,7 @@ except ImportError:
 
 
 class Test(TestCommand):
-    
+
     def run_tests(self):
         raise SystemExit(subprocess.call([sys.executable, '-m', 'pytest', 'tests', '-v', '-s', '--cov=aiohttp_debugger']))
 

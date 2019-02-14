@@ -135,13 +135,13 @@ class Sender(Router):
         request_id = message.data['id']
         page_size = message.data['page.size']
         page = message.data['page']
-        
+
         self._send(self._debugger_api.messages(request_id, page, page_size), message)
 
     @route('sibsribe.requests')
     def _sibsribe_requests(self, message):
         self._send(self._debugger_api.requests(), message)
-    
+
     def _take_endpoint(self, name):
         endpoint = self._endpoints[name]
 
@@ -216,7 +216,7 @@ class Sender(Router):
         def handle_later(self, message):
             if self._send_waiting_task:
                 self._send_waiting_task.cancel()
-                
+
                 logger.info(f"cancel deferred task {id(self._send_waiting_task)}")
 
             when, task = self._do_send_later(message)
@@ -227,11 +227,11 @@ class Sender(Router):
         def _do_send_later(self, message):
             when = self._last_send_time + self._delay
             task = get_event_loop().call_at(when, self._handler_caller, message)
-            
+
             return when, task
 
         def is_free(self):
-            """ Return tuple (pased the time, maker of free) """
+            """ Return tuple (pased the time, freedom marker) """
 
             waiting = self.time - self._last_send_time
             free = waiting >= self._delay
@@ -245,7 +245,7 @@ class Sender(Router):
 
 class DebuggerApi:
     """ Facade layer for WEB """
-    
+
     def __init__(self, debugger, request):
         self._debugger = debugger
         self._request = request
@@ -277,7 +277,6 @@ class DebuggerApi:
             })
 
         return routes
-        # return itertools.groupby(routes, lambda _: _['name'])
 
     def _extract_route_info(self, route):
         return {str(key): str(value) for key, value in route.get_info().items()}
