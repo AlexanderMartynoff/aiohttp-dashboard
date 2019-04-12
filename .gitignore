@@ -6,3 +6,7 @@ dist
 /assets/node_modules/*
 /aiohttp_debugger/static/bundle
 .idea
+**/.DS_Store
+**/.pytest_cache
+**/package-lock.json
+**/.vscode

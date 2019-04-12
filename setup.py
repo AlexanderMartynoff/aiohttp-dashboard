@@ -7,12 +7,6 @@ from setuptools.command.test import test as TestCommand
 import sys
 
 
-try:
-    import pytest
-except ImportError:
-    pass
-
-
 class Test(TestCommand):
 
     def run_tests(self):
