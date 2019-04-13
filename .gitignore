@@ -10,3 +10,4 @@ dist
 **/.pytest_cache
 **/package-lock.json
 **/.vscode
+**/.coverage
