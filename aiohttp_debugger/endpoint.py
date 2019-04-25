@@ -2,14 +2,12 @@ from operator import itemgetter
 from asyncio import sleep, ensure_future, get_event_loop
 from time import time
 from collections import defaultdict
-import warnings
 import logging
-import concurrent.futures
 from collections import namedtuple
-from time import sleep, time
-import re
 import inspect
 import itertools
+import json
+import traceback
 
 from .event import WsMsgIncoming, WsMsgOutbound, HttpRequest, HttpResponse, MsgDirection
 from .router import Router, route
@@ -87,6 +85,12 @@ class WsMsgDispatcher(Router):
         ], handler, group=self._sender.id, hid=message.uid)
 
         return self._debugger_api.requests()
+
+    @route('sibsribe.request.exception')
+    def sibsribe_request_exceptions(self, message):
+        request_id = message.data['id']
+
+        return self._debugger_api.http_exception(request_id)
 
     @route('unsibscribe')
     def unsibscribe(self, message):
@@ -178,7 +182,8 @@ class Sender(Router):
 
     def _send(self, out, message):
         logger.info(f'send websocket to chanel {message.endpoint}')
-        return ensure_future(self._socket.send_json(self._prepare_ws_response(out, message)))
+        return ensure_future(self._socket.send_json(
+            self._prepare_ws_response(out, message), dumps=dumps))
 
     def _prepare_ws_response(self, out, message):
         return {'data': out, 'uid': message.uid, 'endpoint': message.endpoint}
@@ -261,8 +266,11 @@ class DebuggerApi:
             'collection': self._debugger.api.messages(rid, page, perpage),
             'total': self._debugger.api.count_by_direction(rid),
             'incoming': self._debugger.api.count_by_direction(rid, MsgDirection.INCOMING),
-            'outbound': self._debugger.api.count_by_direction(rid, MsgDirection.OUTBOUND)
+            'outbound': self._debugger.api.count_by_direction(rid, MsgDirection.OUTBOUND),
         }
+
+    def http_exception(self, rid):
+        return {'item': self._debugger.api.http_exception(rid)}
 
     def routes(self):
         routes = []
@@ -290,3 +298,20 @@ class DebuggerApi:
     @property
     def debugger(self):
         return self._debugger
+
+
+class JSONEncoder(json.JSONEncoder):
+
+    def default(self, data):
+        if isinstance(data, Exception):
+
+            return {
+                'type': 'error',
+                'class': type(data).__name__,
+                'traceback': traceback.format_tb(data.__traceback__),
+            }
+        return data
+
+
+def dumps(data):
+    return json.dumps(data, cls=JSONEncoder)

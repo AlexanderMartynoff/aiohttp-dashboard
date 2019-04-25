@@ -65,6 +65,9 @@ class Debugger(EventDriven):
 
         self.fire((WsMsgOutbound if direction is MsgDirection.OUTBOUND else WsMsgIncoming)(request_id))
 
+    def register_http_exception(self, request, exception):
+        self.state.put_http_exception(id(request), exception)
+
     @property
     def api(self):
         return self._api
@@ -107,6 +110,12 @@ class Api:
 
         return messages[start:end]
 
+    def http_exception(self, rid):
+        if rid not in self._state.http_exceptions:
+            return None
+
+        return self._state.http_exceptions[rid]
+
     def count_by_direction(self, rid, direction=None):
         if direction is None:
             return self._state.incoming_msg_counter[rid] + self._state.outbound_msg_counter[rid]
@@ -121,6 +130,9 @@ class State:
         self._limit = limit
         self._requests = LimitedDict(limit=self._limit)
         self._messages = LimitedDict(limit=self._limit)
+        self._http_exceptions = LimitedDict(limit=self._limit)
+
+        # TODO: need complute this values on fly
         self._incoming_msg_counter = defaultdict(int)
         self._outbound_msg_counter = defaultdict(int)
 
@@ -157,6 +169,9 @@ class State:
         else:
             self._incoming_msg_counter[rid] += 1
 
+    def put_http_exception(self, rid, exception):
+        self._http_exceptions[rid] = exception
+
     @property
     def outbound_msg_counter(self):
         return self._outbound_msg_counter
@@ -176,3 +191,7 @@ class State:
     @property
     def messages(self) -> dict:
         return self._messages
+
+    @property
+    def http_exceptions(self) -> dict:
+        return self._http_exceptions

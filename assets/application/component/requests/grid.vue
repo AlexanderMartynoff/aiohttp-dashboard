@@ -27,11 +27,11 @@
         mixins: [WebSocketService.mixin],
         data: () => ({
             fields: {
+                status: {label: 'Status'},
                 path: {label: 'Path'},
                 method: {label: 'Method'},
                 begintime: {label: 'Begin time'},
                 donetime: {label: 'End time'},
-                status: {label: 'Status'}
             },
             items: [],
             currentPage: 1,

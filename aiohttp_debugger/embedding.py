@@ -39,17 +39,20 @@ async def _factory_on_request(application, handler):
 
 
 def _is_sutable_request(request):
-    return not request.path.startswith("/_debugger")
+    return not request.path.startswith('/_debugger')
 
 
 async def _on_request(request, handler):
     if _is_sutable_request(request):
         request.app[DEBUGGER_KEY].register_request(request)
 
-    try:
-        return await handler(request)
-    except Exception as exception:
-        request.app[DEBUGGER_KEY].register_exception(exception)
+        try:
+            return await handler(request)
+        except Exception as exception:
+            request.app[DEBUGGER_KEY].register_http_exception(request, exception)
+            raise exception
+
+    return await handler(request)
 
 
 async def _on_response(request, response):

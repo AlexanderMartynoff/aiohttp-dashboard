@@ -11,7 +11,7 @@
 
         <div class="row mt-3">
             <div class="col-md-6">
-                <b-card class="shadow h-100" title="Request">
+                <b-card class="shadow h-100" title="Info">
                     <ul class="list-group overflow-auto" v-if="record">
                         <li class="list-group-item list-group-item-warning block" v-if="record.status || record.reason">
                             <div>
@@ -64,6 +64,14 @@
                 </b-card>
             </div>
         </div>
+
+        <div class="row mt-3" v-if="exceptionHttp">
+            <div class="col-md-12">
+                <b-card class="shadow" :title="exceptionHttp.class">
+                    <code><pre>{{formatException(exceptionHttp)}}</pre></code>
+                </b-card>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -83,6 +91,7 @@
                 wsPerPage: 25,
                 wsTotal: 0,
                 wsCollection: [],
+                exceptionHttp: null,
                 goToNextWsPage: false,
                 showWsLastPageSetting: false,
                 wsIncomingTotal: 0,
@@ -138,6 +147,10 @@
                 this.wsOutboundTotal = data.outbound
             },
 
+            onExceptionRecive(data) {
+                this.exceptionHttp = data.item
+            },
+
             showWsDetail: function(record) {
                 this.wsRecord = record
                 this.$refs.wsDetail.show()
@@ -167,6 +180,12 @@
                 }
             },
 
+            formatException: function (exception) {
+                if (exception && exception.traceback) {
+                    return exception.traceback.join('\r\n')
+                }
+            },
+
             requestSubscribe: function() {
                 return this.httpSubscription = this.subscribe(
                     "sibsribe.request",
@@ -187,6 +206,16 @@
                 )
             },
 
+            exceptionSubscribe() {
+                return this.wsSubscription = this.subscribe(
+                    "sibsribe.request.exception",
+                    message => this.onExceptionRecive(message.data),
+                    {
+                        "id": parseInt(this.id)
+                    }
+                )
+            },
+
             wsUnsubscribe: function(onComplete) {
                 this.unsibscribe(this.wsSubscription, onComplete)
             },
@@ -199,6 +228,7 @@
         created: function() {
             this.wsSubscribe()
             this.requestSubscribe()
+            this.exceptionSubscribe()
             ps.$on('settings:change', configuration => {
                 this.showWsLastPageSetting = configuration.showWsLastPage
             })
