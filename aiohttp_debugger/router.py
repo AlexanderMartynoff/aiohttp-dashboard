@@ -26,7 +26,7 @@ from .helper import to_list
 
 
 class Router:
-    
+
     def router(self, name, *args, **kwargs):
         try:
             return self._router(name, *args, **kwargs)
@@ -41,18 +41,18 @@ class Router:
                 return route(self, *args, **kwargs)
 
         raise RouteNotFoundError
-        
+
     @property
     def routes(self):
         """
         Return all routes registering on this class
         """
-        
+
         IGNORED = ['routes']
 
+        # NOTE: reFUCKt!
         # NOTE: for fix RecursionError - ignore routes methods
-        return [member for member in [getattr(self, name) for name in dir(self) if name not in IGNORED]
-            if isinstance(member, _Route)]
+        return [member for member in [getattr(self, name) for name in dir(self) if name not in IGNORED] if isinstance(member, _Route)]
 
     def default_route(self, *args, **kwargs):
         for route in self.routes:
@@ -71,7 +71,7 @@ class Router:
 
 class AsyncRouter(Router):
     async def router(self, name, *args, **kwargs):
-        
+
         try:
             return await self._ensure_coroutine(self._router(name, *args, **kwargs))
         except RouteNotFoundError:
@@ -80,11 +80,12 @@ class AsyncRouter(Router):
             return await self._ensure_coroutine(self.error_route(error))
 
     def _ensure_coroutine(self, coroutine):
-        
+
         async def ensure_coroutine(coroutine):
             return await coroutine if iscoroutine(coroutine) else coroutine
 
         return ensure_coroutine(coroutine)
+
 
 def route(name):
     def decorator(handler):
@@ -135,6 +136,7 @@ class _ErrorRoute(_Route):
 
 class RouterError(Exception):
     pass
+
 
 class RouteNotFoundError(RouterError):
     pass

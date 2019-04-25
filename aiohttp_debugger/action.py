@@ -18,7 +18,7 @@ debugger_dir = os.path.dirname(os.path.abspath(__file__))
 
 @template('index.html', app_key=JINJA_KEY)
 async def dashboard(request):
-    return {'nocache': hash(uuid4())}
+    return {'id': hash(uuid4())}
 
 
 async def websocket(request):

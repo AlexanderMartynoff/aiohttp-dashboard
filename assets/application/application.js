@@ -20,9 +20,11 @@ import InspectMaster from '@/component/inspect/master'
 import Alert from '@/component/widget/alert'
 import Layout from '@/component/layout/layout'
 import Predicat from '@/component/predicat/index'
+import Cardnavbar from '@/component/cardnavbar/cardnavbar'
 
 
-import "@/style/main.styl"
+import "@/style/aiohttp-debugger.styl"
+import "@/style/bootstrap-override.styl"
 
 
 Vue.use(VueRouter)
@@ -42,7 +44,8 @@ const components = {
     InspectMaster,
     Layout,
     SettingsWindow,
-    Predicat
+    Predicat,
+    Cardnavbar,
 }
 
 for (const key in components) {

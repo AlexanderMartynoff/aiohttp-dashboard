@@ -1,6 +1,5 @@
 <template>
-
-    <div class="box-body">
+    <div class="box-body overflow-auto">
         <slot></slot>
     </div>
 </template>

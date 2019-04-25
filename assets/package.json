@@ -10,8 +10,8 @@
     "@fortawesome/fontawesome-free-webfonts": "^1.0.3",
     "axios": "^0.15.3",
     "bootstrap": "^4.0.0",
-    "bootstrap-vue": "^2.0.0-rc.2",
-    "tether": "^1.4.0",
+    "bootstrap-vue": "^2.0.0-rc.19",
+    "tether": "^1.4.6",
     "vue": "^2.4.2",
     "vue-router": "^2.3.0"
   },

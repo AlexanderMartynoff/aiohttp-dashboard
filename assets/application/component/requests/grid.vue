@@ -1,37 +1,20 @@
 <template>
-
-    <div class="row box box-direction-column">
-        <div class="col box box-direction-column">
-            <b-card class="grey-card-bg box box-direction-column" show-footer show-header>
-                <b-table v-if="items.length"
-                         @row-clicked="(item, index) => details(item.id, index)"
-                         :items="items"
-                         :fields="fields"
-                         :current-page="currentPage"
-                         :per-page="perPage"
-                         class="table-pinter table-hover"
-                         striped>
-
-                    <template slot="status" scope="item">
-                        {{item.item.status}}/{{item.item.reason}}
-                    </template>
-                </b-table>
-
-                <alert v-else message="Записей не найдено"></alert>
-
-                <span slot="header">
-                    <i class="fa fa-globe" aria-hidden="true"></i> Requests
-                </span>
-
-                <small slot="footer">
-                    <div v-if="items.length" class="justify-content-center row">
-                        <b-pagination size="md" :total-rows="items.length" :per-page="perPage" v-model="currentPage"/>
-                    </div>
-                </small>
-        </b-card>
+    <div class="container-fluid">
+        <div class="row mt-3 mb-3">
+            <div class="col-md-12">
+                <b-card class="shadow" title="Requests">
+                    <b-table @row-clicked="(item, index) => details(item.id, index)" 
+                             :responsive="true"
+                             :hover="true"
+                             :items="items"
+                             :fields="fields"
+                             striped
+                             class="table-pointer">
+                    </b-table>
+                </b-card>
+            </div>
         </div>
     </div>
-  
 </template>
 
 
@@ -47,7 +30,7 @@
                 path: {label: 'Path'},
                 method: {label: 'Method'},
                 begintime: {label: 'Begin time'},
-                donetime: {label: 'Done time'},
+                donetime: {label: 'End time'},
                 status: {label: 'Status'}
             },
             items: [],
@@ -71,13 +54,3 @@
     }
 </script>
 
-
-<style lang="stylus" scoped>
-.websocket_icon
-    margin-right 5px
-</style>
-
-<style lang="stylus">
-.table-pinter tr
-    cursor pointer
-</style>

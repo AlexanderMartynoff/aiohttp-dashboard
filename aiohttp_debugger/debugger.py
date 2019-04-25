@@ -84,11 +84,10 @@ class Api:
             'platform': platform.platform(),
             'python': sys.version,
             'aiohttp': aiohttp.__version__,
-            'debugger': __version__
         }
 
     def requests(self, *args, **kwargs):
-        return list(self._state.requests.values())
+        return sorted(self._state.requests.values(), key=lambda _: _['begintime'], reverse=True)
 
     def request(self, id):
         return self._state.requests.get(id, None)
@@ -148,7 +147,7 @@ class State:
         if rid not in self._messages:
             self._messages[rid] = deque(maxlen=self._limit)
 
-        self._messages[rid] += message,
+        self._messages[rid].appendleft(message)
 
         if self._outbound_msg_counter[rid] + self._incoming_msg_counter[rid] >= self._limit:
             return

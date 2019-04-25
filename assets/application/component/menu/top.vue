@@ -1,27 +1,20 @@
 <template>
-    <ul class="nav">
-        <li class="nav-item">
-            <dropdpown-pane>
-                <a slot="trigger" class="nav-link dropdown-toggle" href="javascript: void(null)">
-                    <i class="fa fa-bars" aria-hidden="true"></i>
-                </a>
-                <div slot="content">
-                    <b-card title="<code>[aiohttp_dashboard]</code>" class="aiohttp_dashbord_menu_dropdown">
-                        <b-list-group>
-                            <router-link to="/" class="list-group-item list-group-item-action">Requests</router-link>
-                            <router-link to="/inspect" class="list-group-item list-group-item-action">Inspect</router-link>
-                        </b-list-group>
-                    </b-card>
-                </div>
-            </dropdpown-pane>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" @click="showAboutInfo" href="javascript: void(null)">
-                <i class="fa fa-cogs" aria-hidden="true"></i>
-            </a>
-            <settings-window ref="settingsWindow"></settings-window>
-        </li>
-    </ul>
+    <b-navbar toggleable type="light" variant="light" class="shadow-sm z-index-1">
+        <b-navbar-toggle target="collapse"></b-navbar-toggle>
+        <b-navbar-brand>
+            <code><i class="fas fa-tachometer-alt"></i> [aiohttp_dashboard]</code>
+        </b-navbar-brand>
+        <b-collapse id="collapse" is-nav>
+            <b-navbar-nav>
+                <b-nav-item href="#/" active>
+                    <code>[REQUESTS]</code>
+                </b-nav-item>
+                <b-nav-item href="#/inspect">
+                    <code>[ROUTES]</code>
+                </b-nav-item>
+            </b-navbar-nav>
+        </b-collapse>
+    </b-navbar>
 </template>
 
 
@@ -34,10 +27,3 @@ export default {
     }
 }
 </script>
-
-
-<style lang="stylus" scoped>
-    .card.aiohttp_dashbord_menu_dropdown {
-        min-width 350px !important
-    }
-</style>

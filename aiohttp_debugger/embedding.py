@@ -9,14 +9,15 @@ from .event import HttpRequest, HttpResponse, WsMsgIncoming, WsMsgOutbound, MsgD
 
 def setup(prefix, application, routes, static_routes, debugger_dir):
     application[DEBUGGER_KEY] = Debugger()
-    
+
     _register_routes(application, routes)
     _register_static_routes(application, static_routes)
 
     application.middlewares.append(_factory_on_request)
     application.on_response_prepare.append(_on_response)
 
-    aiohttp_jinja2.setup(application,
+    aiohttp_jinja2.setup(
+        application,
         loader=FileSystemLoader(f"{debugger_dir}/static"),
         app_key=JINJA_KEY)
 
@@ -45,7 +46,10 @@ async def _on_request(request, handler):
     if _is_sutable_request(request):
         request.app[DEBUGGER_KEY].register_request(request)
 
-    return await handler(request)
+    try:
+        return await handler(request)
+    except Exception as exception:
+        request.app[DEBUGGER_KEY].register_exception(exception)
 
 
 async def _on_response(request, response):
