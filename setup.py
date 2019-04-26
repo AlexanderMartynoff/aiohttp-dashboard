@@ -35,7 +35,6 @@ class Npm(Command):
 prod_requires = [
     'aiohttp',
     'aiohttp_jinja2',
-    # NOTE: задействовать
     'voluptuous'
 ]
 

@@ -1,16 +1,17 @@
-import Vue from 'vue';
+import Vue from 'vue'
+import {DateTime} from "luxon"
 
-const ps = new Vue({});
 const port = getPort();
 
 
-const portsMap = {
+const ports = {
     'http:': 80,
     'https:': 443
-};
-
-function getPort() {
-    return window.location.port ? window.location.port : portsMap[window.location.protocol]
 }
 
-export {port, ps}
+function getPort() {
+    return window.location.port ? window.location.port : ports[window.location.protocol]
+}
+
+
+export {port}

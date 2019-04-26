@@ -20,7 +20,8 @@ import InspectMaster from '@/component/inspect/master'
 import Alert from '@/component/widget/alert'
 import Layout from '@/component/layout/layout'
 import Predicat from '@/component/predicat/index'
-import Cardnavbar from '@/component/cardnavbar/cardnavbar'
+import Bar from '@/component/bar/bar'
+import Traceback from '@/component/traceback/traceback'
 
 
 import "@/style/aiohttp-debugger.styl"
@@ -45,7 +46,8 @@ const components = {
     Layout,
     SettingsWindow,
     Predicat,
-    Cardnavbar,
+    Bar,
+    Traceback,
 }
 
 for (const key in components) {

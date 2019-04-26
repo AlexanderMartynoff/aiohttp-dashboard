@@ -264,9 +264,9 @@ class DebuggerApi:
     def messages(self, rid, page, perpage):
         return {
             'collection': self._debugger.api.messages(rid, page, perpage),
-            'total': self._debugger.api.count_by_direction(rid),
-            'incoming': self._debugger.api.count_by_direction(rid, MsgDirection.INCOMING),
-            'outbound': self._debugger.api.count_by_direction(rid, MsgDirection.OUTBOUND),
+            'total': self._debugger.api.count_messages(rid),
+            'incoming': self._debugger.api.count_messages(rid, MsgDirection.INCOMING),
+            'outbound': self._debugger.api.count_messages(rid, MsgDirection.OUTBOUND),
         }
 
     def http_exception(self, rid):
@@ -308,6 +308,7 @@ class JSONEncoder(json.JSONEncoder):
             return {
                 'type': 'error',
                 'class': type(data).__name__,
+                'message': str(data),
                 'traceback': traceback.format_tb(data.__traceback__),
             }
         return data

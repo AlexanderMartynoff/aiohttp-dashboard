@@ -16,7 +16,6 @@ class EventDriven:
 
         return self
 
-
     def _on(self, event, handler, *, group, hid):
         self._handlers[group] += (event, handler, hid),
 

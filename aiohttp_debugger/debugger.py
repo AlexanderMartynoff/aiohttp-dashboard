@@ -3,7 +3,6 @@ from asyncio import ensure_future
 from aiohttp.web import WebSocketResponse, Response
 from queue import Queue
 from collections import deque, defaultdict
-import os
 import sys
 import logging
 import platform
@@ -95,12 +94,12 @@ class Api:
     def request(self, id):
         return self._state.requests.get(id, None)
 
-    def messages(self, rid, page=1, perpage=-1):
+    def messages(self, id, page=1, perpage=-1):
 
-        if rid not in self._state.messages:
+        if id not in self._state.messages:
             return None
 
-        messages = list(self._state.messages[rid])
+        messages = list(self._state.messages[id])
 
         if perpage == -1:
             return messages
@@ -116,13 +115,15 @@ class Api:
 
         return self._state.http_exceptions[rid]
 
-    def count_by_direction(self, rid, direction=None):
-        if direction is None:
-            return self._state.incoming_msg_counter[rid] + self._state.outbound_msg_counter[rid]
-        elif direction is MsgDirection.OUTBOUND:
-            return self._state.outbound_msg_counter[rid]
-        elif MsgDirection.INCOMING:
-            return self._state.incoming_msg_counter[rid]
+    def count_messages(self, rid, direction=None):
+
+        if rid not in self._state._messages:
+            return
+
+        if direction is not None:
+            return len([message for message in self._state._messages[rid] if message['direction'] == direction.name])
+
+        return len(self._state._messages[rid])
 
 
 class State:
@@ -131,10 +132,6 @@ class State:
         self._requests = LimitedDict(limit=self._limit)
         self._messages = LimitedDict(limit=self._limit)
         self._http_exceptions = LimitedDict(limit=self._limit)
-
-        # TODO: need complute this values on fly
-        self._incoming_msg_counter = defaultdict(int)
-        self._outbound_msg_counter = defaultdict(int)
 
     def put_request(self, request):
         rid = id(request)
@@ -161,28 +158,12 @@ class State:
 
         self._messages[rid].appendleft(message)
 
-        if self._outbound_msg_counter[rid] + self._incoming_msg_counter[rid] >= self._limit:
-            return
-
-        if message['direction'] == MsgDirection.OUTBOUND.name:
-            self._outbound_msg_counter[rid] += 1
-        else:
-            self._incoming_msg_counter[rid] += 1
-
     def put_http_exception(self, rid, exception):
         self._http_exceptions[rid] = exception
 
     @property
-    def outbound_msg_counter(self):
-        return self._outbound_msg_counter
-
-    @property
-    def incoming_msg_counter(self):
-        return self._incoming_msg_counter
-
-    @property
     def now(self):
-        return datetime.now().strftime("%Y-%m-%d %H:%M:%S:%f")
+        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     @property
     def requests(self) -> dict:

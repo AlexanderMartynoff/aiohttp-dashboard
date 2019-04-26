@@ -14,6 +14,10 @@
                 </b-card>
             </div>
         </div>
+
+        <bar v-if="requests" sticky="bottom" align="center" :card="false">            
+            <b-pagination :limit="3" :per-page="50" v-model="page" align="center"/>
+        </bar>
     </div>
 </template>
 
@@ -22,6 +26,8 @@
     
     import {WebSocketService} from '@/websocket';
     import {router} from '@/router';
+    import {dateTimeMixin} from '@/utils'
+
 
     export default {
         mixins: [WebSocketService.mixin],
@@ -33,10 +39,9 @@
                 begintime: {label: 'Begin time'},
                 donetime: {label: 'End time'},
             },
+
             requests: [],
-            currentPage: 1,
-            perPage: 50,
-            filter: null
+            page: 1,
         }),
         methods: {
             details: function(id) {
