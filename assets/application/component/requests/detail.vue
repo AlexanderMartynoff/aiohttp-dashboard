@@ -41,7 +41,7 @@
                 </b-card>
             </div>
             <div class="col-md-6 mt-3 mt-md-0">
-                <b-card no-block no-body class="shadow h-100 box box-direction-column">
+                <b-card no-block no-body class="shadow h-100">
                     <b-tabs small pills card no-fade>
                         <b-tab title="Request headers">
                             <b-list-group v-if="record">
@@ -79,7 +79,6 @@
 <script>
     import {router} from '@/router';
     import {WebSocketService} from '@/websocket'
-    import {ps} from '@/utils'
 
     export default {
         mixins: [WebSocketService.mixin],
@@ -101,38 +100,10 @@
         props: {
             id: String
         },
-        computed: {
-            isNotWs: function() {
-                return !(this.wsCollection || {}).length
-            },
-
-            isWsOnLastPage: function() {
-                return this.wsCurrentPage == this.lastWsPageNumber
-            },
-
-            lastWsPageNumber: function() {
-                return Math.ceil(this.wsTotal / this.wsPerPage)
-            }
-        },
-        watch: {
-            wsCurrentPage: function(page) {
-                this.wsUnsubscribe(() => this.wsSubscribe())
-            },
-
-            wsCollection: function() {
-                if (this.goToNextWsPage) {
-                    this.wsCurrentPage = this.lastWsPageNumber
-                }
-            }
-        },
 
         methods: {
             messages() {
                 router.push({path: `/request/messages/${this.id}`})
-            },
-
-            securityButtonVisible() {
-                return this.$hasAccess("document")
             },
 
             onRequestRecive: function(data) {
@@ -172,14 +143,6 @@
                 return string
             },
 
-            format: function (code) {
-                try {
-                    return JSON.stringify(JSON.parse(code), null, 2)
-                } catch (e) {
-                    return code
-                }
-            },
-
             formatException: function (exception) {
                 if (exception && exception.traceback) {
                     return exception.traceback.join('\r\n')
@@ -187,33 +150,33 @@
             },
 
             requestSubscribe: function() {
-                return this.httpSubscription = this.subscribe(
-                    "sibsribe.request",
-                    msg => this.onRequestRecive(msg.data),
-                    {"id": parseInt(this.id)}
-                )
+                return this.httpSubscription = this.subscribe('request', message => {
+                    this.onRequestRecive(message.data)
+                }, {
+                    'id': parseInt(this.id)
+                })
             },
 
             wsSubscribe: function() {
-                return this.wsSubscription = this.subscribe(
-                    "sibsribe.request.messages",
-                    msg => this.onWsMessagesRecive(msg.data),
-                    {
-                        "id": parseInt(this.id),
-                        "page.size": this.wsPerPage,
-                        "page": this.wsCurrentPage
-                    }
-                )
+                this.wsSubscription = this.subscribe('request.messages', message => {
+                    this.onWsMessagesRecive(message.data)
+                }, {
+                    'id': parseInt(this.id),
+                    'limit': this.wsPerPage,
+                    'page': this.wsCurrentPage
+                })
             },
 
             exceptionSubscribe() {
-                return this.wsSubscription = this.subscribe(
-                    "sibsribe.request.exception",
-                    message => this.onExceptionRecive(message.data),
-                    {
-                        "id": parseInt(this.id)
-                    }
-                )
+                this.errorSubscribtion = this.subscribe('request.exception', message => {
+                    this.onExceptionRecive(message.data)
+                }, {
+                    'id': parseInt(this.id)
+                })
+            },
+
+            errorUnsubscribe: function(onComplete) {
+                this.unsibscribe(this.errorSubscribtion, onComplete)
             },
 
             wsUnsubscribe: function(onComplete) {
@@ -229,15 +192,12 @@
             this.wsSubscribe()
             this.requestSubscribe()
             this.exceptionSubscribe()
-            ps.$on('settings:change', configuration => {
-                this.showWsLastPageSetting = configuration.showWsLastPage
-            })
-            ps.$emit('settings:fire')
         },
         
         destroyed: function() {
             this.wsUnsubscribe()
             this.httpUnsubscribe()
+            this.errorUnsubscribe()
         }
     }
 </script>

@@ -3,7 +3,7 @@
 
         <cardnavbar sticky="top">
             <b-nav-item active>
-                <i class="fas fa-arrows-alt-v"></i> {{wsTotal}}
+                <i class="fas fa-arrows-alt-v"></i> {{total}}
                 <i class="fa fa-long-arrow-alt-down"></i> {{wsIncomingTotal}}
                 <i class="fa fa-long-arrow-alt-up" aria-hidden="true"></i> {{wsOutboundTotal}}
             </b-nav-item>
@@ -15,7 +15,7 @@
                     <ul class="list-group">
 
                         <b-list-group>
-                            <b-list-group-item button v-for="(key, index) in wsCollection" @click="showWsDetail(key)">
+                            <b-list-group-item button v-for="(key, index) in collection" @click="showWsDetail(key)">
                                 <code>{{key.time}}</code>
                             </b-list-group-item>
                         </b-list-group>
@@ -30,17 +30,17 @@
                          @hidden="onDetailHidden"
                          centered
                          hide-footer>
-                    <pre><code>{{format(wsRecord.msg)}}</code></pre>
+                    <pre><code>{{format(record.msg)}}</code></pre>
                 </b-modal>
             </div>
         </div>
 
-        <cardnavbar v-if="wsCollection" sticky="bottom" align="center" :card="false">            
+        <cardnavbar v-if="collection" sticky="bottom" align="center" :card="false">            
             <b-pagination :limit="3"
-                          :total-rows="wsTotal"
-                          :per-page="wsPerPage"
+                          :total-rows="total"
+                          :per-page="limit"
                           :hide-ellipsis="true"
-                          v-model="wsCurrentPage"
+                          v-model="page"
                           align="center"
                           size="md"/>
         </cardnavbar>
@@ -56,13 +56,11 @@
         mixins: [WebSocketService.mixin],
         data: function() {
             return {
-                wsRecord: {},
-                wsCurrentPage: 1,
-                wsPerPage: 25,
-                wsTotal: 0,
-                wsCollection: [],
-                goToNextWsPage: false,
-                showWsLastPageSetting: false,
+                record: {},
+                page: 1,
+                limit: 25,
+                total: 0,
+                collection: [],
                 wsIncomingTotal: 0,
                 wsOutboundTotal: 0,
             }
@@ -70,42 +68,17 @@
         props: {
             id: String
         },
-        computed: {
-            isNotWs: function() {
-                return !(this.wsCollection || {}).length
-            },
-
-            isWsOnLastPage: function() {
-                return this.wsCurrentPage == this.lastWsPageNumber
-            },
-
-            lastWsPageNumber: function() {
-                return Math.ceil(this.wsTotal / this.wsPerPage)
-            }
-        },
-        watch: {
-            wsCurrentPage: function(page) {
-                this.wsUnsubscribe(() => this.wsSubscribe())
-            },
-
-            wsCollection: function() {
-                if (this.goToNextWsPage) {
-                    this.wsCurrentPage = this.lastWsPageNumber
-                }
-            }
-        },
         methods: {
 
             onWsMessagesRecive: function(data) {
-                this.goToNextWsPage = this.isWsOnLastPage && this.showWsLastPageSetting
-                this.wsCollection = data.collection
-                this.wsTotal = data.total
+                this.collection = data.collection
+                this.total = data.total
                 this.wsIncomingTotal = data.incoming
                 this.wsOutboundTotal = data.outbound
             },
 
             showWsDetail: function(record) {
-                this.wsRecord = record
+                this.record = record
                 this.$refs.wsDetail.show()
             },
 
@@ -134,15 +107,13 @@
             },
 
             wsSubscribe: function() {
-                return this.wsSubscription = this.subscribe(
-                    "sibsribe.request.messages",
-                    msg => this.onWsMessagesRecive(msg.data),
-                    {
-                        "id": parseInt(this.id),
-                        "page.size": this.wsPerPage,
-                        "page": this.wsCurrentPage
-                    }
-                )
+                this.wsSubscription = this.subscribe('request.messages', message => {
+                    this.onWsMessagesRecive(message.data)
+                }, {
+                    'id': parseInt(this.id),
+                    'limit': this.limit,
+                    'page': this.page,
+                })
             },
 
             wsUnsubscribe: function(onComplete) {

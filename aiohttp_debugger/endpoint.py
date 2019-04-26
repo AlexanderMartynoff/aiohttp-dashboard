@@ -41,7 +41,7 @@ class WsMsgDispatcher(Router):
         self._sender = sender
         self._debugger_api = debugger_api
 
-    @route('sibsribe.request')
+    @route('request')
     def sibsribe_request(self, message):
         request_id = message.data['id']
 
@@ -56,10 +56,10 @@ class WsMsgDispatcher(Router):
 
         return self._debugger_api.request(request_id)
 
-    @route('sibsribe.request.messages')
+    @route('request.messages')
     def sibsribe_request_messages(self, message):
         request_id = message.data['id']
-        page_size = message.data['page.size']
+        page_size = message.data['limit']
         page = message.data['page']
 
         def handler(event):
@@ -73,7 +73,7 @@ class WsMsgDispatcher(Router):
 
         return self._debugger_api.messages(request_id, page, page_size)
 
-    @route('sibsribe.requests')
+    @route('requests')
     def sibsribe_requests(self, message):
 
         def handler(event):
@@ -86,7 +86,7 @@ class WsMsgDispatcher(Router):
 
         return self._debugger_api.requests()
 
-    @route('sibsribe.request.exception')
+    @route('request.exception')
     def sibsribe_request_exceptions(self, message):
         request_id = message.data['id']
 
@@ -119,7 +119,7 @@ class WsMsgDispatcher(Router):
 
     def close(self):
         self._debugger.off(group=self._sender.id)
-        logger.info(f"after remove debugger handlers - {self._debugger.size}")
+        logger.info(f'After unsibscribe handlers left - ``{self._debugger.size}``')
 
 
 class Sender(Router):
@@ -130,19 +130,19 @@ class Sender(Router):
         self._debugger_api = debugger_api
         self._endpoints = defaultdict(lambda: None)
 
-    @route('sibsribe.request')
+    @route('request')
     def _sibsribe_request(self, message):
         self._send(self._debugger_api.request(message.data['id']), message)
 
-    @route('sibsribe.request.messages')
+    @route('request.messages')
     def _sibsribe_request_messages(self, message):
         request_id = message.data['id']
-        page_size = message.data['page.size']
+        page_size = message.data['limit']
         page = message.data['page']
 
         self._send(self._debugger_api.messages(request_id, page, page_size), message)
 
-    @route('sibsribe.requests')
+    @route('requests')
     def _sibsribe_requests(self, message):
         self._send(self._debugger_api.requests(), message)
 
@@ -159,8 +159,7 @@ class Sender(Router):
         self._take_endpoint(message.endpoint).handle_soon(message, out, self._send)
 
     def send(self, message):
-
-        logger.info(f"try to send data for {message.endpoint}")
+        logger.info(f'Try to send data for ``{message.endpoint}``')
 
         endpoint = self._endpoints[message.endpoint]
 
@@ -174,14 +173,15 @@ class Sender(Router):
             else:
                 endpoint.handle_later(message)
 
-            logger.info(f"passed time {waiting}, is free: {'Yes' if free else 'No'}")
+            logger.info(f'Passed ``{waiting}``, is free - ``{"Yes" if free else "No"}``')
 
     def close(self):
         for endpoint_state in self._endpoints.values():
             endpoint_state.close()
 
     def _send(self, out, message):
-        logger.info(f'send websocket to chanel {message.endpoint}')
+        logger.info(f'Send to chanel ``{message.endpoint}``')
+
         return ensure_future(self._socket.send_json(
             self._prepare_ws_response(out, message), dumps=dumps))
 
@@ -222,12 +222,12 @@ class Sender(Router):
             if self._send_waiting_task:
                 self._send_waiting_task.cancel()
 
-                logger.info(f"cancel deferred task {id(self._send_waiting_task)}")
+                logger.info(f'Cancel deferred task ``{id(self._send_waiting_task)}``')
 
             when, task = self._do_send_later(message)
             self._send_waiting_task = task
 
-            logger.info(f"put deferred task {id(task)} call at {when} seconds to {message.endpoint}")
+            logger.info(f'Deferred task ``{id(task)}`` will call at ``{when}`` seconds for ``{message.endpoint}``')
 
         def _do_send_later(self, message):
             when = self._last_send_time + self._delay

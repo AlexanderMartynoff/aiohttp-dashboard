@@ -6,7 +6,7 @@
                     <b-table @row-clicked="(item, index) => details(item.id, index)" 
                              :responsive="true"
                              :hover="true"
-                             :items="items"
+                             :items="requests"
                              :fields="fields"
                              striped
                              class="table-pointer">
@@ -33,7 +33,7 @@
                 begintime: {label: 'Begin time'},
                 donetime: {label: 'End time'},
             },
-            items: [],
+            requests: [],
             currentPage: 1,
             perPage: 50,
             filter: null
@@ -44,8 +44,8 @@
             }
         },
         created: function() {
-            this.subscription = this.subscribe("sibsribe.requests", msg => {
-                this.items = msg.data;
+            this.subscription = this.subscribe('requests', message => {
+                this.requests = message.data;
             });
         },
         destroyed: function() {
