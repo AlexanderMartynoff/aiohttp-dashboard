@@ -5,7 +5,7 @@ Dashboard panel for ``aiohttp`` applications
 Features
 ********
 
-- Fully reactive user interface
+- Realtime user interface
 - Viewing HTTP activity 
 - Viewing WebSocket activity 
 
@@ -16,8 +16,8 @@ Install
         
     pip install aiohttp_debugger
 
-Embedding in the application
-****************************
+Setup
+*****
 
 .. code-block:: python
         
