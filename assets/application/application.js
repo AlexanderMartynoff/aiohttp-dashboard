@@ -4,7 +4,6 @@ import VueRouter from 'vue-router'
 
 import {WebSocketService} from '@/websocket'
 import {router} from '@/router'
-import {port} from '@/utils'
 
 import Box from '@/component/box/box'
 import BoxHeader from '@/component/box/box-header'
@@ -19,7 +18,6 @@ import DropdpownPane from '@/component/widget/dropdpown-pane'
 import InspectMaster from '@/component/inspect/master'
 import Alert from '@/component/widget/alert'
 import Layout from '@/component/layout/layout'
-import Predicat from '@/component/predicat/index'
 import Bar from '@/component/bar/bar'
 import Traceback from '@/component/traceback/traceback'
 
@@ -29,7 +27,6 @@ import "@/style/bootstrap-override.styl"
 
 
 Vue.use(VueRouter)
-// register boostrap as global components
 Vue.use(BootstrapVue)
 
 const components = {
@@ -45,7 +42,6 @@ const components = {
     InspectMaster,
     Layout,
     SettingsWindow,
-    Predicat,
     Bar,
     Traceback,
 }

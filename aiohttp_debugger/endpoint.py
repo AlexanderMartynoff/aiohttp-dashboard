@@ -137,10 +137,10 @@ class Sender(Router):
     @route('request.messages')
     def _sibsribe_request_messages(self, message):
         request_id = message.data['id']
-        page_size = message.data['limit']
+        limit = message.data['limit']
         page = message.data['page']
 
-        self._send(self._debugger_api.messages(request_id, page, page_size), message)
+        self._send(self._debugger_api.messages(request_id, page, limit), message)
 
     @route('requests')
     def _sibsribe_requests(self, message):

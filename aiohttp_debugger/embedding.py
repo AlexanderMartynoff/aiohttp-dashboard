@@ -2,13 +2,14 @@ import aiohttp_jinja2
 from jinja2 import FileSystemLoader
 from aiohttp.web import WebSocketResponse, Response
 from functools import partial
+from os.path import join, normpath, isabs
 
 from .debugger import Debugger, DEBUGGER_KEY, JINJA_KEY
 from .event import HttpRequest, HttpResponse, WsMsgIncoming, WsMsgOutbound, MsgDirection
 
 
-def setup(prefix, application, routes, static_routes, debugger_dir):
-    application[DEBUGGER_KEY] = Debugger()
+def setup(name, application, routes, static_routes, static_path):
+    application[DEBUGGER_KEY] = Debugger(name)
 
     _register_routes(application, routes)
     _register_static_routes(application, static_routes)
@@ -18,7 +19,7 @@ def setup(prefix, application, routes, static_routes, debugger_dir):
 
     aiohttp_jinja2.setup(
         application,
-        loader=FileSystemLoader(f"{debugger_dir}/static"),
+        loader=FileSystemLoader(static_path),
         app_key=JINJA_KEY)
 
     return application
@@ -26,12 +27,18 @@ def setup(prefix, application, routes, static_routes, debugger_dir):
 
 def _register_routes(application, routes):
     for method, path, handler in routes:
-        application.router.add_route(method, path, handler)
+
+        if isabs(path):
+            raise RuntimeError('Path must be relative, not absolute')
+
+        application.router.add_route(
+            method, join(application[DEBUGGER_KEY].path, path), handler)
 
 
 def _register_static_routes(application, routes):
     for url, path in routes:
-        application.router.add_static(url, path)
+        application.router.add_static(
+            join(application[DEBUGGER_KEY].path, url), path)
 
 
 async def _factory_on_request(application, handler):
@@ -39,7 +46,7 @@ async def _factory_on_request(application, handler):
 
 
 def _is_sutable_request(request):
-    return not request.path.startswith('/_debugger')
+    return not request.path.startswith(request.app[DEBUGGER_KEY].path)
 
 
 async def _on_request(request, handler):

@@ -8,6 +8,7 @@ import logging
 import platform
 import aiohttp
 from functools import partial
+from os.path import join
 
 from .helper import LimitedDict
 from .event import (EventDriven, HttpRequest, HttpResponse,
@@ -23,9 +24,10 @@ JINJA_KEY = __name__ + '.jinja2'
 
 class Debugger(EventDriven):
 
-    def __init__(self):
+    def __init__(self, name):
         EventDriven.__init__(self)
 
+        self._name = name
         self._state = State()
         self._api = Api(self._state)
 
@@ -60,9 +62,14 @@ class Debugger(EventDriven):
         })
 
         assert direction in (MsgDirection.INCOMING, MsgDirection.OUTBOUND), \
-            RuntimeError(f'Unknown websoket message direction {direction!s}')
+            RuntimeError(f'Unknown websoket message direction {direction}')
 
-        self.fire((WsMsgOutbound if direction is MsgDirection.OUTBOUND else WsMsgIncoming)(request_id))
+        if direction is MsgDirection.OUTBOUND:
+            Event = WsMsgOutbound
+        else:
+            Event = WsMsgIncoming
+
+        self.fire(Event(request_id))
 
     def register_http_exception(self, request, exception):
         self.state.put_http_exception(id(request), exception)
@@ -75,8 +82,15 @@ class Debugger(EventDriven):
     def state(self):
         return self._state
 
+    @property
+    def name(self):
+        return self._name
 
-# NOTE: merge this class with Debugger
+    @property
+    def path(self):
+        return join('/', self._name)
+
+
 class Api:
     def __init__(self, state):
         self._state = state
@@ -121,7 +135,7 @@ class Api:
             return
 
         if direction is not None:
-            return len([message for message in self._state._messages[rid] if message['direction'] == direction.name])
+            return len([_ for _ in self._state._messages[rid] if _['direction'] == direction.name])
 
         return len(self._state._messages[rid])
 

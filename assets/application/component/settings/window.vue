@@ -24,7 +24,6 @@
 
 <script type="text/javascript">
     import {WebSocketService} from '@/websocket';
-    import {ps} from '@/utils';
 
     export default {
         data: () => ({
@@ -34,20 +33,9 @@
             wsPageUpdateDelay: 2
         }),
         mixins: [WebSocketService.mixin],
-        watch: {
-            showWsLastPage: function() {
-                this.emitSettingsChange();
-            },
-            wsPageUpdateDelay: function() {
-                this.emitSettingsChange();
-            },
-        },
+        watch: {},
         methods: {
             emitSettingsChange: function() {
-                return ps.$emit('settings:change', {
-                    showWsLastPage: this.showWsLastPage,
-                    wsPageUpdateDelay: this.wsPageUpdateDelay
-                });
             },
             show: function() {
                 this.$refs.settingsWindow.show();
@@ -56,9 +44,6 @@
                 return this.emitSettingsChange();
             }
         },
-        created: function() {
-            ps.$on('settings:fire', event => this.emitSettingsChange())
-        }
     }
 </script>
 

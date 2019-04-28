@@ -25,7 +25,7 @@ Setup
 
     application = ...
     
-    aiohttp_debugger.setup('/aiohttp_debugger', application)
+    aiohttp_debugger.setup('<name>', application)
 
 
-The dashboard is available at ``<application_url>/aiohttp_debugger``
+The dashboard is available at ``/<name>``

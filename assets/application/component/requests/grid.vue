@@ -23,10 +23,8 @@
 
 
 <script type="text/javascript">
-    
     import {WebSocketService} from '@/websocket';
     import {router} from '@/router';
-    import {dateTimeMixin} from '@/utils'
 
 
     export default {

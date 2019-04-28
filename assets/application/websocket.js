@@ -1,5 +1,4 @@
-import {port} from '@/utils';
-import config from '@/config';
+import environment from '@/environment';
 
 
 class WebSocketService {
@@ -143,7 +142,8 @@ class WebSocketService {
     }
 }
 
-const instance = WebSocketService.instance = new WebSocketService(config.wsApiEndpoint);
+const instance = WebSocketService.instance = new WebSocketService(
+    environment.getParameter('aiohttp-dashboard-endpoint'));
 
 // for use as mixin
 WebSocketService.mixin = {
