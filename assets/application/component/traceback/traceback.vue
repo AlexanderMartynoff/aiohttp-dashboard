@@ -1,7 +1,7 @@
 <template>
     <b-card class="shadow traceback" title="Stacktrace">
         <code>
-            <pre><span class="traceback-line" v-for="line in exception.traceback"><span class="traceback-line-code">{{line}}</span><br/></span></pre>
+            <pre>{{format(exception)}}</pre>
         </code>
         <code>
             <pre>{{exception.class}}: {{exception.message}}</pre>

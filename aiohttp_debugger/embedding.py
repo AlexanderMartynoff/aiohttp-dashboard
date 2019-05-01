@@ -1,44 +1,55 @@
 import aiohttp_jinja2
 from jinja2 import FileSystemLoader
 from aiohttp.web import WebSocketResponse, Response
+from yarl import URL
 from functools import partial
-from os.path import join, normpath, isabs
+from os.path import join, normpath, isabs, dirname, abspath
 
 from .debugger import Debugger, DEBUGGER_KEY, JINJA_KEY
 from .event import HttpRequest, HttpResponse, WsMsgIncoming, WsMsgOutbound, MsgDirection
 
 
-def setup(name, application, routes, static_routes, static_path):
+# these path fragments will be joined with `Debugger.path`
+_url_fragment_endpoint = 'api'
+_url_fragment_index = 'index'
+_url_fragment_static = 'static'
+
+# path to static files location into file system
+_static_path = join(dirname(abspath(__file__)), _url_fragment_static)
+
+
+def setup(name, application, action_index, action_endpoint):
     application[DEBUGGER_KEY] = Debugger(name)
 
-    _register_routes(application, routes)
-    _register_static_routes(application, static_routes)
+    _setup_routes(application, action_index, action_endpoint)
+    _setup_static_routes(application)
 
     application.middlewares.append(_factory_on_request)
     application.on_response_prepare.append(_on_response)
 
     aiohttp_jinja2.setup(
         application,
-        loader=FileSystemLoader(static_path),
+        loader=FileSystemLoader(_static_path),
         app_key=JINJA_KEY)
 
     return application
 
 
-def _register_routes(application, routes):
-    for method, path, handler in routes:
+def _setup_routes(application, action_index, action_endpoint):
+    debugger_path = application[DEBUGGER_KEY].path
 
-        if isabs(path):
-            raise RuntimeError('Path must be relative, not absolute')
+    application.router.add_get(
+        join(debugger_path, _url_fragment_index), action_index)
 
-        application.router.add_route(
-            method, join(application[DEBUGGER_KEY].path, path), handler)
+    application.router.add_get(
+        join(debugger_path, _url_fragment_endpoint), action_endpoint)
 
 
-def _register_static_routes(application, routes):
-    for url, path in routes:
-        application.router.add_static(
-            join(application[DEBUGGER_KEY].path, url), path)
+def _setup_static_routes(application):
+    debugger_path = application[DEBUGGER_KEY].path
+
+    application.router.add_static(
+        join(debugger_path, _url_fragment_static), _static_path)
 
 
 async def _factory_on_request(application, handler):
@@ -108,3 +119,17 @@ def _ws_resposne_do_monkey_patch(request, response):
         return message
 
     original_receive, response.receive = response.receive, receive_monkey_patch
+
+
+def endpoint_for_request(request):
+    if request.secure:
+        scheme = 'wss'
+    else:
+        scheme = 'ws'
+
+    return URL.build(
+        scheme=scheme,
+        host=request.url.host,
+        port=request.url.port,
+        path=join(request.app[DEBUGGER_KEY].path, _url_fragment_endpoint),
+    )

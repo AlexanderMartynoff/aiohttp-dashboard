@@ -1,6 +1,6 @@
 from enum import Enum
 from uuid import uuid4
-from collections import defaultdict, OrderedDict, Sequence
+from collections import defaultdict, Sequence
 
 
 class EventDriven:

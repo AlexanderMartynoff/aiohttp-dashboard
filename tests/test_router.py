@@ -97,6 +97,7 @@ def test_routes_length():
 
     assert len(Controller().routes) == 3
 
+
 def test_route_error():
 
     class CatchError(Exception):
@@ -106,7 +107,7 @@ def test_route_error():
         pass
 
     class Controller(Router):
-        
+
         @route('/catch')
         def catch(self):
             raise CatchError

@@ -33,7 +33,6 @@
             wsPageUpdateDelay: 2
         }),
         mixins: [WebSocketService.mixin],
-        watch: {},
         methods: {
             emitSettingsChange: function() {
             },
