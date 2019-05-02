@@ -2,7 +2,6 @@ from aiohttp.web import WebSocketResponse
 from asyncio import iscoroutine, isfuture, ensure_future, gather
 from inspect import iscoroutinefunction, isfunction, ismethod, isclass
 from collections import defaultdict, OrderedDict, Sequence
-import asyncio
 
 
 def to_list(_):

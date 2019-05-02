@@ -68,7 +68,7 @@
         </div>
 
         <div class="row mt-3" v-if="exception">
-            <div class="col-md-12">
+            <div class="col-md">
                 <traceback :exception="exception"></traceback>
             </div>
         </div>

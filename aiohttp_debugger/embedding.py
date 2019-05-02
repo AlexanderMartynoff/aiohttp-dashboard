@@ -11,10 +11,10 @@ from .event import HttpRequest, HttpResponse, WsMsgIncoming, WsMsgOutbound, MsgD
 
 # these path fragments will be joined with `Debugger.path`
 _url_fragment_endpoint = 'api'
-_url_fragment_index = 'index'
 _url_fragment_static = 'static'
 
 # path to static files location into file system
+# see `Debugger._setup_routes`
 _static_path = join(dirname(abspath(__file__)), _url_fragment_static)
 
 
@@ -38,8 +38,7 @@ def setup(name, application, action_index, action_endpoint):
 def _setup_routes(application, action_index, action_endpoint):
     debugger_path = application[DEBUGGER_KEY].path
 
-    application.router.add_get(
-        join(debugger_path, _url_fragment_index), action_index)
+    application.router.add_get(debugger_path, action_index)
 
     application.router.add_get(
         join(debugger_path, _url_fragment_endpoint), action_endpoint)

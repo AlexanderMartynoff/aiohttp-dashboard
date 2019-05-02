@@ -1,7 +1,7 @@
 from . import action, embedding
 
 
-__version__ = '3.0.0a0'
+__version__ = '3.0.0a1'
 
 
 def setup(name, application):
