@@ -11,8 +11,14 @@ from functools import partial
 from os.path import join
 
 from .helper import LimitedDict
-from .event import (EventDriven, HttpRequest, HttpResponse,
-                    WsMsgIncoming, WsMsgOutbound, MsgDirection)
+from .event import (
+    EventDriven,
+    HttpRequest,
+    HttpResponse,
+    WsMsgIncoming,
+    WsMsgOutbound,
+    MsgDirection
+)
 
 
 logger = logging.getLogger("aiohttp_debugger.debugger")

@@ -14,18 +14,18 @@ Install
 
 .. code-block:: shell
         
-    pip install aiohttp_debugger
+    pip install aiohttp_dashboard
 
 Setup
 *****
 
 .. code-block:: python
         
-    import aiohttp_debugger
+    import aiohttp_dashboard
 
     application = ...
     
-    aiohttp_debugger.setup('<name>', application)
+    aiohttp_dashboard.setup('<name>', application)
 
 
 The dashboard is available at ``/<name>``

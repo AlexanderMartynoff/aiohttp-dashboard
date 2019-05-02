@@ -2,7 +2,7 @@ from setuptools import setup
 from distutils.cmd import Command
 from subprocess import Popen
 import subprocess
-from aiohttp_debugger import __version__
+from aiohttp_dashboard import __version__
 from setuptools.command.test import test as TestCommand
 import sys
 
@@ -46,15 +46,15 @@ dev_requires = prod_requires + [
 ]
 
 setup(
-    name='aiohttp-debugger',
+    name='aiohttp-dashboard',
     version=__version__,
     install_requires=prod_requires,
     extras_require={
         'dev': dev_requires
     },
-    packages=['aiohttp_debugger'],
+    packages=['aiohttp_dashboard'],
     package_data={
-        'aiohttp_debugger': [
+        'aiohttp_dashboard': [
             'static/*',
             'static/bundle/*',
             'static/bundle/font-awesome/css/*',

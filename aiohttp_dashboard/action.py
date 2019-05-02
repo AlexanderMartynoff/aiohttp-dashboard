@@ -4,7 +4,7 @@ import time
 
 from .endpoint import WsMsgDispatcherProxy
 from .helper import WsResponseHelper
-from .debugger import DEBUGGER_KEY, JINJA_KEY
+from .core import DEBUGGER_KEY, JINJA_KEY
 from .embedding import endpoint_for_request
 
 

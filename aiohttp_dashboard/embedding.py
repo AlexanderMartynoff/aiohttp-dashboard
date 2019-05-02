@@ -5,7 +5,7 @@ from yarl import URL
 from functools import partial
 from os.path import join, normpath, isabs, dirname, abspath
 
-from .debugger import Debugger, DEBUGGER_KEY, JINJA_KEY
+from .core import Debugger, DEBUGGER_KEY, JINJA_KEY
 from .event import HttpRequest, HttpResponse, WsMsgIncoming, WsMsgOutbound, MsgDirection
 
 
