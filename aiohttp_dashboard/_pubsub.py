@@ -1,9 +1,8 @@
-from enum import Enum
 from uuid import uuid4
 from collections import defaultdict, Sequence
 
 
-class EventDriven:
+class Pubsub:
     def __init__(self):
         self._handlers = defaultdict(list)
 
@@ -46,11 +45,12 @@ class EventDriven:
     def size(self):
         return sum(len(handlers) for handlers in self._handlers.values())
 
-    class Event:
-        pass
+
+class Event:
+    pass
 
 
-class DebuggerAbstractWebEvent(EventDriven.Event):
+class DebuggerAbstractWebEvent(Event):
 
     def __init__(self, rid):
         self._rid = rid
@@ -74,9 +74,3 @@ class WsMsgIncoming(DebuggerAbstractWebEvent):
 
 class WsMsgOutbound(DebuggerAbstractWebEvent):
     pass
-
-
-# ticket for web socket messages
-class MsgDirection(Enum):
-    OUTBOUND = 1
-    INCOMING = 2

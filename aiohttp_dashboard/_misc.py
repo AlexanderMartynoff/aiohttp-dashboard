@@ -2,6 +2,7 @@ from aiohttp.web import WebSocketResponse
 from asyncio import iscoroutine, isfuture, ensure_future, gather
 from inspect import iscoroutinefunction, isfunction, ismethod, isclass
 from collections import defaultdict, OrderedDict, Sequence
+from enum import Enum
 
 
 def to_list(_):
@@ -62,3 +63,8 @@ class LimitedDict(OrderedDict):
         if self._limit is not None:
             while len(self) > self._limit:
                 self.popitem(last=False)
+
+
+class MsgDirection(Enum):
+    OUTBOUND = 1
+    INCOMING = 2

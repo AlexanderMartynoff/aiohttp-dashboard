@@ -8,8 +8,9 @@ import inspect
 import json
 import traceback
 
-from ._event import WsMsgIncoming, WsMsgOutbound, HttpRequest, HttpResponse, MsgDirection
+from ._pubsub import WsMsgIncoming, WsMsgOutbound, HttpRequest, HttpResponse
 from ._router import Router, route
+from ._misc import MsgDirection
 
 
 logger = logging.getLogger(__name__)

@@ -1,6 +1,6 @@
-from aiohttp_jinja2 import template
 import logging
 import time
+from aiohttp_jinja2 import template
 
 from ._endpoint import WsMsgDispatcherProxy
 from ._misc import WsResponseHelper

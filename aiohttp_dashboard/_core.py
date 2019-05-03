@@ -10,15 +10,9 @@ import aiohttp
 from functools import partial
 from os.path import join
 
-from ._misc import LimitedDict
-from ._event import (
-    EventDriven,
-    HttpRequest,
-    HttpResponse,
-    WsMsgIncoming,
-    WsMsgOutbound,
-    MsgDirection
-)
+from ._misc import LimitedDict, MsgDirection
+from ._pubsub import Pubsub, HttpRequest, HttpResponse, \
+    WsMsgIncoming, WsMsgOutbound
 
 
 logger = logging.getLogger(__name__)
@@ -28,10 +22,10 @@ DEBUGGER_KEY = __name__
 JINJA_KEY = __name__ + '-jinja'
 
 
-class Debugger(EventDriven):
+class Debugger(Pubsub):
 
     def __init__(self, name):
-        EventDriven.__init__(self)
+        Pubsub.__init__(self)
 
         self._name = name
         self._state = State()
@@ -68,7 +62,7 @@ class Debugger(EventDriven):
         })
 
         assert direction in (MsgDirection.INCOMING, MsgDirection.OUTBOUND), \
-            RuntimeError(f'Unknown websoket message direction {direction}')
+            RuntimeError(f'Unknown websocket message direction {direction}')
 
         if direction is MsgDirection.OUTBOUND:
             Event = WsMsgOutbound

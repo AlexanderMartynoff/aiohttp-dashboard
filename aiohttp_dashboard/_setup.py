@@ -6,7 +6,7 @@ from functools import partial
 from os.path import join, normpath, isabs, dirname, abspath
 
 from ._core import Debugger, DEBUGGER_KEY, JINJA_KEY
-from ._event import HttpRequest, HttpResponse, WsMsgIncoming, WsMsgOutbound, MsgDirection
+from ._misc import MsgDirection
 
 
 # these path fragments will be joined with `Debugger.path`
