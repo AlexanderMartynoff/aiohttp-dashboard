@@ -48,14 +48,14 @@ class WebSocketService {
             const callbackObject = this._responseHandlres[msg.uid];
 
             if (!callbackObject) {
-                console.log(`not found callbackObject by ${msg.uid}`);
+                console.log(`not found callback by ${msg.uid}`);
                 return;
             }
 
             if (callbackObject.callback) {
                 callbackObject.callback(msg);
             } else {
-                console.log(`not defined callback in callbackObject by ${msg.uid}`);
+                console.log(`not defined callback by ${msg.uid}`);
             }
 
             if (!callbackObject.persistent) {

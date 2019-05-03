@@ -14,7 +14,7 @@
         <div class="row mt-3">
             <div class="col-md-6">
                 <b-card class="shadow h-100" title="Info">
-                    <ul class="list-group overflow-auto" v-if="record">
+                    <ul class="list-group overflow-auto">
                         <li class="list-group-item list-group-item-warning block" v-if="record.status || record.reason">
                             <div>
                                 <span>{{record.status}}</span>
@@ -39,13 +39,26 @@
                             <span>Scheme:</span> <code>{{record.scheme}}</code>
                         </li>
                     </ul>
-                    <alert v-else message="Records not found"></alert>
+
+                    <b-card class="mt-2">
+                        <code v-if="record.body">
+                            <pre class="my-0">{{record.body}}</pre>
+                        </code>
+                        <code v-else>
+                            [EMPTY BODY]
+                        </code>
+                    </b-card>
+
                 </b-card>
             </div>
             <div class="col-md-6 mt-3 mt-md-0">
                 <b-card no-block no-body class="shadow h-100">
-                    <b-tabs small pills card no-fade>
-                        <b-tab title="Request headers">
+                    <b-tabs small pills card>
+                        <b-tab title="Request">
+                            <template slot="title">
+                                <i class="fas fa-arrow-right"></i> Headers
+                            </template>
+
                             <b-list-group v-if="record">
                                 <b-list-group-item button v-for="value, key in record.reqheaders">
                                     <span>{{key}}:</span> <code>{{truncate(value)}}</code>
@@ -54,7 +67,12 @@
 
                             <alert v-else message="Records not found"></alert>
                         </b-tab>
-                        <b-tab title="Response headers">
+                        <b-tab title="Response">
+
+                            <template slot="title">
+                                <i class="fas fa-arrow-left"></i> Headers
+                            </template>
+
                             <ul class="list-group" v-if="record">
                                 <li class="list-group-item" v-for="(value, key) in record.resheaders">
                                     <span>{{key}}:</span> <code>{{truncate(value)}}</code>
@@ -68,7 +86,7 @@
         </div>
 
         <div class="row mt-3" v-if="exception">
-            <div class="col-md">
+            <div class="col-md-12">
                 <traceback :exception="exception"></traceback>
             </div>
         </div>
@@ -117,19 +135,6 @@
 
             onExceptionRecive(data) {
                 this.exception = data.item
-            },
-
-            showWsDetail: function(record) {
-                this.wsRecord = record
-                this.$refs.wsDetail.show()
-            },
-
-            onDetailShown: function() {
-                this.wsUnsubscribe()
-            },
-
-            onDetailHidden: function() {
-                this.wsSubscribe()
             },
 
             truncate(string, limit=50) {

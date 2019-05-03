@@ -1,13 +1,13 @@
 from os.path import join
 import aiohttp.web
-import aiohttp_debugger
-from aiohttp_debugger import action
-from aiohttp_debugger.debugger import DEBUGGER_KEY
-from aiohttp_debugger.embedding import _factory_on_request, _on_response
+import aiohttp_dashboard
+from aiohttp_dashboard import action
+from aiohttp_dashboard.core import DEBUGGER_KEY
+from aiohttp_dashboard.embedding import _factory_on_request, _on_response
 
 
 def empty_application(prefix):
-    return aiohttp_debugger.setup(prefix, aiohttp.web.Application())
+    return aiohttp_dashboard.setup(prefix, aiohttp.web.Application())
 
 
 def test_debugger(prefix):

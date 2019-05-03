@@ -1,7 +1,7 @@
 import pytest
 import aiohttp.web
-from aiohttp_debugger.debugger import DEBUGGER_KEY
-from aiohttp_debugger.router import Router, route, RouteNotFoundError
+from aiohttp_dashboard.core import DEBUGGER_KEY
+from aiohttp_dashboard.router import Router, route, RouteNotFoundError
 from asyncio import sleep
 
 
@@ -26,7 +26,7 @@ def test_routing():
 def test_arguments():
 
     class Controller(Router):
-        
+
         @route('/number')
         def hello_world(self, first=None, second=None):
             return first, second
@@ -42,7 +42,7 @@ def test_arguments():
 def test_default():
 
     class Controller(Router):
-        
+
         @route.default
         def default(self):
             return 'default'
@@ -55,7 +55,7 @@ def test_default():
 def test_default_with_arguments():
 
     class Controller(Router):
-        
+
         @route.default
         def default(self, argument):
             return argument
@@ -121,7 +121,7 @@ def test_route_error():
             return 'catch'
 
     controller = Controller()
-    
+
     assert controller.router('/catch') == 'catch'
 
     with pytest.raises(UncatchError):

@@ -82,14 +82,6 @@
 
         methods: {
 
-            messageVariant(message) {
-                if (message.direction === 'OUTBOUND') {
-                    return 'success'
-                } else {
-                    return 'danger'
-                }
-            },
-
             onWsMessagesRecive: function(data) {
                 this.messages = data.collection
                 this.total = data.total

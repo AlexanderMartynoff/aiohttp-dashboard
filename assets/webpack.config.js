@@ -11,7 +11,7 @@ module.exports = {
         application: resolve('./application/application.js')
     },
     output: {
-        path: resolve("../aiohttp_debugger/static/bundle"),
+        path: resolve('../aiohttp_dashboard/static/bundle'),
         filename: '[name].js',
         publicPath: '/static'
     },

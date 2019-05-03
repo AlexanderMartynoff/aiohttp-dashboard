@@ -2,24 +2,24 @@ from setuptools import setup
 from distutils.cmd import Command
 from subprocess import Popen
 import subprocess
-from aiohttp_dashboard import __version__
 from setuptools.command.test import test as TestCommand
 import sys
+
+
+__version__ = '0.0.2'
 
 
 class Test(TestCommand):
 
     def run_tests(self):
-        raise SystemExit(subprocess.call([sys.executable, '-m', 'pytest', 'tests', '-v', '-s', '--cov=aiohttp_debugger']))
+        subprocess.call([sys.executable, '-m', 'pytest', 'tests', '-v', '-s', '--cov=aiohttp_dashboard'])
 
 
-class Npm(Command):
-    user_options = [('static', None, None)]
+class Asset(Command):
+    user_options = [('asset', None, None)]
 
     def run(self):
-        # `npm install` in any case
         self._run('npm', 'install')
-        # run assets build task
         self._run('npm', 'run', 'build')
 
     def _run(self, *args):
@@ -63,7 +63,7 @@ setup(
     },
     include_package_data=True,
     cmdclass={
-        'static': Npm,
-        'test': Test
+        'assets': Asset,
+        'tests': Test
     }
 )

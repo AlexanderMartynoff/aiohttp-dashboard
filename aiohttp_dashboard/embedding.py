@@ -10,7 +10,9 @@ from .event import HttpRequest, HttpResponse, WsMsgIncoming, WsMsgOutbound, MsgD
 
 
 # these path fragments will be joined with `Debugger.path`
+# websocket path for tranfer data messages
 _url_fragment_endpoint = 'api'
+# just path for serve static files
 _url_fragment_static = 'static'
 
 # path to static files location into file system

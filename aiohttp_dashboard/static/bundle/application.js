@@ -2062,14 +2062,14 @@ var WebSocketService = function () {
                 var callbackObject = _this._responseHandlres[msg.uid];
 
                 if (!callbackObject) {
-                    console.log('not found callbackObject by ' + msg.uid);
+                    console.log('not found callback by ' + msg.uid);
                     return;
                 }
 
                 if (callbackObject.callback) {
                     callbackObject.callback(msg);
                 } else {
-                    console.log('not defined callback in callbackObject by ' + msg.uid);
+                    console.log('not defined callback by ' + msg.uid);
                 }
 
                 if (!callbackObject.persistent) {
@@ -20335,7 +20335,7 @@ var Component = __webpack_require__(11)(
   /* cssModules */
   null
 )
-Component.options.__file = "/Users/alexander/projects/aiohttp-debugger/assets/application/component/inspect/master.vue"
+Component.options.__file = "/Users/alexander/projects/aiohttp-dashboard/assets/application/component/inspect/master.vue"
 if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
 if (Component.options.functional) {console.error("[vue-loader] master.vue: functional components are not supported with templates, they should use render functions.")}
 
@@ -20369,7 +20369,7 @@ var Component = __webpack_require__(11)(
   /* cssModules */
   null
 )
-Component.options.__file = "/Users/alexander/projects/aiohttp-debugger/assets/application/component/requests/grid.vue"
+Component.options.__file = "/Users/alexander/projects/aiohttp-dashboard/assets/application/component/requests/grid.vue"
 if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
 if (Component.options.functional) {console.error("[vue-loader] grid.vue: functional components are not supported with templates, they should use render functions.")}
 
@@ -31510,7 +31510,7 @@ var Component = __webpack_require__(11)(
   /* cssModules */
   null
 )
-Component.options.__file = "/Users/alexander/projects/aiohttp-debugger/assets/application/component/bar/bar.vue"
+Component.options.__file = "/Users/alexander/projects/aiohttp-dashboard/assets/application/component/bar/bar.vue"
 if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
 if (Component.options.functional) {console.error("[vue-loader] bar.vue: functional components are not supported with templates, they should use render functions.")}
 
@@ -31544,7 +31544,7 @@ var Component = __webpack_require__(11)(
   /* cssModules */
   null
 )
-Component.options.__file = "/Users/alexander/projects/aiohttp-debugger/assets/application/component/box/box-body.vue"
+Component.options.__file = "/Users/alexander/projects/aiohttp-dashboard/assets/application/component/box/box-body.vue"
 if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
 if (Component.options.functional) {console.error("[vue-loader] box-body.vue: functional components are not supported with templates, they should use render functions.")}
 
@@ -31578,7 +31578,7 @@ var Component = __webpack_require__(11)(
   /* cssModules */
   null
 )
-Component.options.__file = "/Users/alexander/projects/aiohttp-debugger/assets/application/component/box/box-footer.vue"
+Component.options.__file = "/Users/alexander/projects/aiohttp-dashboard/assets/application/component/box/box-footer.vue"
 if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
 if (Component.options.functional) {console.error("[vue-loader] box-footer.vue: functional components are not supported with templates, they should use render functions.")}
 
@@ -31612,7 +31612,7 @@ var Component = __webpack_require__(11)(
   /* cssModules */
   null
 )
-Component.options.__file = "/Users/alexander/projects/aiohttp-debugger/assets/application/component/box/box-header.vue"
+Component.options.__file = "/Users/alexander/projects/aiohttp-dashboard/assets/application/component/box/box-header.vue"
 if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
 if (Component.options.functional) {console.error("[vue-loader] box-header.vue: functional components are not supported with templates, they should use render functions.")}
 
@@ -31646,7 +31646,7 @@ var Component = __webpack_require__(11)(
   /* cssModules */
   null
 )
-Component.options.__file = "/Users/alexander/projects/aiohttp-debugger/assets/application/component/box/box.vue"
+Component.options.__file = "/Users/alexander/projects/aiohttp-dashboard/assets/application/component/box/box.vue"
 if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
 if (Component.options.functional) {console.error("[vue-loader] box.vue: functional components are not supported with templates, they should use render functions.")}
 
@@ -31680,7 +31680,7 @@ var Component = __webpack_require__(11)(
   /* cssModules */
   null
 )
-Component.options.__file = "/Users/alexander/projects/aiohttp-debugger/assets/application/component/clock/clock.vue"
+Component.options.__file = "/Users/alexander/projects/aiohttp-dashboard/assets/application/component/clock/clock.vue"
 if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
 if (Component.options.functional) {console.error("[vue-loader] clock.vue: functional components are not supported with templates, they should use render functions.")}
 
@@ -31714,7 +31714,7 @@ var Component = __webpack_require__(11)(
   /* cssModules */
   null
 )
-Component.options.__file = "/Users/alexander/projects/aiohttp-debugger/assets/application/component/layout/layout.vue"
+Component.options.__file = "/Users/alexander/projects/aiohttp-dashboard/assets/application/component/layout/layout.vue"
 if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
 if (Component.options.functional) {console.error("[vue-loader] layout.vue: functional components are not supported with templates, they should use render functions.")}
 
@@ -31748,7 +31748,7 @@ var Component = __webpack_require__(11)(
   /* cssModules */
   null
 )
-Component.options.__file = "/Users/alexander/projects/aiohttp-debugger/assets/application/component/menu/top.vue"
+Component.options.__file = "/Users/alexander/projects/aiohttp-dashboard/assets/application/component/menu/top.vue"
 if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
 if (Component.options.functional) {console.error("[vue-loader] top.vue: functional components are not supported with templates, they should use render functions.")}
 
@@ -31786,7 +31786,7 @@ var Component = __webpack_require__(11)(
   /* cssModules */
   null
 )
-Component.options.__file = "/Users/alexander/projects/aiohttp-debugger/assets/application/component/settings/window.vue"
+Component.options.__file = "/Users/alexander/projects/aiohttp-dashboard/assets/application/component/settings/window.vue"
 if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
 if (Component.options.functional) {console.error("[vue-loader] window.vue: functional components are not supported with templates, they should use render functions.")}
 
@@ -31820,7 +31820,7 @@ var Component = __webpack_require__(11)(
   /* cssModules */
   null
 )
-Component.options.__file = "/Users/alexander/projects/aiohttp-debugger/assets/application/component/traceback/traceback.vue"
+Component.options.__file = "/Users/alexander/projects/aiohttp-dashboard/assets/application/component/traceback/traceback.vue"
 if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
 if (Component.options.functional) {console.error("[vue-loader] traceback.vue: functional components are not supported with templates, they should use render functions.")}
 
@@ -31858,7 +31858,7 @@ var Component = __webpack_require__(11)(
   /* cssModules */
   null
 )
-Component.options.__file = "/Users/alexander/projects/aiohttp-debugger/assets/application/component/widget/alert.vue"
+Component.options.__file = "/Users/alexander/projects/aiohttp-dashboard/assets/application/component/widget/alert.vue"
 if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
 if (Component.options.functional) {console.error("[vue-loader] alert.vue: functional components are not supported with templates, they should use render functions.")}
 
@@ -31896,7 +31896,7 @@ var Component = __webpack_require__(11)(
   /* cssModules */
   null
 )
-Component.options.__file = "/Users/alexander/projects/aiohttp-debugger/assets/application/component/widget/dropdpown-pane.vue"
+Component.options.__file = "/Users/alexander/projects/aiohttp-dashboard/assets/application/component/widget/dropdpown-pane.vue"
 if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
 if (Component.options.functional) {console.error("[vue-loader] dropdpown-pane.vue: functional components are not supported with templates, they should use render functions.")}
 
@@ -32283,6 +32283,24 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 
@@ -32324,19 +32342,6 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
         onExceptionRecive(data) {
             this.exception = data.item;
-        },
-
-        showWsDetail: function (record) {
-            this.wsRecord = record;
-            this.$refs.wsDetail.show();
-        },
-
-        onDetailShown: function () {
-            this.wsUnsubscribe();
-        },
-
-        onDetailHidden: function () {
-            this.wsSubscribe();
         },
 
         truncate(string, limit = 50) {
@@ -32557,14 +32562,6 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
     },
 
     methods: {
-
-        messageVariant(message) {
-            if (message.direction === 'OUTBOUND') {
-                return 'success';
-            } else {
-                return 'danger';
-            }
-        },
 
         onWsMessagesRecive: function (data) {
             this.messages = data.collection;
@@ -49115,7 +49112,7 @@ var Component = __webpack_require__(11)(
   /* cssModules */
   null
 )
-Component.options.__file = "/Users/alexander/projects/aiohttp-debugger/assets/application/component/requests/detail.vue"
+Component.options.__file = "/Users/alexander/projects/aiohttp-dashboard/assets/application/component/requests/detail.vue"
 if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
 if (Component.options.functional) {console.error("[vue-loader] detail.vue: functional components are not supported with templates, they should use render functions.")}
 
@@ -49149,7 +49146,7 @@ var Component = __webpack_require__(11)(
   /* cssModules */
   null
 )
-Component.options.__file = "/Users/alexander/projects/aiohttp-debugger/assets/application/component/requests/messages.vue"
+Component.options.__file = "/Users/alexander/projects/aiohttp-dashboard/assets/application/component/requests/messages.vue"
 if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
 if (Component.options.functional) {console.error("[vue-loader] messages.vue: functional components are not supported with templates, they should use render functions.")}
 
@@ -49183,7 +49180,7 @@ var Component = __webpack_require__(11)(
   /* cssModules */
   null
 )
-Component.options.__file = "/Users/alexander/projects/aiohttp-debugger/assets/application/component/special/404.vue"
+Component.options.__file = "/Users/alexander/projects/aiohttp-dashboard/assets/application/component/special/404.vue"
 if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
 if (Component.options.functional) {console.error("[vue-loader] 404.vue: functional components are not supported with templates, they should use render functions.")}
 
@@ -49251,7 +49248,7 @@ if (false) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
   return _c('b-card', {
-    staticClass: "shadow traceback",
+    staticClass: "shadow traceback h-100",
     attrs: {
       "title": "Stacktrace"
     }
@@ -49433,7 +49430,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     attrs: {
       "title": "Info"
     }
-  }, [(_vm.record) ? _c('ul', {
+  }, [_c('ul', {
     staticClass: "list-group overflow-auto"
   }, [(_vm.record.status || _vm.record.reason) ? _c('li', {
     staticClass: "list-group-item list-group-item-warning block"
@@ -49449,11 +49446,11 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     staticClass: "list-group-item"
   }, [_c('span', [_vm._v("Done time:")]), _vm._v(" "), _c('code', [_vm._v(_vm._s(_vm.record.donetime))])]), _vm._v(" "), _c('li', {
     staticClass: "list-group-item"
-  }, [_c('span', [_vm._v("Scheme:")]), _vm._v(" "), _c('code', [_vm._v(_vm._s(_vm.record.scheme))])])]) : _c('alert', {
-    attrs: {
-      "message": "Records not found"
-    }
-  })], 1)], 1), _vm._v(" "), _c('div', {
+  }, [_c('span', [_vm._v("Scheme:")]), _vm._v(" "), _c('code', [_vm._v(_vm._s(_vm.record.scheme))])])]), _vm._v(" "), _c('b-card', {
+    staticClass: "mt-2"
+  }, [(_vm.record.body) ? _c('code', [_c('pre', {
+    staticClass: "my-0"
+  }, [_vm._v(_vm._s(_vm.record.body))])]) : _c('code', [_vm._v("\n                        [EMPTY BODY]\n                    ")])])], 1)], 1), _vm._v(" "), _c('div', {
     staticClass: "col-md-6 mt-3 mt-md-0"
   }, [_c('b-card', {
     staticClass: "shadow h-100",
@@ -49465,14 +49462,17 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     attrs: {
       "small": "",
       "pills": "",
-      "card": "",
-      "no-fade": ""
+      "card": ""
     }
   }, [_c('b-tab', {
     attrs: {
-      "title": "Request headers"
+      "title": "Request"
     }
-  }, [(_vm.record) ? _c('b-list-group', _vm._l((_vm.record.reqheaders), function(value, key) {
+  }, [_c('template', {
+    slot: "title"
+  }, [_c('i', {
+    staticClass: "fas fa-arrow-right"
+  }), _vm._v(" Headers\n                        ")]), _vm._v(" "), (_vm.record) ? _c('b-list-group', _vm._l((_vm.record.reqheaders), function(value, key) {
     return _c('b-list-group-item', {
       attrs: {
         "button": ""
@@ -49482,11 +49482,15 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     attrs: {
       "message": "Records not found"
     }
-  })], 1), _vm._v(" "), _c('b-tab', {
+  })], 2), _vm._v(" "), _c('b-tab', {
     attrs: {
-      "title": "Response headers"
+      "title": "Response"
     }
-  }, [(_vm.record) ? _c('ul', {
+  }, [_c('template', {
+    slot: "title"
+  }, [_c('i', {
+    staticClass: "fas fa-arrow-left"
+  }), _vm._v(" Headers\n                        ")]), _vm._v(" "), (_vm.record) ? _c('ul', {
     staticClass: "list-group"
   }, _vm._l((_vm.record.resheaders), function(value, key) {
     return _c('li', {
@@ -49496,10 +49500,10 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     attrs: {
       "message": "Records not found"
     }
-  })], 1)], 1)], 1)], 1)]), _vm._v(" "), (_vm.exception) ? _c('div', {
+  })], 2)], 1)], 1)], 1)]), _vm._v(" "), (_vm.exception) ? _c('div', {
     staticClass: "row mt-3"
   }, [_c('div', {
-    staticClass: "col-md"
+    staticClass: "col-md-12"
   }, [_c('traceback', {
     attrs: {
       "exception": _vm.exception

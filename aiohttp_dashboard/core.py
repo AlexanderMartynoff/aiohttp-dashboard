@@ -21,11 +21,11 @@ from .event import (
 )
 
 
-logger = logging.getLogger("aiohttp_debugger.debugger")
+logger = logging.getLogger(__name__)
 
 
 DEBUGGER_KEY = __name__
-JINJA_KEY = __name__ + '.jinja2'
+JINJA_KEY = __name__ + '-jinja'
 
 
 class Debugger(EventDriven):

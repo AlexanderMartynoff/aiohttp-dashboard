@@ -1,5 +1,5 @@
 import pytest
-from aiohttp_debugger.router import Router, route, RouteNotFoundError
+from aiohttp_dashboard.router import Router, route, RouteNotFoundError
 
 
 async def test_route_async():

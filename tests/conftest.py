@@ -1,6 +1,6 @@
 import pytest
 import aiohttp
-import aiohttp_debugger
+import aiohttp_dashboard
 
 
 @pytest.fixture
@@ -30,6 +30,6 @@ def full_application(prefix):
     application.router.add_get('/test-websocket', websocket_handler)
     application.router.add_get('/test-websocket/return/{return}', websocket_handler)
 
-    aiohttp_debugger.setup(prefix, application)
+    aiohttp_dashboard.setup(prefix, application)
 
     return application

@@ -1,6 +1,4 @@
-import aiohttp
-import aiohttp_debugger
-from aiohttp_debugger.debugger import DEBUGGER_KEY
+from aiohttp_dashboard.core import DEBUGGER_KEY
 
 
 async def test_statistics_requests_structure(aiohttp_client, full_application):
@@ -8,9 +6,9 @@ async def test_statistics_requests_structure(aiohttp_client, full_application):
                  'resheaders', 'status', 'iswebsocket',
                  'reason', 'body', 'host', 'method', 'begintime']
     client = await aiohttp_client(full_application)
-    
+
     await client.get('/test-http')
-    
+
     response_statistics, *_ = full_application[DEBUGGER_KEY].state.requests.values()
 
     for key in structure:
@@ -20,7 +18,7 @@ async def test_statistics_requests_structure(aiohttp_client, full_application):
 async def test_statistics_requests_number(aiohttp_client, full_application):
     paths = ('/test-http-404', '/test-http') * 5
     client = await aiohttp_client(full_application)
-    
+
     for path in paths:
         await client.get(path)
 
@@ -29,7 +27,7 @@ async def test_statistics_requests_number(aiohttp_client, full_application):
 
 async def test_statistics_requests_status(aiohttp_client, full_application):
     client = await aiohttp_client(full_application)
-    
+
     response_200 = await client.get('/test-http')
     response_404 = await client.get('/test-http-404')
 
@@ -49,7 +47,7 @@ async def test_statistics_requests_status(aiohttp_client, full_application):
 # NOTE: do more complex equals case in separate function
 async def test_statistics_requests_simple_equals(aiohttp_client, full_application):
     client = await aiohttp_client(full_application)
-    
+
     response = await client.get('/test-http')
     response_statistics, *_ = full_application[DEBUGGER_KEY].state.requests.values()
 
