@@ -4,7 +4,7 @@ dist
 *.egg*
 *.sublime*
 /assets/node_modules/*
-/aiohttp_debugger/static/bundle
+/aiohttp_dashboard/static/bundle
 .idea
 **/.DS_Store
 **/.pytest_cache
