@@ -79,47 +79,48 @@ async def _on_response(request, response):
         request.app[DEBUGGER_KEY].register_response(request, response)
 
         if isinstance(response, WebSocketResponse):
-            _ws_resposne_do_monkey_patch(request, response)
+            _ws_resposne_decorate(request, response)
 
 
 def _on_websocket_msg(direction, request, message):
     if _is_sutable_request(request):
-        request.app[DEBUGGER_KEY].register_websocket_message(direction, request, message)
+        request.app[DEBUGGER_KEY].register_websocket_message(
+            direction, request, message)
 
 
-def _ws_resposne_do_monkey_patch(request, response):
+def _ws_resposne_decorate(request, response):
 
-    async def ping_monkey_patch(message):
+    async def ping_decorator(message):
         _on_websocket_msg(MsgDirection.INCOMING, request, message)
-        return await original_ping(message)
+        return await ping(message)
 
-    original_ping, response.ping = response.ping, ping_monkey_patch
+    ping, response.ping = response.ping, ping_decorator
 
-    async def pong_monkey_patch(message):
+    async def pong_decorator(message):
         _on_websocket_msg(MsgDirection.INCOMING, request, message)
-        return await original_pong(message)
+        return await pong(message)
 
-    original_pong, response.pong = response.pong, pong_monkey_patch
+    pong, response.pong = response.pong, pong_decorator
 
-    async def send_str_monkey_patch(data, compress=None):
+    async def send_str_decorator(data, compress=None):
         _on_websocket_msg(MsgDirection.INCOMING, request, data)
-        return await original_send_str(data, compress)
+        return await send_str(data, compress)
 
-    original_send_str, response.send_str = response.send_str, send_str_monkey_patch
+    send_str, response.send_str = response.send_str, send_str_decorator
 
-    async def send_bytes_monkey_patch(data, compress=None):
+    async def send_bytes_decorator(data, compress=None):
         _on_websocket_msg(MsgDirection.INCOMING, request, data)
-        return await original_send_bytes(data, compress)
+        return await send_bytes(data, compress)
 
-    original_send_bytes, response.send_bytes = response.send_bytes, send_bytes_monkey_patch
+    send_bytes, response.send_bytes = response.send_bytes, send_bytes_decorator
 
-    async def receive_monkey_patch(timeout=None):
-        message = await original_receive(timeout)
+    async def receive_decorator(timeout=None):
+        message = await receive(timeout)
         _on_websocket_msg(MsgDirection.OUTBOUND, request, message.data)
 
         return message
 
-    original_receive, response.receive = response.receive, receive_monkey_patch
+    receive, response.receive = response.receive, receive_decorator
 
 
 def endpoint_for_request(request):
