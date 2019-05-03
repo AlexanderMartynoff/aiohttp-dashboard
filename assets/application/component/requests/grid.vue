@@ -67,19 +67,6 @@
         created: function() {
             this.subscription = this.subscribe('requests', message => {
                 this.requests = message.data
-                return
-
-                let requests = message.data
-
-                _.each(requests, request => {
-                    if (_.startsWith(request.status, 4) || _.startsWith(request.status, 5)) {
-                        request._rowVariant = 'danger'
-                    } else {
-                        request._rowVariant = 'success'
-                    }
-                })
-
-                this.requests = requests
             });
         },
         destroyed: function() {
