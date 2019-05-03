@@ -1,5 +1,6 @@
-from . import action, embedding
+from . import _action
+from . import _setup
 
 
 def setup(name, application):
-    return embedding.setup(name, application, action.index, action.endpoint)
+    return _setup.setup(name, application, _action.index, _action.endpoint)

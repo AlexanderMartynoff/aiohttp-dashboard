@@ -2,10 +2,10 @@ from aiohttp_jinja2 import template
 import logging
 import time
 
-from .endpoint import WsMsgDispatcherProxy
-from .helper import WsResponseHelper
-from .core import DEBUGGER_KEY, JINJA_KEY
-from .embedding import endpoint_for_request
+from ._endpoint import WsMsgDispatcherProxy
+from ._misc import WsResponseHelper
+from ._core import DEBUGGER_KEY, JINJA_KEY
+from ._setup import endpoint_for_request
 
 
 logger = logging.getLogger(__name__)

@@ -22,7 +22,7 @@ from functools import update_wrapper
 from inspect import iscoroutinefunction, iscoroutine
 from asyncio import ensure_future, Future
 
-from .helper import to_list
+from ._misc import to_list
 
 
 class Router:

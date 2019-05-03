@@ -1,5 +1,5 @@
 import json
-from aiohttp_dashboard.core import DEBUGGER_KEY, MsgDirection
+from aiohttp_dashboard._core import DEBUGGER_KEY, MsgDirection
 
 
 async def test_websocket_messages_count_incoming(aiohttp_client, aihttp_application):

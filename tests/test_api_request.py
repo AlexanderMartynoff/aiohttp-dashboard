@@ -1,4 +1,4 @@
-from aiohttp_dashboard.core import DEBUGGER_KEY
+from aiohttp_dashboard._core import DEBUGGER_KEY
 
 
 async def test_statistics_requests_structure(aiohttp_client, aihttp_application):

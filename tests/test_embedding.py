@@ -1,6 +1,6 @@
 from os.path import join
-from aiohttp_dashboard.core import DEBUGGER_KEY
-from aiohttp_dashboard.embedding import _factory_on_request, _on_response
+from aiohttp_dashboard._core import DEBUGGER_KEY
+from aiohttp_dashboard._setup import _factory_on_request, _on_response
 
 
 def test_debugger(aihttp_application):

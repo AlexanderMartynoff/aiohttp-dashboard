@@ -5,8 +5,8 @@ from yarl import URL
 from functools import partial
 from os.path import join, normpath, isabs, dirname, abspath
 
-from .core import Debugger, DEBUGGER_KEY, JINJA_KEY
-from .event import HttpRequest, HttpResponse, WsMsgIncoming, WsMsgOutbound, MsgDirection
+from ._core import Debugger, DEBUGGER_KEY, JINJA_KEY
+from ._event import HttpRequest, HttpResponse, WsMsgIncoming, WsMsgOutbound, MsgDirection
 
 
 # these path fragments will be joined with `Debugger.path`

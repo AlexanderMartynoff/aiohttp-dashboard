@@ -10,8 +10,8 @@ import aiohttp
 from functools import partial
 from os.path import join
 
-from .helper import LimitedDict
-from .event import (
+from ._misc import LimitedDict
+from ._event import (
     EventDriven,
     HttpRequest,
     HttpResponse,
