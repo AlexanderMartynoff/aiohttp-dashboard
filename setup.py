@@ -6,7 +6,7 @@ from setuptools.command.test import test as TestCommand
 import sys
 
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 
 class Test(TestCommand):

@@ -2,8 +2,8 @@ import json
 from aiohttp_dashboard.core import DEBUGGER_KEY, MsgDirection
 
 
-async def test_websocket_messages_count_incoming(aiohttp_client, full_application):
-    client = await aiohttp_client(full_application)
+async def test_websocket_messages_count_incoming(aiohttp_client, aihttp_application):
+    client = await aiohttp_client(aihttp_application)
     websocket = await client.ws_connect('/test-websocket', receive_timeout=5)
 
     messages = ['Hello, World!'] * 30
@@ -14,17 +14,17 @@ async def test_websocket_messages_count_incoming(aiohttp_client, full_applicatio
 
     await websocket.close()
 
-    http_response, *_ = full_application[DEBUGGER_KEY].state.requests.values()
-    messages_count = full_application[DEBUGGER_KEY].api.count_messages(http_response['id'], MsgDirection.INCOMING)
+    http_response, *_ = aihttp_application[DEBUGGER_KEY].state.requests.values()
+    messages_count = aihttp_application[DEBUGGER_KEY].api.count_messages(http_response['id'], MsgDirection.INCOMING)
 
     assert messages_count == len(messages)
 
 
-async def test_websocket_messages_count_outbound(aiohttp_client, full_application):
+async def test_websocket_messages_count_outbound(aiohttp_client, aihttp_application):
     messages = ['Hello, World!'] * 20
 
-    debugger = full_application[DEBUGGER_KEY]
-    client = await aiohttp_client(full_application)
+    debugger = aihttp_application[DEBUGGER_KEY]
+    client = await aiohttp_client(aihttp_application)
     websocket = await client.ws_connect('/test-websocket')
 
     for message in messages:
@@ -39,8 +39,8 @@ async def test_websocket_messages_count_outbound(aiohttp_client, full_applicatio
     assert len(messages) + 1 == debugger.api.count_messages(response['id'], MsgDirection.OUTBOUND)
 
 
-async def test_websocket_messages_strucutre(aiohttp_client, full_application):
-    client = await aiohttp_client(full_application)
+async def test_websocket_messages_strucutre(aiohttp_client, aihttp_application):
+    client = await aiohttp_client(aihttp_application)
     websocket = await client.ws_connect('/test-websocket')
 
     message = 'Hello, World!'
@@ -48,7 +48,7 @@ async def test_websocket_messages_strucutre(aiohttp_client, full_application):
     await websocket.send_json(message)
     await websocket.close()
 
-    debugger = full_application[DEBUGGER_KEY]
+    debugger = aihttp_application[DEBUGGER_KEY]
 
     http_response, *_ = debugger.state.requests.values()
 
@@ -58,8 +58,8 @@ async def test_websocket_messages_strucutre(aiohttp_client, full_application):
         assert key in websocket_message.keys()
 
 
-async def test_websocket_request_status(aiohttp_client, full_application):
-    client = await aiohttp_client(full_application)
+async def test_websocket_request_status(aiohttp_client, aihttp_application):
+    client = await aiohttp_client(aihttp_application)
     websocket = await client.ws_connect('/test-websocket')
 
     payload = 'Hello, World!'
@@ -67,7 +67,7 @@ async def test_websocket_request_status(aiohttp_client, full_application):
     await websocket.send_json(payload)
     await websocket.close()
 
-    http_response, *_ = full_application[DEBUGGER_KEY].state.requests.values()
+    http_response, *_ = aihttp_application[DEBUGGER_KEY].state.requests.values()
 
     # I don't know how extract status code from ClientWebSocketResponse
     assert http_response['status'] == 101

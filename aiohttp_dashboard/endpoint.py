@@ -5,7 +5,6 @@ from collections import defaultdict
 import logging
 from collections import namedtuple
 import inspect
-import itertools
 import json
 import traceback
 
@@ -59,7 +58,7 @@ class WsMsgDispatcher(Router):
     @route('request.messages')
     def sibsribe_request_messages(self, message):
         request_id = message.data['id']
-        page_size = message.data['limit']
+        limit = message.data['limit']
         page = message.data['page']
 
         def handler(event):
@@ -71,7 +70,7 @@ class WsMsgDispatcher(Router):
             WsMsgOutbound
         ], handler, group=self._sender.id, hid=message.uid)
 
-        return self._debugger_api.messages(request_id, page, page_size)
+        return self._debugger_api.messages(request_id, page, limit)
 
     @route('requests')
     def sibsribe_requests(self, message):

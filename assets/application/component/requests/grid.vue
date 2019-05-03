@@ -10,6 +10,13 @@
                              :fields="fields"
                              striped
                              class="table-pointer">
+
+                    <template slot="status" slot-scope="row">
+                        <span class="badge" :class="getStatusClassByCode(row.value)">
+                            {{row.value}}
+                        </span>
+                    </template>
+
                     </b-table>
                 </b-card>
             </div>
@@ -23,8 +30,9 @@
 
 
 <script type="text/javascript">
-    import {WebSocketService} from '@/websocket';
-    import {router} from '@/router';
+    import _ from "lodash"
+    import {WebSocketService} from '@/websocket'
+    import {router} from '@/router'
 
 
     export default {
@@ -44,11 +52,34 @@
         methods: {
             details: function(id) {
                 router.push({path: `/request/detail/${id}`})
+            },
+
+            getStatusClassByCode(code) {
+                if (_.startsWith(code, 4)) {
+                    return 'badge-warning'
+                } else if (_.startsWith(code, 5)) {
+                    return 'badge-danger'
+                } else {
+                    return 'badge-success'
+                }
             }
         },
         created: function() {
             this.subscription = this.subscribe('requests', message => {
-                this.requests = message.data;
+                this.requests = message.data
+                return
+
+                let requests = message.data
+
+                _.each(requests, request => {
+                    if (_.startsWith(request.status, 4) || _.startsWith(request.status, 5)) {
+                        request._rowVariant = 'danger'
+                    } else {
+                        request._rowVariant = 'success'
+                    }
+                })
+
+                this.requests = requests
             });
         },
         destroyed: function() {

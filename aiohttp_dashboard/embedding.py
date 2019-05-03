@@ -11,13 +11,12 @@ from .event import HttpRequest, HttpResponse, WsMsgIncoming, WsMsgOutbound, MsgD
 
 # these path fragments will be joined with `Debugger.path`
 # websocket path for tranfer data messages
-_url_fragment_endpoint = 'api'
+_URL_FRAGMENT_ENDPOINT = 'api'
 # just path for serve static files
-_url_fragment_static = 'static'
-
+_URL_FRAGMENT_STATIC = 'static'
 # path to static files location into file system
 # see `Debugger._setup_routes`
-_static_path = join(dirname(abspath(__file__)), _url_fragment_static)
+_STATIC_PATH = join(dirname(abspath(__file__)), _URL_FRAGMENT_STATIC)
 
 
 def setup(name, application, action_index, action_endpoint):
@@ -31,7 +30,7 @@ def setup(name, application, action_index, action_endpoint):
 
     aiohttp_jinja2.setup(
         application,
-        loader=FileSystemLoader(_static_path),
+        loader=FileSystemLoader(_STATIC_PATH),
         app_key=JINJA_KEY)
 
     return application
@@ -43,14 +42,14 @@ def _setup_routes(application, action_index, action_endpoint):
     application.router.add_get(debugger_path, action_index)
 
     application.router.add_get(
-        join(debugger_path, _url_fragment_endpoint), action_endpoint)
+        join(debugger_path, _URL_FRAGMENT_ENDPOINT), action_endpoint)
 
 
 def _setup_static_routes(application):
     debugger_path = application[DEBUGGER_KEY].path
 
     application.router.add_static(
-        join(debugger_path, _url_fragment_static), _static_path)
+        join(debugger_path, _URL_FRAGMENT_STATIC), _STATIC_PATH)
 
 
 async def _factory_on_request(application, handler):
@@ -133,5 +132,5 @@ def endpoint_for_request(request):
         scheme=scheme,
         host=request.url.host,
         port=request.url.port,
-        path=join(request.app[DEBUGGER_KEY].path, _url_fragment_endpoint),
+        path=join(request.app[DEBUGGER_KEY].path, _URL_FRAGMENT_ENDPOINT),
     )

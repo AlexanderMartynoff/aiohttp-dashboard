@@ -1,14 +1,13 @@
-import pytest
-import aiohttp.web
+from asyncio import sleep
 from aiohttp_dashboard.core import DEBUGGER_KEY
 from aiohttp_dashboard.router import Router, route, RouteNotFoundError
-from asyncio import sleep
+import pytest
 
 
 def test_routing():
 
     class Controller(Router):
-        
+
         @route('/hello-world')
         def hello_world(self):
             return 'Hello, World!'

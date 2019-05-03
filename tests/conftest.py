@@ -9,7 +9,7 @@ def prefix():
 
 
 @pytest.fixture
-def full_application(prefix):
+def aihttp_application(prefix):
 
     async def http_handler(request):
         return aiohttp.web.Response(text='Hello, World!')

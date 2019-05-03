@@ -4,7 +4,7 @@ from aiohttp_dashboard.router import Router, route, RouteNotFoundError
 
 async def test_route_async():
     class Controller(Router.Async):
-        
+
         @route('/async')
         async def async_hello_world(self, true):
             return true
@@ -28,7 +28,7 @@ async def test_route_async_error():
         pass
 
     class Controller(Router.Async):
-        
+
         @route('/catch')
         async def catch(self):
             raise CatchError
@@ -42,7 +42,7 @@ async def test_route_async_error():
             return 'catch'
 
     controller = Controller()
-    
+
     assert await controller.router('/catch') == 'catch'
 
     with pytest.raises(NotCatchError):
