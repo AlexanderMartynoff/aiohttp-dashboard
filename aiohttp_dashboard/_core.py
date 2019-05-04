@@ -108,6 +108,9 @@ class Api:
     def request(self, id):
         return self._state.requests.get(id, None)
 
+    def requests_count(self):
+        return len(self._state.requests)
+
     def messages(self, id, page=1, perpage=-1):
 
         if id not in self._state.messages:

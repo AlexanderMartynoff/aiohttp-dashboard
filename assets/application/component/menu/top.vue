@@ -6,7 +6,10 @@
         </b-navbar-brand>
         <b-collapse id="collapse" is-nav>
             <b-navbar-nav>
-                <b-nav-item href="#/" active>
+                <b-nav-item href="#/statistic">
+                    <code>[DASHBOARD]</code>
+                </b-nav-item>
+                <b-nav-item href="#/requests">
                     <code>[REQUESTS]</code>
                 </b-nav-item>
                 <b-nav-item href="#/inspect">

@@ -45,9 +45,3 @@
         },
     }
 </script>
-
-
-<style lang="stylus">
-    .setting-window-item
-        margin 5px 0
-</style>

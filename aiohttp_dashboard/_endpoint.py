@@ -56,6 +56,20 @@ class WsMsgDispatcher(Router):
 
         return self._debugger_api.request(request_id)
 
+    @route('request.requests.count')
+    def sibsribe_request_count(self, message):
+
+        def handler(event):
+            print(event)
+            self._sender.send(message)
+
+        self._debugger.on([
+            HttpRequest,
+            HttpResponse
+        ], handler, group=self._sender.id, hid=message.uid)
+
+        return self._debugger_api.requests_count()
+
     @route('request.messages')
     def sibsribe_request_messages(self, message):
         request_id = message.data['id']
@@ -133,6 +147,11 @@ class Sender(Router):
     @route('request')
     def _sibsribe_request(self, message):
         self._send(self._debugger_api.request(message.data['id']), message)
+
+    @route('request.requests.count')
+    def sibsribe_request_count(self, message):
+        self._send(self._debugger_api.requests_count(), message)
+
 
     @route('request.messages')
     def _sibsribe_request_messages(self, message):
@@ -260,6 +279,9 @@ class DebuggerApi:
 
     def requests(self):
         return self._debugger.api.requests()
+
+    def requests_count(self):
+        return self._debugger.api.requests_count()
 
     def messages(self, rid, page, perpage):
         return {
