@@ -6,7 +6,7 @@ async def test_statistics_requests_structure(aiohttp_client, aihttp_application)
                  'resheaders', 'status', 'iswebsocket',
                  'reason', 'body', 'host', 'method', 'begintime']
     client = await aiohttp_client(aihttp_application)
-    await client.get('/test-http')
+    _response = await client.get('/test-http')
 
     requests, *_ = aihttp_application[DEBUGGER_KEY].state.requests.values()
 
@@ -34,13 +34,13 @@ async def test_statistics_requests_status(aiohttp_client, aihttp_application):
     assert response_200.status == 200
     assert response_404.status == 404
 
-    statistics = aihttp_application[DEBUGGER_KEY].state.requests.values()
+    requests = aihttp_application[DEBUGGER_KEY].state.requests.values()
 
-    statistics_200 = next(statistic for statistic in statistics if statistic['path'] == '/test-http')
-    statistics_404 = next(statistic for statistic in statistics if statistic['path'] == '/test-http-404')
+    request_200 = next(_ for _ in requests if _['path'] == '/test-http')
+    request_404 = next(_ for _ in requests if _['path'] == '/test-http-404')
 
-    assert response_200.status == statistics_200['status']
-    assert response_404.status == statistics_404['status']
+    assert response_200.status == request_200['status']
+    assert response_404.status == request_404['status']
 
 
 # NOTE: do more complex equals case in separate function

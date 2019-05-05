@@ -15,8 +15,8 @@ async def test_route_async():
 
     controller = Controller()
 
-    assert await controller.router('/async', True) == True
-    assert await controller.router('/sync', True) == True
+    assert await controller.router('/async', True) is True
+    assert await controller.router('/sync', True) is True
 
 
 async def test_route_async_error():

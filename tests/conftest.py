@@ -28,7 +28,8 @@ def aihttp_application(prefix):
 
     application.router.add_get('/test-http', http_handler)
     application.router.add_get('/test-websocket', websocket_handler)
-    application.router.add_get('/test-websocket/return/{return}', websocket_handler)
+    application.router.add_get(
+        '/test-websocket/return/{return}', websocket_handler)
 
     aiohttp_dashboard.setup(prefix, application)
 
