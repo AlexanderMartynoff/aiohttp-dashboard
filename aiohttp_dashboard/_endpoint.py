@@ -43,10 +43,10 @@ class WsMsgDispatcher(Router):
 
     @route('request')
     def sibsribe_request(self, message):
-        request_id = message.data['id']
+        rid = message.data['id']
 
         def handler(event):
-            if event.rid == request_id:
+            if event.rid == rid:
                 self._sender.send(message)
 
         self._debugger.on([
@@ -54,13 +54,12 @@ class WsMsgDispatcher(Router):
             HttpResponse
         ], handler, group=self._sender.id, hid=message.uid)
 
-        return self._debugger_api.request(request_id)
+        return self._debugger_api.request(rid)
 
     @route('request.requests.count')
     def sibsribe_request_count(self, message):
 
         def handler(event):
-            print(event)
             self._sender.send(message)
 
         self._debugger.on([
@@ -72,12 +71,12 @@ class WsMsgDispatcher(Router):
 
     @route('request.messages')
     def sibsribe_request_messages(self, message):
-        request_id = message.data['id']
+        rid = message.data['id']
         limit = message.data['limit']
         page = message.data['page']
 
         def handler(event):
-            if event.rid == request_id:
+            if event.rid == rid:
                 self._sender.send(message)
 
         self._debugger.on([
@@ -85,7 +84,20 @@ class WsMsgDispatcher(Router):
             WsMsgOutbound
         ], handler, group=self._sender.id, hid=message.uid)
 
-        return self._debugger_api.messages(request_id, page, limit)
+        return self._debugger_api.messages(rid, page, limit)
+
+    @route('request.messages.count')
+    def sibsribe_request_messages_count(self, message):
+
+        def handler(event):
+            self._sender.send(message)
+
+        self._debugger.on([
+            WsMsgIncoming,
+            WsMsgOutbound
+        ], handler, group=self._sender.id, hid=message.uid)
+
+        return self._debugger_api.messages_count()
 
     @route('requests')
     def sibsribe_requests(self, message):
@@ -102,15 +114,19 @@ class WsMsgDispatcher(Router):
 
     @route('request.exception')
     def sibsribe_request_exceptions(self, message):
-        request_id = message.data['id']
+        rid = message.data['id']
 
-        return self._debugger_api.http_exception(request_id)
+        return self._debugger_api.http_exception(rid)
 
     @route('unsibscribe')
     def unsibscribe(self, message):
         # NOTE: with this `hid` probably exist multiple handlers
 
         self._debugger.off(hid=message.data['id'])
+
+    @route('fetch.times')
+    def fetch_times(self, _message):
+        return self._debugger_api.times()
 
     @route('fetch.info')
     def fetch_info(self, _message):
@@ -152,14 +168,17 @@ class Sender(Router):
     def sibsribe_request_count(self, message):
         self._send(self._debugger_api.requests_count(), message)
 
+    @route('request.messages.count')
+    def sibsribe_request_messages_count(self, message):
+        self._send(self._debugger_api.messages_count(), message)
 
     @route('request.messages')
     def _sibsribe_request_messages(self, message):
-        request_id = message.data['id']
+        rid = message.data['id']
         limit = message.data['limit']
         page = message.data['page']
 
-        self._send(self._debugger_api.messages(request_id, page, limit), message)
+        self._send(self._debugger_api.messages(rid, page, limit), message)
 
     @route('requests')
     def _sibsribe_requests(self, message):
@@ -212,7 +231,7 @@ class Sender(Router):
         return self._socket.id
 
     class _EndpointState:
-        _delay = 5
+        _delay = 3
         _handler = None
         _last_send_time = None
         _send_waiting_task = None
@@ -277,8 +296,14 @@ class DebuggerApi:
     def request(self, rid):
         return {'item': self._debugger.api.request(rid)}
 
+    def times(self):
+        return self._debugger.times()
+
     def requests(self):
         return self._debugger.api.requests()
+
+    def messages_count(self):
+        return self._debugger.api.messages_count()
 
     def requests_count(self):
         return self._debugger.api.requests_count()

@@ -2,14 +2,14 @@
     <div class="container-fluid my-3">
         <div class="row mt-3 mb-3">
             
-            <div class="col-md-6 mt-3 mt-md-0">
+            <div class="col-md-6">
                 <b-card class="shadow h-100" title="Time">
                     <h3>
-                        <code>14:41</code> <br/>
+                        <code>{{formatDateTime(startupTime)}}</code> <br/>
                         <small class="text-muted">applicaion start time</small>
                     </h3>
                     <h3>
-                        <code>1 day 12 hours 53 seconds</code> <br/>
+                        <code>{{startupDuration}}</code> <br/>
                         <small class="text-muted">application work duration</small>
                     </h3>
                 </b-card>
@@ -33,7 +33,7 @@
                         <small class="text-muted">total number</small>
                     </h3>
                     <h3>
-                        <code>558</code> <br/>
+                        <code>{{requestsPerSecond}}</code> <br/>
                         <small class="text-muted">number per second</small>
                     </h3>
                 </b-card>
@@ -41,11 +41,11 @@
             <div class="col-md-6 mt-3 mt-md-0">
                 <b-card class="shadow h-100" title="Messages">
                     <h3>
-                        <code>558 068</code> <br/>
+                        <code>{{messagesCount}}</code> <br/>
                         <small class="text-muted">total number</small>
                     </h3>
                     <h3>
-                        <code>558</code> <br/>
+                        <code>{{messagesPerSecond}}</code> <br/>
                         <small class="text-muted">number per second</small>
                     </h3>
                 </b-card>
@@ -56,24 +56,75 @@
 
 
 <script type="text/javascript">
-    import {WebSocketService} from '@/websocket';
+    import {DateTime} from "luxon"
+    import {WebSocketService} from '@/websocket'
+    import {formatDateTime} from "@/misc"
 
     export default {
         mixins: [WebSocketService.mixin],
         data: () => ({
             requestsCount: 0,
             messagesCount: 0,
+            startupTime: DateTime.utc(0),
+            now: DateTime.utc(),
         }),
         methods: {
+            formatDateTime(datetime) {
+                return formatDateTime(datetime)
+            },
+
             requestsSubscribe() {
                 this.requestsSubscribtion = this.subscribe('request.requests.count', message => {
                     this.requestsCount = message.data
                 })
             },
+
+            messagesSubscribe() {
+                this.messagesSubscribtion = this.subscribe('request.messages.count', message => {
+                    this.messagesCount = message.data
+                })
+            },
+
+            fetchTime() {
+                this.subscribe('fetch.times', message => {
+                    this.startupTime = DateTime.fromSeconds(message.data.startup)
+                })
+            },
+
+            startInterval() {
+                this.$interval = setInterval(() => {
+                    this.now = DateTime.utc()
+                }, 1000)
+            },
+
+            stopInterval() {
+                clearInterval(this.$interval)
+            }
+        },
+
+        computed: {
+            startupDuration() {
+                return this.now.diff(this.startupTime).toFormat('dd:hh:mm:ss')
+            },
+
+            requestsPerSecond() {
+                return (this.requestsCount / this.now.diff(this.startupTime).as('seconds')).toFixed(2)
+            },
+
+            messagesPerSecond() {
+                return (this.messagesCount / this.now.diff(this.startupTime).as('seconds')).toFixed(2)
+            }
+        },
+
+        destroyed() {
+            this.stopInterval()
         },
 
         created() {
+            this.fetchTime()
+            this.messagesSubscribe()
             this.requestsSubscribe()
-        }
+            this.startInterval()
+        },
     }
 </script>

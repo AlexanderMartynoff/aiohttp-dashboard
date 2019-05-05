@@ -4,6 +4,7 @@ from aiohttp.web import WebSocketResponse, Response
 from yarl import URL
 from functools import partial
 from os.path import join, normpath, isabs, dirname, abspath
+import time
 
 from ._core import Debugger, DEBUGGER_KEY, JINJA_KEY
 from ._misc import MsgDirection
@@ -20,7 +21,7 @@ _STATIC_PATH = join(dirname(abspath(__file__)), _URL_FRAGMENT_STATIC)
 
 
 def setup(name, application, action_index, action_endpoint):
-    application[DEBUGGER_KEY] = Debugger(name)
+    application[DEBUGGER_KEY] = Debugger(name, time.time())
 
     _setup_routes(application, action_index, action_endpoint)
     _setup_static_routes(application)
@@ -29,9 +30,7 @@ def setup(name, application, action_index, action_endpoint):
     application.on_response_prepare.append(_on_response)
 
     aiohttp_jinja2.setup(
-        application,
-        loader=FileSystemLoader(_STATIC_PATH),
-        app_key=JINJA_KEY)
+        application, loader=FileSystemLoader(_STATIC_PATH), app_key=JINJA_KEY)
 
     return application
 
@@ -40,7 +39,6 @@ def _setup_routes(application, action_index, action_endpoint):
     debugger_path = application[DEBUGGER_KEY].path
 
     application.router.add_get(debugger_path, action_index)
-
     application.router.add_get(
         join(debugger_path, _URL_FRAGMENT_ENDPOINT), action_endpoint)
 

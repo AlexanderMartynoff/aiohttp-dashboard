@@ -3,12 +3,12 @@ from asyncio import ensure_future
 from aiohttp.web import WebSocketResponse, Response
 from queue import Queue
 from collections import deque, defaultdict
+from functools import partial
+from os.path import join
 import sys
 import logging
 import platform
 import aiohttp
-from functools import partial
-from os.path import join
 
 from ._misc import LimitedDict, MsgDirection
 from ._pubsub import Pubsub, HttpRequest, HttpResponse, \
@@ -24,12 +24,18 @@ JINJA_KEY = __name__ + '-jinja'
 
 class Debugger(Pubsub):
 
-    def __init__(self, name):
+    def __init__(self, name, time):
         Pubsub.__init__(self)
 
         self._name = name
+        self._time = time
         self._state = State()
         self._api = Api(self._state)
+
+    def times(self):
+        return {
+            'startup': self._time
+        }
 
     def register_request(self, request):
         self.state.put_request(request)
@@ -107,6 +113,9 @@ class Api:
 
     def request(self, id):
         return self._state.requests.get(id, None)
+
+    def messages_count(self):
+        return sum(len(_) for _ in self._state.messages.values())
 
     def requests_count(self):
         return len(self._state.requests)
