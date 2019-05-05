@@ -4,23 +4,23 @@
             
             <div class="col-md-6">
                 <b-card class="shadow h-100" title="Time">
-                    <h3>
-                        <code>{{formatDateTime(startupTime)}}</code> <br/>
-                        <small class="text-muted">applicaion start time</small>
-                    </h3>
-                    <h3>
-                        <code>{{startupDuration}}</code> <br/>
-                        <small class="text-muted">application work duration</small>
-                    </h3>
+                    <h2>
+                        <code>{{formatDateTime(startupTime)}}</code>
+                        <span class="d-block text-muted text-small">application start time</span>
+                    </h2>
+                    <h2>
+                        <code>{{startupDuration}}</code>
+                        <span class="d-block text-muted text-small">application work duration</span>
+                    </h2>
                 </b-card>
             </div>
 
             <div class="col-md-6 mt-3 mt-md-0">
                 <b-card class="shadow h-100" title="Exceptions">
-                    <h3>
-                        <code>558 068</code> <br/>
-                        <small class="text-muted">total number</small>
-                    </h3>
+                    <h2>
+                        <code>558 068</code>
+                        <span class="d-block text-muted text-small">total number</span>
+                    </h2>
                 </b-card>
             </div>
 
@@ -28,26 +28,26 @@
         <div class="row mt-3 mb-3">
             <div class="col-md-6">
                 <b-card class="shadow h-100" title="Requests">
-                    <h3>
-                        <code>{{requestsCount}}</code> <br/>
-                        <small class="text-muted">total number</small>
-                    </h3>
-                    <h3>
-                        <code>{{requestsPerSecond}}</code> <br/>
-                        <small class="text-muted">number per second</small>
-                    </h3>
+                    <h2>
+                        <code>{{requestsCount}}</code>
+                        <span class="d-block text-muted text-small">total number</span>
+                    </h2>
+                    <h2>
+                        <code>{{requestsPerSecond}}</code>
+                        <span class="d-block text-muted text-small">number per second</span>
+                    </h2>
                 </b-card>
             </div>
             <div class="col-md-6 mt-3 mt-md-0">
                 <b-card class="shadow h-100" title="Messages">
-                    <h3>
-                        <code>{{messagesCount}}</code> <br/>
-                        <small class="text-muted">total number</small>
-                    </h3>
-                    <h3>
-                        <code>{{messagesPerSecond}}</code> <br/>
-                        <small class="text-muted">number per second</small>
-                    </h3>
+                    <h2>
+                        <code>{{messagesCount}}</code>
+                        <span class="d-block text-muted text-small">total number</span>
+                    </h2>
+                    <h2>
+                        <code>{{messagesPerSecond}}</code>
+                        <span class="d-block text-muted text-small">number per second</span>
+                    </h2>
                 </b-card>
             </div>
         </div>
