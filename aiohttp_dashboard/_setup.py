@@ -6,11 +6,11 @@ from functools import partial
 from os.path import join, normpath, isabs, dirname, abspath
 import time
 
-from ._core import Debugger, DEBUGGER_KEY, JINJA_KEY
+from ._state import Debugger, DEBUGGER_KEY, JINJA_KEY
 from ._misc import MsgDirection
 
 
-# these path fragments will be joined with `Debugger.path`
+# these path-fragments will be joined with `Debugger.path`
 # websocket path for tranfer data messages
 _URL_FRAGMENT_ENDPOINT = 'api'
 # just path for serve static files

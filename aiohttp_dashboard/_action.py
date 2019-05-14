@@ -4,7 +4,7 @@ from aiohttp_jinja2 import template
 
 from ._endpoint import WsMsgDispatcherProxy
 from ._misc import WsResponseHelper
-from ._core import DEBUGGER_KEY, JINJA_KEY
+from ._state import DEBUGGER_KEY, JINJA_KEY
 from ._setup import endpoint_for_request
 
 

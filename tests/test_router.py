@@ -1,5 +1,5 @@
 from asyncio import sleep
-from aiohttp_dashboard._core import DEBUGGER_KEY
+from aiohttp_dashboard._state import DEBUGGER_KEY
 from aiohttp_dashboard._router import Router, route, RouteNotFoundError
 import pytest
 

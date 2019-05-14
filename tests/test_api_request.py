@@ -1,4 +1,4 @@
-from aiohttp_dashboard._core import DEBUGGER_KEY
+from aiohttp_dashboard._state import DEBUGGER_KEY
 
 
 async def test_statistics_requests_structure(aiohttp_client, aihttp_application):
@@ -8,7 +8,7 @@ async def test_statistics_requests_structure(aiohttp_client, aihttp_application)
     client = await aiohttp_client(aihttp_application)
     _response = await client.get('/test-http')
 
-    requests, *_ = aihttp_application[DEBUGGER_KEY].state.requests.values()
+    requests, *_ = aihttp_application[DEBUGGER_KEY]._http_requests.values()
 
     for key in structure:
         assert key in requests.keys()
@@ -21,7 +21,7 @@ async def test_statistics_requests_number(aiohttp_client, aihttp_application):
     for path in paths:
         await client.get(path)
 
-    assert len(aihttp_application[DEBUGGER_KEY].state.requests.values()) == len(paths)
+    assert len(aihttp_application[DEBUGGER_KEY]._http_requests.values()) == len(paths)
 
 
 async def test_statistics_requests_status(aiohttp_client, aihttp_application):
@@ -34,7 +34,7 @@ async def test_statistics_requests_status(aiohttp_client, aihttp_application):
     assert response_200.status == 200
     assert response_404.status == 404
 
-    requests = aihttp_application[DEBUGGER_KEY].state.requests.values()
+    requests = aihttp_application[DEBUGGER_KEY]._http_requests.values()
 
     request_200 = next(_ for _ in requests if _['path'] == '/test-http')
     request_404 = next(_ for _ in requests if _['path'] == '/test-http-404')
@@ -48,7 +48,7 @@ async def test_statistics_requests_simple_equals(aiohttp_client, aihttp_applicat
     client = await aiohttp_client(aihttp_application)
 
     response = await client.get('/test-http')
-    response_statistics, *_ = aihttp_application[DEBUGGER_KEY].state.requests.values()
+    response_statistics, *_ = aihttp_application[DEBUGGER_KEY]._http_requests.values()
 
     assert await response.text() == response_statistics['body']
     assert response.status == response_statistics['status']

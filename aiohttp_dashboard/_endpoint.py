@@ -294,30 +294,30 @@ class DebuggerApi:
         self._request = request
 
     def request(self, rid):
-        return {'item': self._debugger.api.request(rid)}
+        return {'item': self._debugger.find_http_request(rid)}
 
     def times(self):
         return self._debugger.times()
 
     def requests(self):
-        return self._debugger.api.requests()
+        return self._debugger.find_http_requests()
 
     def messages_count(self):
-        return self._debugger.api.messages_count()
+        return self._debugger.count_ws_messages()
 
     def requests_count(self):
-        return self._debugger.api.requests_count()
+        return self._debugger.count_http_requests()
 
     def messages(self, rid, page, perpage):
         return {
-            'collection': self._debugger.api.messages(rid, page, perpage),
-            'total': self._debugger.api.count_messages(rid),
-            'incoming': self._debugger.api.count_messages(rid, MsgDirection.INCOMING),
-            'outbound': self._debugger.api.count_messages(rid, MsgDirection.OUTBOUND),
+            'collection': self._debugger.find_ws_messages(rid, page, perpage),
+            'total': self._debugger.count_ws_messages(rid),
+            'incoming': self._debugger.count_ws_messages(rid, MsgDirection.INCOMING),
+            'outbound': self._debugger.count_ws_messages(rid, MsgDirection.OUTBOUND),
         }
 
     def http_exception(self, rid):
-        return {'item': self._debugger.api.http_exception(rid)}
+        return {'item': self._debugger.find_http_exception(rid)}
 
     def routes(self):
         routes = []
@@ -340,7 +340,7 @@ class DebuggerApi:
         return self._debugger.off(hid=hid)
 
     def platform_info(self):
-        return self._debugger.api.platform_info()
+        return self._debugger.platform_info()
 
     @property
     def debugger(self):
