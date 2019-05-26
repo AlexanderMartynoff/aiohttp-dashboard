@@ -123,8 +123,8 @@
             },
 
             onRequestRecive: function(data) {
-                if (data.item) {
-                    this.record = data.item
+                if (data) {
+                    this.record = data
                 } else {
                     this.record = {}
                 }
@@ -150,7 +150,7 @@
             },
 
             requestSubscribe: function() {
-                return this.httpSubscription = this.subscribe('request', message => {
+                return this.httpSubscription = this.subscribe('request.one', message => {
                     this.onRequestRecive(message.data)
                 }, {
                     'id': parseInt(this.id)
@@ -189,15 +189,15 @@
         },
 
         created: function() {
-            this.wsSubscribe()
+            // this.wsSubscribe()
             this.requestSubscribe()
-            this.exceptionSubscribe()
+            // this.exceptionSubscribe()
         },
         
         destroyed: function() {
-            this.wsUnsubscribe()
-            this.httpUnsubscribe()
-            this.errorUnsubscribe()
+            // this.wsUnsubscribe()
+            // this.httpUnsubscribe()
+            // this.errorUnsubscribe()
         }
     }
 </script>

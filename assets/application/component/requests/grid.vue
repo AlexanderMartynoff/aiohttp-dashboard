@@ -64,13 +64,15 @@
                 }
             }
         },
+
         created: function() {
-            this.subscription = this.subscribe('requests', message => {
+            this.subscription = this.subscribe('request.all', message => {
                 this.requests = message.data
             });
         },
+        
         destroyed: function() {
-            this.unsibscribe(this.subscription);
+            // this.unsibscribe(this.subscription);
         }
     }
 </script>

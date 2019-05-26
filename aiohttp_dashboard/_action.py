@@ -2,7 +2,7 @@ import logging
 import time
 from aiohttp_jinja2 import template
 
-from ._endpoint import WsMsgDispatcherProxy
+from ._endpoint import MessageRouter
 from ._misc import WsResponseHelper
 from ._state import DEBUGGER_KEY, JINJA_KEY
 from ._setup import endpoint_for_request
@@ -23,17 +23,15 @@ async def index(request):
 
 
 async def endpoint(request):
-    debugger = request.app[DEBUGGER_KEY]
-
     socket = await WsResponseHelper.instance(request)
-    proxy = WsMsgDispatcherProxy(socket, debugger, request)
+    router = MessageRouter(socket, request)
 
     try:
         async for message in socket:
-            proxy.recive(message)
+            router.router(message.endpoint, message)
     except Exception:
         logger.exception('An error occurred during execution')
     finally:
-        proxy.close()
+        router.off()
 
     return socket

@@ -45,21 +45,21 @@ class WebSocketService {
                 return;
             }
 
-            const callbackObject = this._responseHandlres[msg.uid];
+            const callbackObject = this._responseHandlres[msg.id];
 
             if (!callbackObject) {
-                console.log(`not found callback by ${msg.uid}`);
+                console.log(`not found callback by ${msg.id}`);
                 return;
             }
 
             if (callbackObject.callback) {
                 callbackObject.callback(msg);
             } else {
-                console.log(`not defined callback by ${msg.uid}`);
+                console.log(`not defined callback by ${msg.id}`);
             }
 
             if (!callbackObject.persistent) {
-                delete this._responseHandlres[msg.uid];
+                delete this._responseHandlres[msg.id];
             }
         };
 
@@ -99,7 +99,7 @@ class WebSocketService {
     _prepareMsg(reqMsg) {
         return {
             ...reqMsg,
-            uid: this._getUid()
+            id: this._getUid()
         };
     }
     
@@ -109,10 +109,10 @@ class WebSocketService {
         } : reqMsgOrEndpoint);
 
         this._do(() => {
-            this._responseHandlres[preparedReqMsg.uid] = {callback, persistent};
+            this._responseHandlres[preparedReqMsg.id] = {callback, persistent};
             this._sendToWs(preparedReqMsg);
         });
-        return preparedReqMsg.uid;
+        return preparedReqMsg.id;
     }
 
     subscribe(endpoint, callback, data) {
@@ -120,13 +120,13 @@ class WebSocketService {
         return this._doSubscribe(endpoint, callback, data);
     }
 
-    unsibscribe(uid, onComplete) {
+    unsibscribe(id, onComplete) {
         return this.send({
             endpoint: "unsibscribe",
-            data: {id: uid}
+            data: {id: id}
         }, onComplete, false);
 
-        delete this._responseHandlres[uid];
+        delete this._responseHandlres[id];
     }
 
     _doSubscribe(endpoint, callback, data) {

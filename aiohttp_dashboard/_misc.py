@@ -36,8 +36,8 @@ class WsResponseHelper(WebSocketResponse):
             return self._json.get('data', defaultdict(lambda: None))
 
         @property
-        def uid(self):
-            return self._json.get('uid', None)
+        def id(self):
+            return self._json.get('id', None)
 
         @property
         def endpoint(self):

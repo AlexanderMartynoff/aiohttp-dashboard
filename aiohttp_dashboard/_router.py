@@ -31,7 +31,7 @@ class Router:
         try:
             return self._router(name, *args, **kwargs)
         except RouteNotFoundError:
-            return self.default_route(*args, **kwargs)
+            return self.default_route(name, *args, **kwargs)
         except Exception as error:
             return self.error_route(error)
 
@@ -40,7 +40,7 @@ class Router:
             if route._name == name:
                 return route(self, *args, **kwargs)
 
-        raise RouteNotFoundError
+        raise RouteNotFoundError(name)
 
     @property
     def routes(self):
@@ -49,12 +49,12 @@ class Router:
             if isinstance(attribute, _Route):
                 yield attribute
 
-    def default_route(self, *args, **kwargs):
+    def default_route(self, name, *args, **kwargs):
         for route in self.routes:
             if isinstance(route, _DefaultRoute):
                 return route(self, *args, **kwargs)
 
-        raise RouteNotFoundError
+        raise RouteNotFoundError(name)
 
     def error_route(self, error):
         for route in self.routes:
@@ -72,7 +72,7 @@ class AsyncRouter(Router):
                 self._router(name, *args, **kwargs))
         except RouteNotFoundError:
             return await self._ensure_coroutine(
-                self.default_route(*args, **kwargs))
+                self.default_route(name, *args, **kwargs))
         except Exception as error:
             return await self._ensure_coroutine(
                 self.error_route(error))
