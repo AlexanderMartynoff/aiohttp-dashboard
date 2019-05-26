@@ -44,15 +44,10 @@ class Router:
 
     @property
     def routes(self):
-        """
-        Return all routes registering on this class
-        """
-
-        IGNORED = ['routes']
-
-        # NOTE: reFUCKt!
-        # NOTE: for fix RecursionError - ignore routes methods
-        return [member for member in [getattr(self, name) for name in dir(self) if name not in IGNORED] if isinstance(member, _Route)]
+        for name in dir(self.__class__):
+            attribute = getattr(self.__class__, name)
+            if isinstance(attribute, _Route):
+                yield attribute
 
     def default_route(self, *args, **kwargs):
         for route in self.routes:
@@ -73,11 +68,14 @@ class AsyncRouter(Router):
     async def router(self, name, *args, **kwargs):
 
         try:
-            return await self._ensure_coroutine(self._router(name, *args, **kwargs))
+            return await self._ensure_coroutine(
+                self._router(name, *args, **kwargs))
         except RouteNotFoundError:
-            return await self._ensure_coroutine(self.default_route(*args, **kwargs))
+            return await self._ensure_coroutine(
+                self.default_route(*args, **kwargs))
         except Exception as error:
-            return await self._ensure_coroutine(self.error_route(error))
+            return await self._ensure_coroutine(
+                self.error_route(error))
 
     def _ensure_coroutine(self, coroutine):
 

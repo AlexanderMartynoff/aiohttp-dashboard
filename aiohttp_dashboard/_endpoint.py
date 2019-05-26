@@ -148,8 +148,7 @@ class WsMsgDispatcher(Router):
         })
 
     def close(self):
-        self._debugger.off(group=self._sender.id)
-        logger.info(f'After unsibscribe handlers left - ``{self._debugger.size}``')
+        self._debugger.off(gid=self._sender.id)
 
 
 class Sender(Router):

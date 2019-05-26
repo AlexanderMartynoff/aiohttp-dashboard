@@ -11,9 +11,8 @@ import platform
 import aiohttp
 
 from ._misc import LimitedDict, MsgDirection
-from ._pubsub import Pubsub, HttpRequest, HttpResponse, \
+from ._pubsub import PubSub, HttpRequest, HttpResponse, \
     WsMsgIncoming, WsMsgOutbound
-
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +22,10 @@ JINJA_KEY = __name__ + '-jinja'
 _LIMIT = 50000
 
 
-class Debugger(Pubsub):
+class Debugger(PubSub):
 
     def __init__(self, name, time):
-        Pubsub.__init__(self)
+        PubSub.__init__(self)
 
         self._name = name
         self._time = time
@@ -37,7 +36,7 @@ class Debugger(Pubsub):
         self._ws_exceptions = LimitedDict(limit=_LIMIT)
 
     # registration API
-    def register_request(self, request):
+    def register_http_request(self, request):
         requst_id = id(request)
         ip, _ = request.transport.get_extra_info('peername')
 
@@ -55,7 +54,7 @@ class Debugger(Pubsub):
 
         self.fire(HttpRequest(requst_id))
 
-    def register_response(self, request, response):
+    def register_http_response(self, request, response):
         requst_id = id(request)
 
         if requst_id in self._http_requests.keys():
@@ -71,7 +70,10 @@ class Debugger(Pubsub):
 
         self.fire(HttpResponse(requst_id))
 
-    def register_websocket_message(self, direction, request, message):
+    def register_http_exception(self, request, exception):
+        self._http_exceptions[id(request)] = exception
+
+    def register_ws_message(self, direction, request, message):
         request_id, message_id = id(request), id(message)
 
         if request_id not in self._ws_messages:
@@ -91,13 +93,12 @@ class Debugger(Pubsub):
 
         self.fire(Event(request_id))
 
-    def register_http_exception(self, request, exception):
-        self._http_exceptions[id(request)] = exception
-
-    # getters API
-
     def find_http_requests(self):
-        return sorted(self._http_requests.values(), key=lambda _: _['begintime'], reverse=True)
+        return sorted(
+            self._http_requests.values(),
+            key=lambda _: _['begintime'],
+            reverse=True
+        )
 
     def find_http_request(self, id):
         return self._http_requests.get(id, None)
@@ -105,17 +106,11 @@ class Debugger(Pubsub):
     def count_http_requests(self):
         return len(self._http_requests)
 
-    @property
-    def http_exceptions(self) -> dict:
-        return self._http_exceptions
-
     def find_http_exception(self, rid):
         if rid not in self._http_exceptions:
             return None
 
-    @property
-    def ws_messages(self) -> dict:
-        return self._ws_messages
+        return self._http_exceptions[rid]
 
     def find_ws_messages(self, id, page=1, perpage=-1):
 

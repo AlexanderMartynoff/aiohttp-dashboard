@@ -94,7 +94,7 @@ def test_routes_length():
         def _0(self):
             pass
 
-    assert len(Controller().routes) == 3
+    assert len(list(Controller().routes)) == 3
 
 
 def test_route_error():

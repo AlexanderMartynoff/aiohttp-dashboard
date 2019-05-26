@@ -123,7 +123,11 @@
             },
 
             onRequestRecive: function(data) {
-                this.record = data.item;
+                if (data.item) {
+                    this.record = data.item
+                } else {
+                    this.record = {}
+                }
             },
 
             onWsMessagesRecive: function(data) {
