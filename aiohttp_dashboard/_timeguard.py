@@ -6,10 +6,29 @@ class TimeGuardFactory:
         self._timeout = timeout
 
     def __call__(self, function):
-        return TimeGuard(self._timeout, function)
+        return _TimeGuardHolder(self._timeout, function)
 
 
-class TimeGuard:
+class _TimeGuardHolder:
+
+    def __init__(self, timeout, function):
+        self._states = {
+            'default': _TimeGuard(timeout, function)
+        }
+        self._timeout = timeout
+        self._function = function
+
+    def __call__(self, *args, **kwargs):
+        state_id = kwargs.pop('_state_id', 'default')
+
+        if state_id not in self._states:
+            self._states[state_id] = _TimeGuard(
+                self._timeout, self._function)
+
+        return self._states[state_id](*args, **kwargs)
+
+
+class _TimeGuard:
     def __init__(self, timeout, function):
         self._timeout = timeout
         self._function = function

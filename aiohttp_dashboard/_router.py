@@ -125,7 +125,6 @@ class _DefaultRoute(_Route):
 
 
 class _ErrorRoute(_Route):
-    _error_types = None
 
     def __init__(self, error_types, handler):
         super().__init__(None, handler)

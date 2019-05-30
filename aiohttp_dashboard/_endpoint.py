@@ -37,7 +37,7 @@ class MessageRouter(Router):
 
         def on_event(event):
             if event.rid == rid:
-                send()
+                send(_state_id=event.__class__.__name__)
 
         self._state.on([
             HttpRequest,
@@ -49,16 +49,19 @@ class MessageRouter(Router):
     @route('request.all')
     def request_all(self, message):
 
+        def on_event(event):
+            send(_state_id=event.__class__.__name__)
+
         @timeguard
-        def send(event):
+        def send():
             self._send(message, self._state.find_http_requests())
 
         self._state.on([
             HttpRequest,
             HttpResponse
-        ], send, gid=self._id, hid=message.id)
+        ], on_event, gid=self._id, hid=message.id)
 
-        send(None)
+        send()
 
     @route('request.all.count')
     def requests_all_count(self, message):

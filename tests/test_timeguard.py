@@ -49,3 +49,27 @@ async def test_calls_count():
 
     await asyncio.sleep(.1)
     assert count == 3
+
+
+async def test_states():
+    timeguard = TimeGuardFactory(.1)
+    count = 0
+
+    @timeguard
+    def function():
+        nonlocal count
+        count = count + 1
+
+    function(_state_id='1')
+    function(_state_id='2')
+    assert count == 2
+
+    function(_state_id='1')
+    assert count == 2
+
+    function(_state_id='2')
+    assert count == 2
+
+    await asyncio.sleep(.1)
+
+    assert count == 4
