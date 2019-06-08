@@ -60,14 +60,14 @@ async def test_states():
         nonlocal count
         count = count + 1
 
-    function(_state_id='1')
-    function(_state_id='2')
+    function(_state='1')
+    function(_state='2')
     assert count == 2
 
-    function(_state_id='1')
+    function(_state='1')
     assert count == 2
 
-    function(_state_id='2')
+    function(_state='2')
     assert count == 2
 
     await asyncio.sleep(.1)

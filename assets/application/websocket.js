@@ -36,7 +36,7 @@ class WebSocketService {
         };
         
         this._ws.onmessage = rawMsg => {
-            let msg;
+            var msg;
             
             try {
                 msg = JSON.parse(rawMsg.data);
@@ -116,14 +116,18 @@ class WebSocketService {
     }
 
     subscribe(endpoint, callback, data) {
-        this._subscribeHistory.push({endpoint, callback, data});
+        this._subscribeHistory.push({
+            endpoint,
+            callback,
+            data,
+        });
         return this._doSubscribe(endpoint, callback, data);
     }
 
     unsibscribe(id, onComplete) {
         return this.send({
-            endpoint: "unsibscribe",
-            data: {id: id}
+            endpoint: 'unsubscribe',
+            data: {id},
         }, onComplete, false);
 
         delete this._responseHandlres[id];
@@ -131,8 +135,8 @@ class WebSocketService {
 
     _doSubscribe(endpoint, callback, data) {
         return this.send({
-            endpoint: endpoint,
-            data: data
+            endpoint,
+            data,
         }, callback, true);
     }
 
@@ -145,12 +149,16 @@ class WebSocketService {
 const instance = WebSocketService.instance = new WebSocketService(
     environment.getParameter('aiohttp-dashboard-endpoint'));
 
-// for use as mixin
 WebSocketService.mixin = {
     methods: {
-        send: (...args) => instance.send.apply(instance, args),
-        subscribe: (...args) => instance.subscribe.apply(instance, args),
-        unsibscribe: (...args) => instance.unsibscribe.apply(instance, args)
+        $subscribe(event, callback, conditions, name) {
+            return instance.subscribe('subscribe', callback, {
+                event,
+                name,
+                conditions,
+            })
+        },
+        $unsibscribe() {},
     }
 };
 

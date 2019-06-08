@@ -3,16 +3,8 @@ from aiohttp_dashboard._pubsub import PubSub
 import pytest
 
 
-class _EventA:
-    pass
-
-
-class _EventB:
-    pass
-
-
 def _pubsub_length(pubsub):
-    return sum(len(handlers) for handlers in pubsub._handlers.values())
+    return len(pubsub._handlers)
 
 
 @pytest.fixture
@@ -23,13 +15,13 @@ def _pubsub():
 def test_subcribtion_single_event_count(_pubsub):
     events = []
 
-    def handler(event):
+    def handler(event, parameters):
         events.append(event)
 
-    _pubsub.on(_EventA, handler)
+    _pubsub.on('a', handler)
 
-    _pubsub.fire(_EventA())
-    _pubsub.fire(_EventA())
+    _pubsub.fire('a', None)
+    _pubsub.fire('a', None)
 
     assert len(events) == 2
 
@@ -37,81 +29,90 @@ def test_subcribtion_single_event_count(_pubsub):
 def test_subcribtion_multiple_event_count(_pubsub):
     events = []
 
-    def handler(event):
+    def handler(event, parameters):
         events.append(event)
 
-    _pubsub.on([_EventA, _EventB], handler)
+    _pubsub.on(['a', 'b'], handler)
 
-    _pubsub.fire(_EventA())
-    _pubsub.fire(_EventB())
+    _pubsub.fire('a', None)
+    _pubsub.fire('b', None)
 
     assert len(events) == 2
 
 
-def test_subcribtion_event_type(_pubsub):
+def test_subcribtion_event_equals(_pubsub):
     fired_event = None
-    event = _EventA()
+    event = 'a'
 
-    def handler(event):
+    def handler(event, parameters):
         nonlocal fired_event
         fired_event = event
 
-    _pubsub.on(_EventA, handler)
+    _pubsub.on('a', handler)
+    _pubsub.fire(event, None)
 
-    _pubsub.fire(event)
-
-    assert isinstance(fired_event, _EventA)
     assert fired_event is event
 
 
 def test_subcribtion_handler_count(_pubsub):
-    def handler(event):
+    def handler(event, parameters):
         pass
 
-    _pubsub.on(_EventA, handler)
-    _pubsub.on(_EventA, handler)
+    _pubsub.on('a', handler)
+    _pubsub.on('b', handler)
 
     assert _pubsub_length(_pubsub) == 2
 
 
-def test_unsubcribtion_default_gid(_pubsub):
-    def handler(event):
+def test_unsubcribtion_event(_pubsub):
+
+    def handler(event, parameters):
         pass
 
-    _pubsub.on(_EventA, handler)
-    _pubsub.on(_EventB, handler)
+    _pubsub.on('a', handler)
+    _pubsub.on('b', handler)
 
-    _pubsub.off(gid='default')
-
-    assert _pubsub_length(_pubsub) == 0
-
-
-def test_unsubcribtion_gid(_pubsub):
-    def handler(event):
-        pass
-
-    _pubsub.on(_EventA, handler, gid='gid-1')
-    _pubsub.on(_EventB, handler, gid='gid-2')
-
-    _pubsub.off(gid='default')
     assert _pubsub_length(_pubsub) == 2
 
-    _pubsub.off(gid='gid-1')
+    _pubsub.off('a')
     assert _pubsub_length(_pubsub) == 1
 
-    _pubsub.off(gid='gid-2')
+    _pubsub.off('b')
     assert _pubsub_length(_pubsub) == 0
 
 
-def test_unsubcribtion_hid(_pubsub):
-    def handler(event):
+def test_unsubcribtion_name(_pubsub):
+
+    def handler(event, parameters):
         pass
 
-    _pubsub.on(_EventB, handler, hid='hid-1')
-    _pubsub.on(_EventB, handler, hid='hid-2')
+    _pubsub.on('a', handler, '1')
+    _pubsub.on('b', handler, '2')
 
-    _pubsub.off(hid='hid-2')
+    _pubsub.off(name='1')
     assert _pubsub_length(_pubsub) == 1
 
-    _pubsub.off(hid='hid-1')
+    _pubsub.off(name='2')
     assert _pubsub_length(_pubsub) == 0
+
+
+def test_unsubcribtion_default_name(_pubsub):
+    def handler(event, parameters):
+        pass
+
+    _pubsub.on('a', handler)
+    _pubsub.on('b', handler)
+
+    _pubsub.off(name='default')
+
+    assert _pubsub_length(_pubsub) == 0
+
+
+def test_parameters(_pubsub):
+    parameters_ = {}
+
+    def handler(event, parameters):
+        assert parameters_ is parameters
+
+    _pubsub.on('a', handler)
+    _pubsub.fire('a', parameters_)

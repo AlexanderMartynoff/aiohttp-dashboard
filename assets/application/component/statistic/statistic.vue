@@ -74,20 +74,20 @@
             },
 
             requestsSubscribe() {
-                this.requestsSubscribtion = this.subscribe('request.requests.count', message => {
+                this.requestsSubscribtion = this.subscribe('request.all', message => {
                     this.requestsCount = message.data
                 })
             },
 
             messagesSubscribe() {
-                this.messagesSubscribtion = this.subscribe('request.messages.count', message => {
-                    this.messagesCount = message.data
+                this.messagesSubscribtion = this.subscribe('message.all.length', message => {
+                    this.messagesCount = message.payload.length.all
                 })
             },
 
             fetchTime() {
-                this.subscribe('fetch.times', message => {
-                    this.startupTime = DateTime.fromSeconds(message.data.startup)
+                this.subscribe('system.times', message => {
+                    this.startupTime = DateTime.fromSeconds(message.payload.startup)
                 })
             },
 

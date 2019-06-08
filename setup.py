@@ -12,7 +12,10 @@ __version__ = '0.1.0dev1'
 class Test(TestCommand):
 
     def run_tests(self):
-        subprocess.call([sys.executable, '-m', 'pytest', 'tests', '-v', '-s', '--cov=aiohttp_dashboard'])
+        subprocess.call([
+            sys.executable, '-m', 'pytest', 'tests',
+            '--exitfirst', '-v', '-s', '--cov=aiohttp_dashboard'
+        ])
 
 
 class Asset(Command):
@@ -35,7 +38,8 @@ class Asset(Command):
 prod_requires = [
     'aiohttp',
     'aiohttp_jinja2',
-    'voluptuous'
+    'voluptuous',
+    'voluptuous',
 ]
 
 dev_requires = prod_requires + [

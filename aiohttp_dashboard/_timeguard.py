@@ -19,13 +19,13 @@ class _TimeGuardHolder:
         self._function = function
 
     def __call__(self, *args, **kwargs):
-        state_id = kwargs.pop('_state_id', 'default')
+        state = kwargs.pop('_state', 'default')
 
-        if state_id not in self._states:
-            self._states[state_id] = _TimeGuard(
+        if state not in self._states:
+            self._states[state] = _TimeGuard(
                 self._timeout, self._function)
 
-        return self._states[state_id](*args, **kwargs)
+        return self._states[state](*args, **kwargs)
 
 
 class _TimeGuard:

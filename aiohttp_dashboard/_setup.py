@@ -1,7 +1,6 @@
 import aiohttp_jinja2
 from jinja2 import FileSystemLoader
-from aiohttp.web import WebSocketResponse, Response
-from yarl import URL
+from aiohttp.web import WebSocketResponse, Response, RouteTableDef
 from functools import partial
 from os.path import join, normpath, isabs, dirname, abspath
 import time
@@ -10,44 +9,43 @@ from ._state import Debugger, DEBUGGER_KEY, JINJA_KEY
 from ._misc import MsgDirection
 
 
-# these path-fragments will be joined with `Debugger.path`
-# websocket path for tranfer data messages
-_URL_FRAGMENT_ENDPOINT = 'api'
-# just path for serve static files
-_URL_FRAGMENT_STATIC = 'static'
-# path to static files location into file system
-# see `Debugger._setup_routes`
-_STATIC_PATH = join(dirname(abspath(__file__)), _URL_FRAGMENT_STATIC)
+DEBUGGER_PREFIX_KEY = DEBUGGER_KEY + '-prefix'
 
 
-def setup(name, application, action_index, action_endpoint):
-    application[DEBUGGER_KEY] = Debugger(name, time.time())
+def normalize_prefix(prefix):
+    assert isabs(prefix), \
+        ValueError('Prefix must be absoluste path')
+    return normpath(prefix)
 
-    _setup_routes(application, action_index, action_endpoint)
-    _setup_static_routes(application)
+
+def setup(prefix, application, routes, static_routes, resource_paths):
+
+    application[DEBUGGER_PREFIX_KEY] = prefix
+    application[DEBUGGER_KEY] = Debugger(time.time())
+
+    _setup_routes(application, routes)
+    _setup_static_routes(application, static_routes)
 
     application.middlewares.append(_factory_on_request)
     application.on_response_prepare.append(_on_response)
 
     aiohttp_jinja2.setup(
-        application, loader=FileSystemLoader(_STATIC_PATH), app_key=JINJA_KEY)
+        application,
+        loader=FileSystemLoader(resource_paths),
+        app_key=JINJA_KEY
+    )
 
     return application
 
 
-def _setup_routes(application, action_index, action_endpoint):
-    debugger_path = application[DEBUGGER_KEY].path
-
-    application.router.add_get(debugger_path, action_index)
-    application.router.add_get(
-        join(debugger_path, _URL_FRAGMENT_ENDPOINT), action_endpoint)
+def _setup_routes(application, routes):
+    for method, fragment_path, handler in routes:
+        application.router.add_route(method, fragment_path, handler)
 
 
-def _setup_static_routes(application):
-    debugger_path = application[DEBUGGER_KEY].path
-
-    application.router.add_static(
-        join(debugger_path, _URL_FRAGMENT_STATIC), _STATIC_PATH)
+def _setup_static_routes(application, routes):
+    for path, location in routes:
+        application.router.add_static(path, location)
 
 
 async def _factory_on_request(application, handler):
@@ -55,7 +53,7 @@ async def _factory_on_request(application, handler):
 
 
 def _is_sutable_request(request):
-    return not request.path.startswith(request.app[DEBUGGER_KEY].path)
+    return not request.path.startswith(request.app[DEBUGGER_PREFIX_KEY])
 
 
 async def _on_request(request, handler):
@@ -65,7 +63,8 @@ async def _on_request(request, handler):
         try:
             return await handler(request)
         except Exception as exception:
-            request.app[DEBUGGER_KEY].register_http_exception(request, exception)
+            request.app[DEBUGGER_KEY].register_http_exception(
+                request, exception)
             raise exception
 
     return await handler(request)
@@ -87,7 +86,7 @@ def _on_websocket_msg(direction, request, message):
 
 def _ws_resposne_decorate(request, response):
 
-    async def ping_decorator(message):
+    async def ping_decorato(message):
         _on_websocket_msg(MsgDirection.INCOMING, request, message)
         return await ping(message)
 
@@ -118,17 +117,3 @@ def _ws_resposne_decorate(request, response):
         return message
 
     receive, response.receive = response.receive, receive_decorator
-
-
-def endpoint_for_request(request):
-    if request.secure:
-        scheme = 'wss'
-    else:
-        scheme = 'ws'
-
-    return URL.build(
-        scheme=scheme,
-        host=request.url.host,
-        port=request.url.port,
-        path=join(request.app[DEBUGGER_KEY].path, _URL_FRAGMENT_ENDPOINT),
-    )

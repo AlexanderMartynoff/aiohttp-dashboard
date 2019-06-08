@@ -42,8 +42,8 @@
                 status: {label: 'Status'},
                 path: {label: 'Path'},
                 method: {label: 'Method'},
-                begintime: {label: 'Begin time'},
-                donetime: {label: 'End time'},
+                starttime: {label: 'Begin time'},
+                stoptime: {label: 'End time'},
             },
 
             requests: [],
@@ -62,17 +62,25 @@
                 } else {
                     return 'badge-success'
                 }
+            },
+
+            loadRequests() {
+                return this.$axios.get('/dashboard/api/request').then(requests => {
+                    this.requests = requests
+                }) 
             }
         },
 
         created: function() {
-            this.subscription = this.subscribe('request.all', message => {
-                this.requests = message.data
+            this.loadRequests()
+
+            this.$subscribe('http.request', message => {
+                this.loadRequests()
             });
         },
         
         destroyed: function() {
-            // this.unsibscribe(this.subscription);
+            this.$unsibscribe();
         }
     }
 </script>

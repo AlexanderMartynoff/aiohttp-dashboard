@@ -1,4 +1,3 @@
-from os.path import join
 from aiohttp_dashboard._state import DEBUGGER_KEY
 from aiohttp_dashboard._setup import _factory_on_request, _on_response
 

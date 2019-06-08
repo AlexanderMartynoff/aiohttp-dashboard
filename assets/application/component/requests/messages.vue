@@ -4,9 +4,9 @@
         <bar sticky="top">
             <b-nav>
                 <b-nav-item active>
-                    <i class="fas fa-arrows-alt-v"></i> {{total}}
-                    <i class="fa fa-long-arrow-alt-down"></i> {{incomingTotal}}
-                    <i class="fa fa-long-arrow-alt-up" aria-hidden="true"></i> {{outboundTotal}}
+                    <i class="fas fa-arrows-alt-v"></i> {{bothLength}}
+                    <i class="fa fa-long-arrow-alt-down"></i> {{incomingLength}}
+                    <i class="fa fa-long-arrow-alt-up" aria-hidden="true"></i> {{outboundLength}}
                 </b-nav-item>
             </b-nav>
         </bar>
@@ -37,10 +37,6 @@
                 </b-modal>
             </div>
         </div>
-
-        <bar v-if="messages" sticky="bottom" align="center" :card="false">            
-            <b-pagination :limit="3" :total-rows="total" :per-page="limit" v-model="page" align="center"/>
-        </bar>
     </div>
 </template>
 
@@ -52,41 +48,29 @@
         mixins: [WebSocketService.mixin],
         data: function() {
             return {
-                fields: {
-                    direction: {
-                        label: 'Direction',
-                        class: 'text-center'
-                    },
-                    time: {
-                        label: 'Time'
-                    },
-                },
                 message: {},
-                page: 1,
-                limit: 25,
-                total: 0,
                 messages: [],
-                incomingTotal: 0,
-                outboundTotal: 0,
+                limit: 25,
+                incomingLength: 0,
+                outboundLength: 0,
             }
         },
         props: {
             id: String
         },
 
-        watch: {
-            page: function(page) { 
-                this.wsUnsubscribe(() => this.wsSubscribe())    
-            },
+        computed: {
+            bothLength() {
+                return this.incomingLength + this.outboundLength
+            }
         },
 
         methods: {
 
-            onWsMessagesRecive: function(data) {
-                this.messages = data.collection
-                this.total = data.total
-                this.incomingTotal = data.incoming
-                this.outboundTotal = data.outbound
+            onWsMessagesRecive: function(payload) {
+                this.messages = payload.messages
+                this.incomingLength = payload.length.incoming
+                this.outboundLength = payload.length.outcoming
             },
 
             showDetail: function(message) {
@@ -119,17 +103,15 @@
             },
 
             wsSubscribe: function() {
-                this.wsSubscription = this.subscribe('request.messages', message => {
-                    this.onWsMessagesRecive(message.data)
-                }, {
-                    'id': parseInt(this.id),
-                    'limit': this.limit,
-                    'page': this.page,
+                this.$subscribe('websocket:*', {
+                    request: this.id,
+                }, message => {
+                    
                 })
             },
 
             wsUnsubscribe: function(onComplete) {
-                this.unsibscribe(this.wsSubscription, onComplete)
+                this.$unsibscribe()
             },
         },
 
@@ -138,7 +120,7 @@
         },
         
         destroyed: function() {
-            this.wsUnsubscribe()
+            this.$unsubscribe()
         }
     }
 </script>

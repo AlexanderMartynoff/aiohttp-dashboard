@@ -22,10 +22,14 @@ import Bar from '@/component/bar/bar'
 import Traceback from '@/component/traceback/traceback'
 
 
+import Axios from '@/axios'
+
+
 import "@/style/aiohttp-debugger.styl"
 import "@/style/bootstrap-override.styl"
 
 
+Vue.use(Axios)
 Vue.use(VueRouter)
 Vue.use(BootstrapVue)
 
@@ -50,4 +54,13 @@ for (const key in components) {
     Vue.component(key, components[key])
 }
 
-const application = new Vue({router, el: ".application"})
+const application = new Vue({
+    router, el: ".application",
+    axios: {
+        interceptor: {
+            response(response) {
+                return response.data
+            }
+        }
+    }
+})

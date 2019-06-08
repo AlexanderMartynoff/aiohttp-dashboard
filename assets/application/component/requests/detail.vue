@@ -1,17 +1,17 @@
 <template>
     <div class="container-fluid my-3">
 
-        <bar v-if="messages" sticky="top">
+        <bar v-if="wsLength" sticky="top">
             <b-nav>
                 <b-nav-item active @click="openMessages">
-                    <i class="fas fa-arrows-alt-v"></i> {{wsTotal}}
-                    <i class="fa fa-long-arrow-alt-down"></i> {{wsIncomingTotal}}
-                    <i class="fa fa-long-arrow-alt-up" aria-hidden="true"></i> {{wsOutboundTotal}}
+                    <i class="fas fa-arrows-alt-v"></i> {{wsLength}}
+                    <i class="fa fa-long-arrow-alt-down"></i> {{wsIncomingLength}}
+                    <i class="fa fa-long-arrow-alt-up" aria-hidden="true"></i> {{wsOutcomingLength}}
                 </b-nav-item>
             </b-nav>
         </bar>
 
-        <div class="row mt-3">
+        <div class="row mt-3" v-if="record">
             <div class="col-md-6">
                 <b-card class="shadow h-100" title="Info">
                     <ul class="list-group overflow-auto">
@@ -30,10 +30,10 @@
                             <span>Path:</span> <code>{{record.path}}</code>
                         </li>
                         <li class="list-group-item">
-                            <span>Begin time:</span> <code>{{record.begintime}}</code>
+                            <span>Begin time:</span> <code>{{record.starttime}}</code>
                         </li>
                         <li class="list-group-item">
-                            <span>Done time:</span> <code>{{record.donetime}}</code>
+                            <span>Done time:</span> <code>{{record.stoptime}}</code>
                         </li>
                         <li class="list-group-item">
                             <span>Scheme:</span> <code>{{record.scheme}}</code>
@@ -60,7 +60,7 @@
                             </template>
 
                             <b-list-group v-if="record">
-                                <b-list-group-item button v-for="value, key in record.reqheaders">
+                                <b-list-group-item button v-for="value, key in record.requestheaders">
                                     <span>{{key}}:</span> <code>{{truncate(value)}}</code>
                                 </b-list-group-item>
                             </b-list-group>
@@ -74,7 +74,7 @@
                             </template>
 
                             <ul class="list-group" v-if="record">
-                                <li class="list-group-item" v-for="(value, key) in record.resheaders">
+                                <li class="list-group-item" v-for="(value, key) in record.responseheaders">
                                     <span>{{key}}:</span> <code>{{truncate(value)}}</code>
                                 </li>
                             </ul>
@@ -102,19 +102,20 @@
         mixins: [WebSocketService.mixin],
         data: function() {
             return {
-                record: {},
-                wsCurrentPage: 1,
-                wsPerPage: 25,
-                wsTotal: 0,
-                messages: null,
+                record: null,
                 exception: null,
-                showWsLastPageSetting: false,
-                wsIncomingTotal: 0,
-                wsOutboundTotal: 0,
+                wsIncomingLength: 0,
+                wsOutcomingLength: 0,
             }
         },
         props: {
             id: String
+        },
+
+        computed: {
+            wsLength() {
+                return this.wsIncomingLength + this.wsOutcomingLength
+            }
         },
 
         methods: {
@@ -122,23 +123,18 @@
                 router.push({path: `/request/messages/${this.id}`})
             },
 
-            onRequestRecive: function(data) {
-                if (data) {
-                    this.record = data
-                } else {
-                    this.record = {}
-                }
+            onRequestRecive: function(payload) {
+                this.record = payload.request
+                this.exception = payload.exception
             },
 
-            onWsMessagesRecive: function(data) {
-                this.messages = data.collection
-                this.wsTotal = data.total
-                this.wsIncomingTotal = data.incoming
-                this.wsOutboundTotal = data.outbound
+            onWsMessagesRecive: function(payload) {
+                this.wsIncomingLength = payload.length.incoming
+                this.wsOutcomingLength = payload.length.outcoming
             },
 
-            onExceptionRecive(data) {
-                this.exception = data.item
+            onExceptionRecive(payload) {
+                this.exception = payload.exception
             },
 
             truncate(string, limit=50) {
@@ -151,32 +147,20 @@
 
             requestSubscribe: function() {
                 return this.httpSubscription = this.subscribe('request.one', message => {
-                    this.onRequestRecive(message.data)
+                    this.onRequestRecive(message.payload)
                 }, {
-                    'id': parseInt(this.id)
+                    'id': parseInt(this.id),
                 })
             },
 
             wsSubscribe: function() {
-                this.wsSubscription = this.subscribe('request.messages', message => {
-                    this.onWsMessagesRecive(message.data)
+                this.wsSubscription = this.subscribe('message.all', message => {
+                    this.onWsMessagesRecive(message.payload)
                 }, {
                     'id': parseInt(this.id),
-                    'limit': this.wsPerPage,
-                    'page': this.wsCurrentPage
+                    'limit': 0,
+                    'start': 0,
                 })
-            },
-
-            exceptionSubscribe() {
-                this.errorSubscribtion = this.subscribe('request.exception', message => {
-                    this.onExceptionRecive(message.data)
-                }, {
-                    'id': parseInt(this.id)
-                })
-            },
-
-            errorUnsubscribe: function(onComplete) {
-                this.unsibscribe(this.errorSubscribtion, onComplete)
             },
 
             wsUnsubscribe: function(onComplete) {
@@ -189,15 +173,13 @@
         },
 
         created: function() {
-            // this.wsSubscribe()
+            this.wsSubscribe()
             this.requestSubscribe()
-            // this.exceptionSubscribe()
         },
         
         destroyed: function() {
-            // this.wsUnsubscribe()
-            // this.httpUnsubscribe()
-            // this.errorUnsubscribe()
+            this.wsUnsubscribe()
+            this.httpUnsubscribe()
         }
     }
 </script>

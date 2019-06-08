@@ -5,7 +5,7 @@ import aiohttp_dashboard
 
 @pytest.fixture
 def prefix():
-    return '_debugger'
+    return '/aiohttp_dashboard'
 
 
 @pytest.fixture
