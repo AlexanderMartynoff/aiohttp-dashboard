@@ -45,7 +45,6 @@
     import {WebSocketService} from '@/websocket'
 
     export default {
-        mixins: [WebSocketService.mixin],
         data: function() {
             return {
                 message: {},
@@ -66,12 +65,6 @@
         },
 
         methods: {
-
-            onWsMessagesRecive: function(payload) {
-                this.messages = payload.messages
-                this.incomingLength = payload.length.incoming
-                this.outboundLength = payload.length.outcoming
-            },
 
             showDetail: function(message) {
                 this.message = message
@@ -103,10 +96,10 @@
             },
 
             wsSubscribe: function() {
-                this.$subscribe('websocket:*', {
+                this.$event.on('websocket', message => {
+                    console.log(message)
+                }, {
                     request: this.id,
-                }, message => {
-                    
                 })
             },
 
@@ -116,11 +109,12 @@
         },
 
         created: function() {
+            this.$event = WebSocketService.create()
             this.wsSubscribe()
         },
         
         destroyed: function() {
-            this.$unsubscribe()
+            this.$event.off()
         }
     }
 </script>

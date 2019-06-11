@@ -12,7 +12,7 @@ import BoxFooter from '@/component/box/box-footer'
 
 import TopMenu from '@/component/menu/top'
 import SettingsWindow from '@/component/settings/window'
-import IndexGrid from '@/component/requests/grid'
+import IndexGrid from '@/component/requests/master'
 import Clock from '@/component/clock/clock'
 import DropdpownPane from '@/component/widget/dropdpown-pane'
 import InspectMaster from '@/component/inspect/master'

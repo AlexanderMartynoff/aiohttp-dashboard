@@ -59,6 +59,10 @@ class Debugger(PubSub):
             'request': request_id,
         })
 
+        self.fire('http', {
+            'request': request_id,
+        })
+
     def register_http_response(self, request, response):
         request_id = id(request)
         stored_request = self.find_http_request(request_id)
@@ -78,6 +82,10 @@ class Debugger(PubSub):
             })
 
         self.fire('http.response', {
+            'request': request_id,
+        })
+
+        self.fire('http', {
             'request': request_id,
         })
 
@@ -134,6 +142,11 @@ class Debugger(PubSub):
 
         self.fire(event, {
             'request': request_id,
+        })
+
+        self.fire('websocket', {
+            'request': request_id,
+            'direction': MsgDirection.OUTBOUND,
         })
 
     def find_http_exception(self, request_id):

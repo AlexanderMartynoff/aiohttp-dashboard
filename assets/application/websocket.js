@@ -142,24 +142,23 @@ class WebSocketService {
 
     _restoreSubscribe() {
         this._subscribeHistory.forEach(record => this._doSubscribe(
-            record.endpoint, record.callback, record.data));
+            record.endpoint, record.callback, record.data))
     }
+
+    on(event, callback, conditions, name) {
+        return this.subscribe('subscribe', callback, {
+            event,
+            name,
+            conditions,
+        })
+    }
+
+    off() {}
 }
 
-const instance = WebSocketService.instance = new WebSocketService(
-    environment.getParameter('aiohttp-dashboard-endpoint'));
-
-WebSocketService.mixin = {
-    methods: {
-        $subscribe(event, callback, conditions, name) {
-            return instance.subscribe('subscribe', callback, {
-                event,
-                name,
-                conditions,
-            })
-        },
-        $unsibscribe() {},
-    }
-};
+WebSocketService.create = function () {
+    return new WebSocketService(
+        environment.getParameter('aiohttp-dashboard-endpoint'));
+}
 
 export {WebSocketService}

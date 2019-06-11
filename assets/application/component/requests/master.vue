@@ -36,7 +36,6 @@
 
 
     export default {
-        mixins: [WebSocketService.mixin],
         data: () => ({
             fields: {
                 status: {label: 'Status'},
@@ -72,15 +71,17 @@
         },
 
         created: function() {
+            this.$event = WebSocketService.create()
+
             this.loadRequests()
 
-            this.$subscribe('http.request', message => {
+            this.$event.on('http', message => {
                 this.loadRequests()
             });
         },
         
         destroyed: function() {
-            this.$unsibscribe();
+            this.$event.off();
         }
     }
 </script>

@@ -18,6 +18,8 @@ logger = logging.getLogger(__name__)
 _URL_POSTFIX_EVENT = '/api/event'
 _PATH_STATIC = Path(__file__).resolve().parent / 'static'
 
+_int_schema = Coerce(int)
+
 _subscribe_schema = Schema({
     Required('id'): str,
     Required('endpoint'): str,
@@ -106,7 +108,9 @@ async def _requests(request):
 
 async def _request(request):
     state = request.app[DEBUGGER_KEY]
-    return json_response(state.find_ws_messages())
+    request_id = _int_schema(request.match_info['id'])
+
+    return json_response(state.find_http_request(request_id))
 
 
 async def _request_exception(request):

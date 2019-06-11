@@ -99,7 +99,6 @@
     import {WebSocketService} from '@/websocket'
 
     export default {
-        mixins: [WebSocketService.mixin],
         data: function() {
             return {
                 record: null,
@@ -123,20 +122,6 @@
                 router.push({path: `/request/messages/${this.id}`})
             },
 
-            onRequestRecive: function(payload) {
-                this.record = payload.request
-                this.exception = payload.exception
-            },
-
-            onWsMessagesRecive: function(payload) {
-                this.wsIncomingLength = payload.length.incoming
-                this.wsOutcomingLength = payload.length.outcoming
-            },
-
-            onExceptionRecive(payload) {
-                this.exception = payload.exception
-            },
-
             truncate(string, limit=50) {
                 if (string && string.length > limit) {
                     return string.substr(0, limit) + ' ...'
@@ -145,41 +130,39 @@
                 return string
             },
 
-            requestSubscribe: function() {
-                return this.httpSubscription = this.subscribe('request.one', message => {
-                    this.onRequestRecive(message.payload)
+            loadRequest() {
+                return this.$axios.get(`/dashboard/api/request/${this.id}`).then(request => {
+                    this.record = request
+                }) 
+            },
+
+            subscribeWs: function() {
+                this.$event.on('websocket', message => {
+                    console.log(message)
                 }, {
-                    'id': parseInt(this.id),
+                    request: this.id,
                 })
             },
 
-            wsSubscribe: function() {
-                this.wsSubscription = this.subscribe('message.all', message => {
-                    this.onWsMessagesRecive(message.payload)
+            subscribeRequest: function() {
+                this.$event.on('http', request => {
+                    console.log(request)
                 }, {
-                    'id': parseInt(this.id),
-                    'limit': 0,
-                    'start': 0,
+                    request: this.id,
                 })
             },
-
-            wsUnsubscribe: function(onComplete) {
-                this.unsibscribe(this.wsSubscription, onComplete)
-            },
-
-            httpUnsubscribe: function(onComplete) {
-                this.unsibscribe(this.httpSubscription, onComplete)
-            }
         },
 
         created: function() {
-            this.wsSubscribe()
-            this.requestSubscribe()
+            this.$event = WebSocketService.create()
+
+            this.loadRequest()
+            this.subscribeWs()
+            this.subscribeRequest()
         },
         
         destroyed: function() {
-            this.wsUnsubscribe()
-            this.httpUnsubscribe()
+            this.$event.off()
         }
     }
 </script>

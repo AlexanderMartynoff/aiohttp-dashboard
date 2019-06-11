@@ -41,7 +41,6 @@
     import {router} from '@/router';
 
     export default {
-        mixins: [WebSocketService.mixin],
         data: () => ({
             fields: {
                 path: {label: 'Path'},
@@ -61,7 +60,6 @@
             }
         },
         created: function() {
-            this.send('fetch.routes', response => this.items = response.data);
         }
     }
 </script>

@@ -61,7 +61,6 @@
     import {formatDateTime} from "@/misc"
 
     export default {
-        mixins: [WebSocketService.mixin],
         data: () => ({
             requestsCount: 0,
             messagesCount: 0,
@@ -74,21 +73,18 @@
             },
 
             requestsSubscribe() {
-                this.requestsSubscribtion = this.subscribe('request.all', message => {
-                    this.requestsCount = message.data
+                this.$event.on('http', event => {
+                    
                 })
             },
 
             messagesSubscribe() {
-                this.messagesSubscribtion = this.subscribe('message.all.length', message => {
-                    this.messagesCount = message.payload.length.all
+                this.$event.on('websocket', message => {
+                    
                 })
             },
 
             fetchTime() {
-                this.subscribe('system.times', message => {
-                    this.startupTime = DateTime.fromSeconds(message.payload.startup)
-                })
             },
 
             startInterval() {
@@ -121,6 +117,8 @@
         },
 
         created() {
+            this.$event = WebSocketService.create()
+
             this.fetchTime()
             this.messagesSubscribe()
             this.requestsSubscribe()

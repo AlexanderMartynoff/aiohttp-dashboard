@@ -1,6 +1,6 @@
 import VueRouter from 'vue-router';
 
-import IndexGrid from '@/component/requests/grid';
+import IndexGrid from '@/component/requests/master';
 import RequestDetail from '@/component/requests/detail';
 import RequestMessages from '@/component/requests/messages';
 import NotFound from '@/component/special/404';

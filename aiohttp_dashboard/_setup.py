@@ -86,7 +86,7 @@ def _on_websocket_msg(direction, request, message):
 
 def _ws_resposne_decorate(request, response):
 
-    async def ping_decorato(message):
+    async def ping_decorator(message):
         _on_websocket_msg(MsgDirection.INCOMING, request, message)
         return await ping(message)
 

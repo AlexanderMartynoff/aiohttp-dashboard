@@ -32,7 +32,6 @@
             showWsLastPage: false,
             wsPageUpdateDelay: 2
         }),
-        mixins: [WebSocketService.mixin],
         methods: {
             emitSettingsChange: function() {
             },
