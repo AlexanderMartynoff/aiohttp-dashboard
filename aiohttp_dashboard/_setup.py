@@ -85,34 +85,33 @@ def _on_websocket_msg(direction, request, message):
 
 
 def _ws_resposne_decorate(request, response):
-
     async def ping_decorator(message):
-        _on_websocket_msg(MsgDirection.INCOMING, request, message)
+        _on_websocket_msg(MsgDirection.OUTBOUND, request, message)
         return await ping(message)
 
     ping, response.ping = response.ping, ping_decorator
 
     async def pong_decorator(message):
-        _on_websocket_msg(MsgDirection.INCOMING, request, message)
+        _on_websocket_msg(MsgDirection.OUTBOUND, request, message)
         return await pong(message)
 
     pong, response.pong = response.pong, pong_decorator
 
     async def send_str_decorator(data, compress=None):
-        _on_websocket_msg(MsgDirection.INCOMING, request, data)
+        _on_websocket_msg(MsgDirection.OUTBOUND, request, data)
         return await send_str(data, compress)
 
     send_str, response.send_str = response.send_str, send_str_decorator
 
     async def send_bytes_decorator(data, compress=None):
-        _on_websocket_msg(MsgDirection.INCOMING, request, data)
+        _on_websocket_msg(MsgDirection.OUTBOUND, request, data)
         return await send_bytes(data, compress)
 
     send_bytes, response.send_bytes = response.send_bytes, send_bytes_decorator
 
     async def receive_decorator(timeout=None):
         message = await receive(timeout)
-        _on_websocket_msg(MsgDirection.OUTBOUND, request, message.data)
+        _on_websocket_msg(MsgDirection.INCOMING, request, message.data)
 
         return message
 

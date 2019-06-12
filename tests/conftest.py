@@ -20,7 +20,7 @@ def aihttp_application(prefix):
         await websocket.prepare(request)
 
         async for message in websocket:
-            await websocket.send_json(message)
+            await websocket.send_json(message.data + '<-')
 
         return websocket
 
