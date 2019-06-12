@@ -12,7 +12,13 @@ def to_list(_):
 
 
 def is_subset_dict(subset_dict, superset_dict):
-    pass
+    for key, value in subset_dict.items():
+        if key in superset_dict.keys():
+            if value != superset_dict[key]:
+                return False
+        else:
+            return False
+    return True
 
 
 class JSONEncoder(json.JSONEncoder):

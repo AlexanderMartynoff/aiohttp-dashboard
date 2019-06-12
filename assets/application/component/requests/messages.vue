@@ -42,10 +42,10 @@
 
 
 <script>
-    import {WebSocketService} from '@/websocket'
+    import {EventService} from '@/websocket'
 
     export default {
-        data: function() {
+        data () {
             return {
                 message: {},
                 messages: [],
@@ -66,16 +66,16 @@
 
         methods: {
 
-            showDetail: function(message) {
+            showDetail (message) {
                 this.message = message
                 this.$refs.detail.show()
             },
 
-            onDetailShown: function() {
+            onDetailShown () {
                 this.wsUnsubscribe()
             },
 
-            onDetailHidden: function() {
+            onDetailHidden () {
                 this.wsSubscribe()
             },
 
@@ -87,7 +87,7 @@
                 return string
             },
 
-            format: function (code) {
+            format (code) {
                 try {
                     return JSON.stringify(JSON.parse(code), null, 2)
                 } catch (e) {
@@ -95,25 +95,19 @@
                 }
             },
 
-            wsSubscribe: function() {
-                this.$event.on('websocket', message => {
-                    console.log(message)
-                }, {
-                    request: this.id,
-                })
-            },
-
-            wsUnsubscribe: function(onComplete) {
-                this.$unsibscribe()
-            },
         },
 
-        created: function() {
-            this.$event = WebSocketService.create()
-            this.wsSubscribe()
+        created () {
+            this.$event = EventService.create()
+
+            this.$event.on('websocket', message => {
+                console.log(message)
+            }, {
+                request: this.id,
+            })
         },
         
-        destroyed: function() {
+        destroyed () {
             this.$event.off()
         }
     }

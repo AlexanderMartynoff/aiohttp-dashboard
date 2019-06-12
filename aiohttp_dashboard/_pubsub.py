@@ -6,24 +6,24 @@ class PubSub:
     def __init__(self):
         self._handlers = []
 
-    def on(self, event, handler, name='default'):
+    def on(self, event, handler, name='default', family='default'):
         if isinstance(event, list):
             events = event
         else:
             events = [event]
 
         for event in events:
-            self._on(event, handler, name)
+            self._on(event, handler, name, family)
 
-    def _on(self, event, handler, name):
-        self._handlers.append((event, handler, name))
+    def _on(self, event, handler, name, family):
+        self._handlers.append((event, handler, name, family))
 
-    def off(self, event=None, name=None):
-        for event_, handler, name_ in self._handlers[:]:
-            if event_ == event or name_ == name:
-                self._handlers.remove((event_, handler, name_))
+    def off(self, name=None, family=None):
+        for event_, handler, name_, family_ in self._handlers[:]:
+            if name_ == name or family_ == family:
+                self._handlers.remove((event_, handler, name_, family_))
 
     def fire(self, event, parameters):
-        for event_, handler, name in self._handlers:
+        for event_, handler, name, family in self._handlers:
             if event_ == event:
                 handler(event, parameters)

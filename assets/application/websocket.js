@@ -3,75 +3,73 @@ import environment from '@/environment';
 
 class WebSocketService {
     constructor(url) {
-        this._ws = null;
-        this._state = null;
-        this._url = url;
-        this._onOpenWaiters = [];
-        this._responseHandlres = {};
-        this._subscribeHistory = [];
+        this._ws = null
+        this._state = null
+        this._url = url
+        this._onOpenWaiters = []
+        this._responseHandlres = {}
+        this._subscribeHistory = []
     }
 
     _resetState() {
-        this._ws = null;
-        this._onOpenWaiters = [];
-        this._responseHandlres = {};
+        this._ws = null
+        this._onOpenWaiters = []
+        this._responseHandlres = {}
     }
 
     _getState() {
-        return (this._ws || {}).readyState;
+        return (this._ws || {}).readyState
     }
 
     _open(success) {
         if (this._ws) {
-            success(this._ws);
-            return this;
+            success(this._ws)
+            return this
         }
         
-        this._onOpenWaiters.push(success);
+        this._onOpenWaiters.push(success)
 
-        this._ws = new WebSocket(this._url);
+        this._ws = new WebSocket(this._url)
         
         this._ws.onopen = response => {
-            this._onOpenWaiters.forEach(waiter => waiter(this._ws));
-        };
+            this._onOpenWaiters.forEach(waiter => waiter(this._ws))
+        }
         
         this._ws.onmessage = rawMsg => {
-            var msg;
-            
             try {
-                msg = JSON.parse(rawMsg.data);
+                var msg = JSON.parse(rawMsg.data)
             } catch (error) {
-                console.log(`error while parse msg ${error.toString()}`);
+                console.log(`error while parse msg ${error.toString()}`)
                 return;
             }
 
-            const callbackObject = this._responseHandlres[msg.id];
+            const callbackObject = this._responseHandlres[msg.id]
 
             if (!callbackObject) {
-                console.log(`not found callback by ${msg.id}`);
+                console.log(`not found callback by ${msg.id}`)
                 return;
             }
 
             if (callbackObject.callback) {
-                callbackObject.callback(msg);
+                callbackObject.callback(msg)
             } else {
-                console.log(`not defined callback by ${msg.id}`);
+                console.log(`not defined callback by ${msg.id}`)
             }
 
             if (!callbackObject.persistent) {
-                delete this._responseHandlres[msg.id];
+                delete this._responseHandlres[msg.id]
             }
-        };
+        }
 
         this._ws.onerror = response => {
-            console.log(response);
-        };
+            console.log(response)
+        }
 
         this._ws.onclose = response => {
-            this._tryReconnect(2000);
-        };
+            this._tryReconnect(2000)
+        }
 
-        return this;
+        return this
     }
 
     _tryReconnect(delay) {
@@ -81,9 +79,9 @@ class WebSocketService {
 
     _do(success, fail=() => {}) {
         switch(this._getState()) {
-            case WebSocket.CONNECTING: this._onOpenWaiters.push(success); break;
-            case WebSocket.OPEN: success(this._ws); break;
-            default: this._open(success);
+            case WebSocket.CONNECTING: this._onOpenWaiters.push(success); break
+            case WebSocket.OPEN: success(this._ws); break
+            default: this._open(success)
         }
     }
 
@@ -120,17 +118,20 @@ class WebSocketService {
             endpoint,
             callback,
             data,
-        });
-        return this._doSubscribe(endpoint, callback, data);
+        })
+
+        return this._doSubscribe(endpoint, callback, data)
     }
 
-    unsibscribe(id, onComplete) {
+    unsibscribe(subscription, onComplete) {
+        delete this._responseHandlres[subscription]
+
         return this.send({
             endpoint: 'unsubscribe',
-            data: {id},
-        }, onComplete, false);
-
-        delete this._responseHandlres[id];
+            data: {
+                id: subscription,
+            },
+        }, onComplete, false)
     }
 
     _doSubscribe(endpoint, callback, data) {
@@ -144,21 +145,39 @@ class WebSocketService {
         this._subscribeHistory.forEach(record => this._doSubscribe(
             record.endpoint, record.callback, record.data))
     }
+}
+
+const webSocketService = new WebSocketService(
+    environment.getParameter('aiohttp-dashboard-endpoint'))
+
+
+class EventService {
+    constructor(service) {
+        this._service = service
+        this._events = []
+    }
 
     on(event, callback, conditions, name) {
-        return this.subscribe('subscribe', callback, {
+        const subscription = this._service.subscribe('subscribe', callback, {
             event,
             name,
             conditions,
         })
+
+        this._events.push(subscription)
     }
 
-    off() {}
+    off() {
+        this._events.forEach(subscription => {
+            this._service.unsibscribe(subscription)
+        })
+        this._events = []
+    }
+
+    static create () {
+        return new EventService(webSocketService)
+    }
 }
 
-WebSocketService.create = function () {
-    return new WebSocketService(
-        environment.getParameter('aiohttp-dashboard-endpoint'));
-}
 
-export {WebSocketService}
+export {EventService}

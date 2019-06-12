@@ -31,7 +31,7 @@
 
 <script type="text/javascript">
     import _ from "lodash"
-    import {WebSocketService} from '@/websocket'
+    import {EventService} from '@/websocket'
     import {router} from '@/router'
 
 
@@ -71,13 +71,13 @@
         },
 
         created: function() {
-            this.$event = WebSocketService.create()
-
-            this.loadRequests()
+            this.$event = EventService.create()
 
             this.$event.on('http', message => {
                 this.loadRequests()
             });
+            
+            this.loadRequests()
         },
         
         destroyed: function() {

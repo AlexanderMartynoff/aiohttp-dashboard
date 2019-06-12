@@ -96,7 +96,7 @@
 
 <script>
     import {router} from '@/router';
-    import {WebSocketService} from '@/websocket'
+    import {EventService} from '@/websocket'
 
     export default {
         data: function() {
@@ -136,29 +136,29 @@
                 }) 
             },
 
-            subscribeWs: function() {
-                this.$event.on('websocket', message => {
-                    console.log(message)
-                }, {
-                    request: this.id,
-                })
-            },
-
-            subscribeRequest: function() {
-                this.$event.on('http', request => {
-                    console.log(request)
-                }, {
-                    request: this.id,
-                })
+            loadMessages() {
+                return this.$axios.get(`/dashboard/api/request/${this.id}`).then(request => {
+                    this.record = request
+                }) 
             },
         },
 
         created: function() {
-            this.$event = WebSocketService.create()
+            this.$event = EventService.create()
+
+            this.$event.on('websocket', message => {
+                console.log(message)
+            }, {
+                request: this.id,
+            })
+
+            this.$event.on('http', request => {
+                this.loadRequest()
+            }, {
+                request: this.id,
+            })
 
             this.loadRequest()
-            this.subscribeWs()
-            this.subscribeRequest()
         },
         
         destroyed: function() {

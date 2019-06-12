@@ -146,7 +146,7 @@ class Debugger(PubSub):
 
         self.fire('websocket', {
             'request': request_id,
-            'direction': MsgDirection.OUTBOUND,
+            # 'direction': MsgDirection.OUTBOUND,
         })
 
     def find_http_exception(self, request_id):

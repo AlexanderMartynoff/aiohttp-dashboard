@@ -64,20 +64,17 @@ def test_subcribtion_handler_count(_pubsub):
     assert _pubsub_length(_pubsub) == 2
 
 
-def test_unsubcribtion_event(_pubsub):
+def test_unsubcribtion_family(_pubsub):
 
     def handler(event, parameters):
         pass
 
-    _pubsub.on('a', handler)
-    _pubsub.on('b', handler)
+    _pubsub.on('a', handler, family='1')
+    _pubsub.on('b', handler, family='1')
 
     assert _pubsub_length(_pubsub) == 2
 
-    _pubsub.off('a')
-    assert _pubsub_length(_pubsub) == 1
-
-    _pubsub.off('b')
+    _pubsub.off(family='1')
     assert _pubsub_length(_pubsub) == 0
 
 

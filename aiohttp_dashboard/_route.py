@@ -35,7 +35,8 @@ _unsubscribe_schema = Schema({
     Required('id'): str,
     Required('endpoint'): str,
     Required('data'): Schema({
-        Required('event'): str,
+        Optional('event'): str,
+        Required('id'): str,
     })
 })
 
@@ -96,7 +97,7 @@ async def _messages(request):
     return json_response(state.find_ws_messages())
 
 
-async def _message(request):
+async def _messages_info(request):
     state = request.app[DEBUGGER_KEY]
     return json_response(state.find_ws_messages())
 
@@ -127,7 +128,7 @@ def build_routes(prefix):
     routes = [
         ('GET', prefix, _index),
         ('GET', prefix + '/api/message', _messages),
-        ('GET', prefix + '/api/message/{id}', _message),
+        ('GET', prefix + '/api/message/info', _messages_info),
         ('GET', prefix + '/api/request', _requests),
         ('GET', prefix + '/api/request/{id}', _request),
         ('GET', prefix + '/api/request_exception', _request_exceptions),
