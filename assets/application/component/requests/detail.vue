@@ -1,6 +1,5 @@
 <template>
     <div class="container-fluid my-3">
-
         <bar v-if="wsLength" sticky="top">
             <b-nav>
                 <b-nav-item active @click="openMessages">
@@ -15,7 +14,7 @@
             <div class="col-md-6">
                 <b-card class="shadow h-100" title="Info">
                     <ul class="list-group overflow-auto">
-                        <li class="list-group-item list-group-item-warning block" v-if="record.status || record.reason">
+                        <li class="list-group-item list-group-item-warning block" v-if="record.status">
                             <div>
                                 <span>{{record.status}}</span>
                             </div>
@@ -59,13 +58,12 @@
                                 <i class="fas fa-arrow-right"></i> Headers
                             </template>
 
-                            <b-list-group v-if="record">
+                            <b-list-group>
                                 <b-list-group-item button v-for="value, key in record.requestheaders">
                                     <span>{{key}}:</span> <code>{{truncate(value)}}</code>
                                 </b-list-group-item>
                             </b-list-group>
 
-                            <alert v-else message="Records not found"></alert>
                         </b-tab>
                         <b-tab title="Response">
 
@@ -73,12 +71,11 @@
                                 <i class="fas fa-arrow-left"></i> Headers
                             </template>
 
-                            <ul class="list-group" v-if="record">
+                            <ul class="list-group">
                                 <li class="list-group-item" v-for="(value, key) in record.responseheaders">
                                     <span>{{key}}:</span> <code>{{truncate(value)}}</code>
                                 </li>
                             </ul>
-                            <alert v-else message="Records not found"></alert>
                         </b-tab>
                     </b-tabs>
                 </b-card>
@@ -97,16 +94,18 @@
 <script>
     import {router} from '@/router';
     import {EventService} from '@/websocket'
+    import _ from "lodash"
 
     export default {
         data: function() {
             return {
-                record: null,
-                exception: null,
+                record: {},
+                exception: {},
                 wsIncomingLength: 0,
                 wsOutcomingLength: 0,
             }
         },
+
         props: {
             id: String
         },

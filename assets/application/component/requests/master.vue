@@ -81,7 +81,7 @@
         },
         
         destroyed: function() {
-            this.$event.off();
+            this.$event.off()
         }
     }
 </script>

@@ -16,7 +16,6 @@ import SettingsWindow from '@/component/settings/window'
 import IndexGrid from '@/component/requests/master'
 import Clock from '@/component/clock/clock'
 import DropdpownPane from '@/component/widget/dropdpown-pane'
-import InspectMaster from '@/component/inspect/master'
 import Alert from '@/component/widget/alert'
 import Layout from '@/component/layout/layout'
 import Bar from '@/component/bar/bar'
@@ -44,7 +43,6 @@ const components = {
     Clock,
     DropdpownPane,
     Alert,
-    InspectMaster,
     Layout,
     SettingsWindow,
     Bar,
