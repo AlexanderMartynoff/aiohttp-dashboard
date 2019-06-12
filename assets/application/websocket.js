@@ -157,6 +157,10 @@ class EventService {
         this._events = []
     }
 
+    onerror() {
+
+    }
+    
     on(event, callback, conditions, name) {
         const subscription = this._service.subscribe('subscribe', callback, {
             event,
@@ -173,6 +177,9 @@ class EventService {
         })
         this._events = []
     }
+
+    start() {}
+    stop() {}
 
     static create () {
         return new EventService(webSocketService)

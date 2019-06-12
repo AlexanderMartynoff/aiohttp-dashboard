@@ -131,14 +131,17 @@
             },
 
             loadRequest() {
-                return this.$axios.get(`/dashboard/api/request/${this.id}`).then(request => {
+                return this.$axios.get(`/api/request/${this.id}`).then(request => {
                     this.record = request
                 }) 
             },
 
-            loadMessages() {
-                return this.$axios.get(`/dashboard/api/request/${this.id}`).then(request => {
-                    this.record = request
+            loadMessagesInfo() {
+                return this.$axios.get(`/api/request/${this.id}/message/info`).then(info => {
+                    if (info.websocket) {
+                        this.wsIncomingLength = info.websocket.length.incoming
+                        this.wsOutcomingLength = info.websocket.length.outcoming
+                    }
                 }) 
             },
         },
@@ -147,7 +150,7 @@
             this.$event = EventService.create()
 
             this.$event.on('websocket', message => {
-                console.log(message)
+                this.loadMessagesInfo()
             }, {
                 request: this.id,
             })
@@ -159,6 +162,7 @@
             })
 
             this.loadRequest()
+            this.loadMessagesInfo()
         },
         
         destroyed: function() {

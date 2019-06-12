@@ -57,7 +57,7 @@
 
 <script type="text/javascript">
     import {DateTime} from "luxon"
-    import {WebSocketService} from '@/websocket'
+    import {EventService} from '@/websocket'
     import {formatDateTime} from "@/misc"
 
     export default {
@@ -117,7 +117,7 @@
         },
 
         created() {
-            this.$event = WebSocketService.create()
+            this.$event = EventService.create()
 
             this.fetchTime()
             this.messagesSubscribe()

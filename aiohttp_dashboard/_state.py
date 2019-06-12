@@ -67,10 +67,8 @@ class Debugger(PubSub):
         request_id = id(request)
         stored_request = self.find_http_request(request_id)
 
-        if isinstance(response, Response):
-            body = response.text
-        else:
-            body = None
+        body = response.text if isinstance(response, Response) else None
+        websocket = True if isinstance(response, WebSocketResponse) else False
 
         if stored_request:
             stored_request.update({
@@ -79,6 +77,7 @@ class Debugger(PubSub):
                 'status': response.status,
                 'reason': response.reason,
                 'body': body,
+                'websocket': websocket,
             })
 
         self.fire('http.response', {
@@ -130,7 +129,7 @@ class Debugger(PubSub):
         self._ws_messages.appendleft({
             'id': message_id,
             'requestid': request_id,
-            'message': message,
+            'body': message,
             'time': self._now,
             'direction': direction.name
         })
@@ -146,7 +145,7 @@ class Debugger(PubSub):
 
         self.fire('websocket', {
             'request': request_id,
-            # 'direction': MsgDirection.OUTBOUND,
+            'direction': MsgDirection.OUTBOUND,
         })
 
     def find_http_exception(self, request_id):

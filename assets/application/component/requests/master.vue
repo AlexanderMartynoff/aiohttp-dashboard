@@ -1,5 +1,5 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid my-3">
         <div class="row mt-3 mb-3">
             <div class="col-md-12">
                 <b-card class="shadow" title="Requests">
@@ -11,9 +11,9 @@
                              striped
                              class="table-pointer">
 
-                    <template slot="status" slot-scope="row">
-                        <span class="badge" :class="getStatusClassByCode(row.value)">
-                            {{row.value}}
+                    <template slot="status" slot-scope="record">
+                        <span class="badge" :class="getStatusClassByCode(record.value)">
+                            {{record.value}}
                         </span>
                     </template>
 
@@ -64,7 +64,7 @@
             },
 
             loadRequests() {
-                return this.$axios.get('/dashboard/api/request').then(requests => {
+                return this.$axios.get('/api/request').then(requests => {
                     this.requests = requests
                 }) 
             }

@@ -6,7 +6,7 @@
                 <b-nav-item active>
                     <i class="fas fa-arrows-alt-v"></i> {{bothLength}}
                     <i class="fa fa-long-arrow-alt-down"></i> {{incomingLength}}
-                    <i class="fa fa-long-arrow-alt-up" aria-hidden="true"></i> {{outboundLength}}
+                    <i class="fa fa-long-arrow-alt-up" aria-hidden="true"></i> {{outcomingLength}}
                 </b-nav-item>
             </b-nav>
         </bar>
@@ -33,10 +33,14 @@
                          @hidden="onDetailHidden"
                          hide-footer
                          centered>
-                    <pre><code>{{format(message.msg)}}</code></pre>
+                    <pre><code>{{format(message.body)}}</code></pre>
                 </b-modal>
             </div>
         </div>
+
+        <bar v-if="messages" sticky="bottom" align="center" :card="false">            
+            <b-pagination :limit="3" :per-page="50" v-model="page" align="center"/>
+        </bar>
     </div>
 </template>
 
@@ -51,7 +55,8 @@
                 messages: [],
                 limit: 25,
                 incomingLength: 0,
-                outboundLength: 0,
+                outcomingLength: 0,
+                page: 1,
             }
         },
         props: {
@@ -60,7 +65,7 @@
 
         computed: {
             bothLength() {
-                return this.incomingLength + this.outboundLength
+                return this.incomingLength + this.outcomingLength
             }
         },
 
@@ -72,11 +77,11 @@
             },
 
             onDetailShown () {
-                this.wsUnsubscribe()
+                this.$event.stop()
             },
 
             onDetailHidden () {
-                this.wsSubscribe()
+                this.$event.start()
             },
 
             truncate(string, limit=50) {
@@ -95,16 +100,40 @@
                 }
             },
 
+            loadMessages() {
+                return this.$axios.get(`/api/message`, {
+                    params: {
+                        request: this.id,
+                        start: 0, 
+                        limit: 25, 
+                    }
+                }).then(messages => {
+                    this.messages = messages
+                }) 
+            },
+
+            loadMessagesInfo() {
+                return this.$axios.get(`/api/request/${this.id}/message/info`).then(info => {
+                    if (info.websocket) {
+                        this.incomingLength = info.websocket.length.incoming
+                        this.outcomingLength = info.websocket.length.outcoming
+                    }
+                }) 
+            },
         },
 
         created () {
             this.$event = EventService.create()
 
             this.$event.on('websocket', message => {
-                console.log(message)
+                this.loadMessages()
+                this.loadMessagesInfo()
             }, {
                 request: this.id,
             })
+
+            this.loadMessages()
+            this.loadMessagesInfo()
         },
         
         destroyed () {

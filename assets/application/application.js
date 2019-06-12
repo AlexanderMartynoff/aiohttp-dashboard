@@ -2,6 +2,7 @@ import Vue from 'vue'
 import BootstrapVue from 'bootstrap-vue'
 import VueRouter from 'vue-router'
 
+import environment from '@/environment';
 import {WebSocketService} from '@/websocket'
 import {router} from '@/router'
 
@@ -55,8 +56,9 @@ for (const key in components) {
 }
 
 const application = new Vue({
-    router, el: ".application",
+    router, el: '.application',
     axios: {
+        baseURL: environment.getParameter('aiohttp-dashboard-prefix'),
         interceptor: {
             response(response) {
                 return response.data

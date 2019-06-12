@@ -16,9 +16,6 @@
                 <b-nav-item href="#/requests">
                     <code>[REQUESTS]</code>
                 </b-nav-item>
-                <b-nav-item href="#/inspect">
-                    <code>[ROUTES]</code>
-                </b-nav-item>
             </b-navbar-nav>
         </b-collapse>
     </b-navbar>
