@@ -2,7 +2,7 @@ from uuid import uuid4
 from collections import defaultdict, Sequence
 
 
-class PubSub:
+class EventEmitter:
     def __init__(self):
         self._handlers = []
 

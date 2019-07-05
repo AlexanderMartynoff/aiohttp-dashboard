@@ -37,7 +37,7 @@ class Subcriber:
 
             send(event, _state=event.__class__.__name__)
 
-        self._state.on(
+        self._state.emitter.on(
             event=message['data']['event'],
             handler=subscribtion,
             name=message['id'],
@@ -45,10 +45,10 @@ class Subcriber:
         )
 
     def unsubscribe(self, message):
-        self._state.off(name=message['data']['id'])
+        self._state.emitter.off(name=message['data']['id'])
 
     def cancel(self):
-        self._state.off(family=id(self))
+        self._state.emitter.off(family=id(self))
 
     def _send(self, message):
         return ensure_future(self._websocket.send_json(message, dumps=dumps))

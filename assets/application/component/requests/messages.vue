@@ -113,7 +113,11 @@
             },
 
             loadMessagesInfo() {
-                return this.$axios.get(`/api/request/${this.id}/message/info`).then(info => {
+                return this.$axios.get(`/api/request/message/status`, {
+                    params: {
+                        request: this.id,
+                    }
+                }).then(info => {
                     if (info.websocket) {
                         this.incomingLength = info.websocket.length.incoming
                         this.outcomingLength = info.websocket.length.outcoming

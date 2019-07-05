@@ -20,6 +20,7 @@ import Alert from '@/component/widget/alert'
 import Layout from '@/component/layout/layout'
 import Bar from '@/component/bar/bar'
 import Traceback from '@/component/traceback/traceback'
+import DatepickerInput from '@/component/datepicker/datepicker-input'
 
 
 import Axios from '@/axios'
@@ -27,6 +28,7 @@ import Axios from '@/axios'
 
 import "@/style/aiohttp-debugger.styl"
 import "@/style/bootstrap-override.styl"
+import "@/style/datepicker.styl"
 
 
 Vue.use(Axios)
@@ -47,6 +49,7 @@ const components = {
     SettingsWindow,
     Bar,
     Traceback,
+    DatepickerInput,
 }
 
 for (const key in components) {

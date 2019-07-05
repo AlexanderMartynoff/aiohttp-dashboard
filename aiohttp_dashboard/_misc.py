@@ -41,3 +41,24 @@ def dumps(data):
 class MsgDirection(Enum):
     OUTBOUND = 1
     INCOMING = 2
+
+
+class QueueDict(OrderedDict):
+
+    def __init__(self, maxlen, default, **kwargs):
+        self._maxlen = maxlen
+        self._default = default
+
+        super().__init__(**kwargs)
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+
+        while len(self) > self._maxlen:
+            self.popitem(last=False)
+
+    def __getitem__(self, key):
+        if key not in self:
+            self.__setitem__(key, self._default())
+
+        return super().__getitem__(key)

@@ -1,5 +1,17 @@
 <template type="text/html">
     <div class="container-fluid my-3">
+        <b-form>
+            <b-row>
+                <b-col md="6">
+                    <label class="mr-sm-2">Date</label>
+                    <b-input-group>
+                        <b-form-input v-model="filter.datestart" type="text" readonly></b-form-input>
+                        <b-form-input v-model="filter.dateend" type="text" readonly></b-form-input>
+                    </b-input-group>
+                </b-col>
+            </b-row>            
+        </b-form>
+
         <div class="row mt-3 mb-3">
             
             <div class="col-md-6">
@@ -63,28 +75,33 @@
     export default {
         data: () => ({
             requestsCount: 0,
-            messagesCount: 0,
+            messagesIncomingCount: 0,
+            messagesOutcomingCount: 0,
             startupTime: DateTime.utc(0),
             now: DateTime.utc(),
+            filter: {
+                datefrom: null,
+            }
         }),
         methods: {
             formatDateTime(datetime) {
                 return formatDateTime(datetime)
             },
 
-            requestsSubscribe() {
-                this.$event.on('http', event => {
-                    
-                })
+            loadRequestsStatus() {
             },
 
-            messagesSubscribe() {
-                this.$event.on('websocket', message => {
-                    
-                })
+            loadMessagesStatus() {
+                return this.$axios.get(`/api/request/message/status`).then(status => {
+                    this.messagesIncomingCount = status.websocket.length.incoming
+                    this.messagesOutcomingCount = status.websocket.length.outcoming
+                }) 
             },
 
-            fetchTime() {
+            loadStatus() {
+                return this.$axios.get('/api/status').then(status => {
+                    this.startupTime = DateTime.fromSeconds(status.startup)
+                }) 
             },
 
             startInterval() {
@@ -109,7 +126,11 @@
 
             messagesPerSecond() {
                 return (this.messagesCount / this.now.diff(this.startupTime).as('seconds')).toFixed(2)
-            }
+            },
+
+            messagesCount() {
+                return this.messagesIncomingCount + this.messagesOutcomingCount
+            },
         },
 
         destroyed() {
@@ -119,9 +140,13 @@
         created() {
             this.$event = EventService.create()
 
-            this.fetchTime()
-            this.messagesSubscribe()
-            this.requestsSubscribe()
+            
+            this.$event.on('websocket', event => {
+                this.loadMessagesStatus()
+            })
+
+            this.loadStatus()
+            this.loadMessagesStatus()
             this.startInterval()
         },
     }

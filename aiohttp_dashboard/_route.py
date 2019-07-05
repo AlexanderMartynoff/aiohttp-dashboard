@@ -115,25 +115,21 @@ async def _messages(request):
 
 
 async def _request_info(request):
-    state = request.app[DEBUGGER_KEY]
-    request_id = _optional_int_coerce(request.match_info['id'])
-    request_data = state.find_http_request(request_id)
     response = {}
 
-    if not request_data:
-        return json_response()
+    state = request.app[DEBUGGER_KEY]
+    request_id = _optional_int_coerce(request.query.get('request', None))
 
-    if request_data['websocket']:
-        response.update({
-            'websocket': {
-                'length': {
-                    'incoming': state.count_ws_messages(
-                        request_id, MsgDirection.INCOMING),
-                    'outcoming': state.count_ws_messages(
-                        request_id, MsgDirection.OUTBOUND),
-                }
+    response.update({
+        'websocket': {
+            'length': {
+                'incoming': state.count_ws_messages(
+                    request_id, MsgDirection.INCOMING),
+                'outcoming': state.count_ws_messages(
+                    request_id, MsgDirection.OUTBOUND),
             }
-        })
+        }
+    })
 
     return json_response(response)
 
@@ -160,15 +156,21 @@ async def _request_exceptions(request):
     return json_response(state.find_ws_messages())
 
 
+async def _status(request):
+    state = request.app[DEBUGGER_KEY]
+    return json_response(state.status())
+
+
 def build_routes(prefix):
     routes = [
         ('GET', prefix, _index),
         ('GET', prefix + '/api/message', _messages),
-        ('GET', prefix + '/api/request/{id}/message/info', _request_info),
+        ('GET', prefix + '/api/request/message/status', _request_info),
         ('GET', prefix + '/api/request', _requests),
         ('GET', prefix + '/api/request/{id}', _request),
         ('GET', prefix + '/api/request_exception', _request_exceptions),
         ('GET', prefix + '/api/request_exception/{id}', _request_exception),
+        ('GET', prefix + '/api/status', _status),
         ('GET', prefix + _URL_POSTFIX_EVENT, _event),
     ]
 

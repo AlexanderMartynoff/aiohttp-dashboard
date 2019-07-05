@@ -8,8 +8,9 @@ from os.path import join
 import logging
 from inspect import isfunction
 
-from ._misc import MsgDirection
-from ._pubsub import PubSub
+
+from ._misc import MsgDirection, QueueDict
+from ._event_emitter import EventEmitter
 
 logger = logging.getLogger(__name__)
 
@@ -28,23 +29,26 @@ def _slice(sequence, start=0, limit=None):
     return sequence[start:stop]
 
 
-class Debugger(PubSub):
+_Deque = partial(deque, maxlen=_LIMIT)
+_QueueDict = partial(QueueDict, _LIMIT)
+
+
+class Debugger:
 
     def __init__(self, time):
-        PubSub.__init__(self)
-
         self._time = time
+        self._emitter = EventEmitter()
 
-        self._http_requests = deque(maxlen=_LIMIT)
-        self._http_exceptions = deque(maxlen=_LIMIT)
-        self._ws_messages = deque(maxlen=_LIMIT)
-        self._ws_exceptions = deque(maxlen=_LIMIT)
+        self._http_requests = _QueueDict(dict)
+        self._http_exceptions = _QueueDict(dict)
+        self._ws_messages = _QueueDict(_Deque)
+        self._ws_exceptions = _QueueDict(_Deque)
 
     def register_http_request(self, request):
         request_id = id(request)
         ip, _ = request.transport.get_extra_info('peername')
 
-        self._http_requests.appendleft({
+        self._http_requests[request_id] = {
             'id': request_id,
             'scheme': request.scheme,
             'host': request.host,
@@ -53,13 +57,13 @@ class Debugger(PubSub):
             'starttime': self._now,
             'requestheaders': dict(request.headers),
             'ip': ip,
-        })
+        }
 
-        self.fire('http.request', {
+        self.emitter.fire('http.request', {
             'request': request_id,
         })
 
-        self.fire('http', {
+        self.emitter.fire('http', {
             'request': request_id,
         })
 
@@ -80,18 +84,16 @@ class Debugger(PubSub):
                 'websocket': websocket,
             })
 
-        self.fire('http.response', {
+        self.emitter.fire('http.response', {
             'request': request_id,
         })
 
-        self.fire('http', {
+        self.emitter.fire('http', {
             'request': request_id,
         })
 
     def find_http_request(self, request_id):
-        for request in self._http_requests:
-            if request_id == request['id']:
-                return request
+        return self._http_requests[request_id]
 
     def find_http_requests(self, time_start=None, time_stop=None,
                            status_code=None, slice_start=None,
@@ -99,7 +101,7 @@ class Debugger(PubSub):
 
         http_requests = []
 
-        for request in self._http_requests:
+        for request in self._http_requests.values():
 
             if status_code and request['status'] != status_code:
                 continue
@@ -118,15 +120,16 @@ class Debugger(PubSub):
         return len(self._http_requests)
 
     def register_http_exception(self, request, exception):
-        self._http_exceptions.appendleft({
-            'excepton': exception,
-            'requestid': id(request),
-        })
+        request_id = id(request)
+        self._http_exceptions[request_id] = exception
+
+    def find_http_exception(self, request_id):
+        return self._http_exceptions[request_id]
 
     def register_ws_message(self, direction, request, message):
         request_id, message_id = id(request), id(message)
 
-        self._ws_messages.appendleft({
+        self._ws_messages[request_id].appendleft({
             'id': message_id,
             'requestid': request_id,
             'body': message,
@@ -139,33 +142,30 @@ class Debugger(PubSub):
         else:
             event = 'websocket.incoming'
 
-        self.fire(event, {
+        self.emitter.fire(event, {
             'request': request_id,
         })
 
-        self.fire('websocket', {
+        self.emitter.fire('websocket', {
             'request': request_id,
             'direction': MsgDirection.OUTBOUND,
         })
-
-    def find_http_exception(self, request_id):
-        for exception in self._http_exceptions:
-            if request_id == exception['requestid']:
-                return exception
 
     def find_ws_messages(self, request_id=None, direction=None,
                          slice_start=None, slice_limit=None):
         messages = []
 
-        for message in self._ws_messages:
+        for queue in self._ws_messages.values():
 
-            if request_id and request_id != message['requestid']:
-                continue
+            for message in queue:
 
-            if direction and direction.name != message['direction']:
-                continue
+                if request_id and request_id != message['requestid']:
+                    continue
 
-            messages.append(message)
+                if direction and direction.name != message['direction']:
+                    continue
+
+                messages.append(message)
 
         return _slice(messages, slice_start, slice_limit)
 
@@ -176,7 +176,11 @@ class Debugger(PubSub):
     def _now(self):
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    def times(self):
+    def status(self):
         return {
             'startup': self._time
         }
+
+    @property
+    def emitter(self):
+        return self._emitter
