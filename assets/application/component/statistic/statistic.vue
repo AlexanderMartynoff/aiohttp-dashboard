@@ -1,20 +1,12 @@
 <template type="text/html">
     <div class="container-fluid my-3">
-        <b-form>
-            <b-row>
-                <b-col md="6">
-                    <label class="mr-sm-2">Date</label>
-                    <b-input-group>
-                        <b-form-input v-model="filter.datestart" type="text" readonly></b-form-input>
-                        <b-form-input v-model="filter.dateend" type="text" readonly></b-form-input>
-                    </b-input-group>
-                </b-col>
-            </b-row>            
-        </b-form>
+
+        <datepicker-modal name="datepicker-datestart"></datepicker-modal>
+        <datepicker-modal name="datepicker-datestop"></datepicker-modal>
 
         <div class="row mt-3 mb-3">
-            
-            <div class="col-md-6">
+
+            <div class="col-md-6 mt-3 mt-md-0">
                 <b-card class="shadow h-100" title="Time">
                     <h2>
                         <code>{{formatDateTime(startupTime)}}</code>
@@ -23,6 +15,56 @@
                     <h2>
                         <code>{{startupDuration}}</code>
                         <span class="d-block text-muted text-small">application work duration</span>
+                    </h2>
+                    <b-form class="mt-3">
+                        <b-row>
+                            <b-col md="12">
+                                <b-input-group>
+                                    <div class="input-group-prepend">
+                                        <button class="btn btn-primary" type="button">
+                                            <i class="far fa-calendar-alt"></i>
+                                        </button>
+                                    </div>
+                                    <datepicker-modal-input name="datestart"
+                                                            datepicker-modal="datepicker-datestart"
+                                                            v-model="filter.datestart">
+                                    </datepicker-modal-input>
+                                    <datepicker-modal-input name="datestop"
+                                                            datepicker-modal="datepicker-datestop"
+                                                            v-model="filter.datestop">
+                                    </datepicker-modal-input>
+                                </b-input-group>
+                                <span class="d-block text-muted text-small">date range</span>
+                            </b-col>
+                        </b-row>
+                    </b-form>
+                </b-card>
+            </div>
+            <div class="col-md-6 mt-3 mt-md-0">
+
+                <b-card class="shadow h-100" title="Requests">
+                    <h2>
+                        <code>{{requestsCount}}</code>
+                        <span class="d-block text-muted text-small">total number</span>
+                    </h2>
+                    <h2>
+                        <code>{{requestsPerSecond}}</code>
+                        <span class="d-block text-muted text-small">number per second</span>
+                    </h2>
+                </b-card>
+            </div>
+        </div>
+
+        <div class="row mt-3 mb-3">
+            <div class="col-md-6">
+                <b-card class="shadow h-100" title="Messages">
+                    <h2>
+                        <code>{{messagesCount}}</code>
+                        <span class="d-block text-muted text-small">total number</span>
+                    </h2>
+                    <h2>
+                        <code>{{messagesPerSecond}}</code>
+                        <span class="d-block text-muted text-small">number per second</span>
                     </h2>
                 </b-card>
             </div>
@@ -37,52 +79,36 @@
             </div>
 
         </div>
-        <div class="row mt-3 mb-3">
-            <div class="col-md-6">
-                <b-card class="shadow h-100" title="Requests">
-                    <h2>
-                        <code>{{requestsCount}}</code>
-                        <span class="d-block text-muted text-small">total number</span>
-                    </h2>
-                    <h2>
-                        <code>{{requestsPerSecond}}</code>
-                        <span class="d-block text-muted text-small">number per second</span>
-                    </h2>
-                </b-card>
-            </div>
-            <div class="col-md-6 mt-3 mt-md-0">
-                <b-card class="shadow h-100" title="Messages">
-                    <h2>
-                        <code>{{messagesCount}}</code>
-                        <span class="d-block text-muted text-small">total number</span>
-                    </h2>
-                    <h2>
-                        <code>{{messagesPerSecond}}</code>
-                        <span class="d-block text-muted text-small">number per second</span>
-                    </h2>
-                </b-card>
-            </div>
-        </div>
+
+
     </div>
 </template>
 
 
 <script type="text/javascript">
-    import {DateTime} from "luxon"
+    import {DateTime, Duration} from "luxon"
     import {EventService} from '@/websocket'
     import {formatDateTime} from "@/misc"
+    import datefns from 'date-fns'
+
 
     export default {
-        data: () => ({
-            requestsCount: 0,
-            messagesIncomingCount: 0,
-            messagesOutcomingCount: 0,
-            startupTime: DateTime.utc(0),
-            now: DateTime.utc(),
-            filter: {
-                datefrom: null,
+        data: () => {
+            const datestop = new Date()
+            const datestart = datefns.subMonths(datestop, 1)
+
+            return {
+                requestsCount: 0,
+                messagesIncomingCount: 0,
+                messagesOutcomingCount: 0,
+                startupTime: DateTime.utc(0),
+                now: DateTime.utc(),
+                filter: {
+                    datestart: datestart,
+                    datestop: datestop,
+                },
             }
-        }),
+        },
         methods: {
             formatDateTime(datetime) {
                 return formatDateTime(datetime)
@@ -112,7 +138,12 @@
 
             stopInterval() {
                 clearInterval(this.$interval)
-            }
+            },
+
+            load() {
+                this.loadStatus()
+                this.loadMessagesStatus()
+            },
         },
 
         computed: {
@@ -140,14 +171,15 @@
         created() {
             this.$event = EventService.create()
 
-            
             this.$event.on('websocket', event => {
                 this.loadMessagesStatus()
             })
 
-            this.loadStatus()
-            this.loadMessagesStatus()
             this.startInterval()
         },
+
+        mounted() {
+            this.load()
+        }
     }
 </script>

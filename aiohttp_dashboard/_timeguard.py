@@ -12,11 +12,12 @@ class TimeGuardFactory:
 class _TimeGuardHolder:
 
     def __init__(self, timeout, function):
-        self._states = {
-            'default': _TimeGuard(timeout, function)
-        }
         self._timeout = timeout
         self._function = function
+
+        self._states = {
+            'default': _TimeGuard(self._timeout, self._function)
+        }
 
     def __call__(self, *args, **kwargs):
         state = kwargs.pop('_state', 'default')

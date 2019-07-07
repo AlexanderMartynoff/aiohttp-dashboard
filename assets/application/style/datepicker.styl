@@ -2,6 +2,10 @@
     &-dropdown
         position absolute
         z-index 10000
+        
+    &-input
+        &[readonly]
+            background-color transparent !important
 
     &-calendar
         &-display-month-btn
@@ -12,3 +16,7 @@
                 text-align center
             .btn
                 box-shadow none
+                
+            td
+                .btn
+                    padding 3px

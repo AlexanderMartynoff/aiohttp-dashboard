@@ -39,22 +39,22 @@ class Debugger:
         self._time = time
         self._emitter = EventEmitter()
 
-        self._http_requests = _QueueDict(dict)
-        self._http_exceptions = _QueueDict(dict)
-        self._ws_messages = _QueueDict(_Deque)
-        self._ws_exceptions = _QueueDict(_Deque)
+        self._requests = _QueueDict(dict)
+        self._requests_errors = _QueueDict(dict)
+        self._messages = _QueueDict(_Deque)
+        self._messages_errors = _QueueDict(_Deque)
 
-    def register_http_request(self, request):
+    def register_request(self, request):
         request_id = id(request)
         ip, _ = request.transport.get_extra_info('peername')
 
-        self._http_requests[request_id] = {
+        self._requests[request_id] = {
             'id': request_id,
             'scheme': request.scheme,
             'host': request.host,
             'path': request.raw_path,
             'method': request.method,
-            'starttime': self._now,
+            'starttime': self._datetime,
             'requestheaders': dict(request.headers),
             'ip': ip,
         }
@@ -67,16 +67,16 @@ class Debugger:
             'request': request_id,
         })
 
-    def register_http_response(self, request, response):
+    def register_response(self, request, response):
         request_id = id(request)
-        stored_request = self.find_http_request(request_id)
+        stored_request = self.find_request(request_id)
 
         body = response.text if isinstance(response, Response) else None
         websocket = True if isinstance(response, WebSocketResponse) else False
 
         if stored_request:
             stored_request.update({
-                'stoptime': self._now,
+                'stoptime': self._datetime,
                 'responseheaders': dict(response.headers),
                 'status': response.status,
                 'reason': response.reason,
@@ -92,16 +92,16 @@ class Debugger:
             'request': request_id,
         })
 
-    def find_http_request(self, request_id):
-        return self._http_requests[request_id]
+    def find_request(self, request_id):
+        return self._requests[request_id]
 
-    def find_http_requests(self, time_start=None, time_stop=None,
-                           status_code=None, slice_start=None,
-                           slice_limit=None):
+    def find_requests(self, time_start=None, time_stop=None,
+                      status_code=None, slice_start=None,
+                      slice_limit=None):
 
         http_requests = []
 
-        for request in self._http_requests.values():
+        for request in self._requests.values():
 
             if status_code and request['status'] != status_code:
                 continue
@@ -116,24 +116,24 @@ class Debugger:
 
         return _slice(http_requests, slice_start, slice_limit)
 
-    def count_http_requests(self):
-        return len(self._http_requests)
+    def count_requests(self, *args, **kwargs):
+        return len(self.find_requests(*args, **kwargs))
 
-    def register_http_exception(self, request, exception):
+    def register_request_error(self, request, exception):
         request_id = id(request)
-        self._http_exceptions[request_id] = exception
+        self._requests_errors[request_id] = exception
 
-    def find_http_exception(self, request_id):
-        return self._http_exceptions[request_id]
+    def find_request_error(self, request_id):
+        return self._requests_errors[request_id]
 
-    def register_ws_message(self, direction, request, message):
+    def register_message(self, direction, request, message):
         request_id, message_id = id(request), id(message)
 
-        self._ws_messages[request_id].appendleft({
+        self._messages[request_id].appendleft({
             'id': message_id,
             'requestid': request_id,
             'body': message,
-            'time': self._now,
+            'time': self._datetime,
             'direction': direction.name
         })
 
@@ -151,11 +151,11 @@ class Debugger:
             'direction': MsgDirection.OUTBOUND,
         })
 
-    def find_ws_messages(self, request_id=None, direction=None,
-                         slice_start=None, slice_limit=None):
+    def find_messages(self, request_id=None, direction=None,
+                      slice_start=None, slice_limit=None):
         messages = []
 
-        for queue in self._ws_messages.values():
+        for queue in self._messages.values():
 
             for message in queue:
 
@@ -169,11 +169,11 @@ class Debugger:
 
         return _slice(messages, slice_start, slice_limit)
 
-    def count_ws_messages(self, request_id=None, direction=None):
-        return len(self.find_ws_messages(request_id, direction))
+    def count_messages(self, *args, **kwargs):
+        return len(self.find_messages(*args, **kwargs))
 
     @property
-    def _now(self):
+    def _datetime(self):
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     def status(self):

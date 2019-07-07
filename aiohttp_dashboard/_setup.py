@@ -58,12 +58,12 @@ def _is_sutable_request(request):
 
 async def _on_request(request, handler):
     if _is_sutable_request(request):
-        request.app[DEBUGGER_KEY].register_http_request(request)
+        request.app[DEBUGGER_KEY].register_request(request)
 
         try:
             return await handler(request)
         except Exception as exception:
-            request.app[DEBUGGER_KEY].register_http_exception(
+            request.app[DEBUGGER_KEY].register_request_error(
                 request, exception)
             raise exception
 
@@ -72,7 +72,7 @@ async def _on_request(request, handler):
 
 async def _on_response(request, response):
     if _is_sutable_request(request):
-        request.app[DEBUGGER_KEY].register_http_response(request, response)
+        request.app[DEBUGGER_KEY].register_response(request, response)
 
         if isinstance(response, WebSocketResponse):
             _ws_resposne_decorate(request, response)
@@ -80,7 +80,7 @@ async def _on_response(request, response):
 
 def _on_websocket_msg(direction, request, message):
     if _is_sutable_request(request):
-        request.app[DEBUGGER_KEY].register_ws_message(
+        request.app[DEBUGGER_KEY].register_message(
             direction, request, message)
 
 

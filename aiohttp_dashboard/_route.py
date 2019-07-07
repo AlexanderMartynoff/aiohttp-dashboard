@@ -107,7 +107,7 @@ async def _messages(request):
     start = _optional_int_coerce(request.query.get('start'))
     limit = _optional_int_coerce(request.query.get('limit'))
 
-    return json_response(state.find_ws_messages(
+    return json_response(state.find_messages(
         request_id=request_id,
         slice_start=start,
         slice_limit=limit,
@@ -123,9 +123,9 @@ async def _request_info(request):
     response.update({
         'websocket': {
             'length': {
-                'incoming': state.count_ws_messages(
+                'incoming': state.count_messages(
                     request_id, MsgDirection.INCOMING),
-                'outcoming': state.count_ws_messages(
+                'outcoming': state.count_messages(
                     request_id, MsgDirection.OUTBOUND),
             }
         }
@@ -136,24 +136,24 @@ async def _request_info(request):
 
 async def _requests(request):
     state = request.app[DEBUGGER_KEY]
-    return json_response(state.find_http_requests())
+    return json_response(state.find_requests())
 
 
 async def _request(request):
     state = request.app[DEBUGGER_KEY]
     request_id = _optional_int_coerce(request.match_info['id'])
 
-    return json_response(state.find_http_request(request_id))
+    return json_response(state.find_request(request_id))
 
 
 async def _request_exception(request):
     state = request.app[DEBUGGER_KEY]
-    return json_response(state.find_ws_messages())
+    return json_response(state.find_messages())
 
 
 async def _request_exceptions(request):
     state = request.app[DEBUGGER_KEY]
-    return json_response(state.find_ws_messages())
+    return json_response(state.find_messages())
 
 
 async def _status(request):

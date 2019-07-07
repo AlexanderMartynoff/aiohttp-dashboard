@@ -20,7 +20,9 @@ import Alert from '@/component/widget/alert'
 import Layout from '@/component/layout/layout'
 import Bar from '@/component/bar/bar'
 import Traceback from '@/component/traceback/traceback'
-import DatepickerInput from '@/component/datepicker/datepicker-input'
+import DatepickerCalendar from '@/component/datepicker/datepicker-calendar'
+import DatepickerModal from '@/component/datepicker/datepicker-modal'
+import DatepickerModalInput from '@/component/datepicker/datepicker-modal-input'
 
 
 import Axios from '@/axios'
@@ -49,7 +51,9 @@ const components = {
     SettingsWindow,
     Bar,
     Traceback,
-    DatepickerInput,
+    DatepickerCalendar,
+    DatepickerModal,
+    DatepickerModalInput,
 }
 
 for (const key in components) {

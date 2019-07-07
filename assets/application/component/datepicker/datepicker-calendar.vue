@@ -1,6 +1,6 @@
 <template>
     <div class="datepicker-calendar" @wheel.stop.prevent="onCalendarMousewheel">
-        <table class="datepicker-calendar-table ml-auto mr-auto">
+        <table class="datepicker-calendar-table ml-auto mr-auto w-100">
             <thead>
                 <th v-for="week in weeks">{{week}}</th>
             </thead>
