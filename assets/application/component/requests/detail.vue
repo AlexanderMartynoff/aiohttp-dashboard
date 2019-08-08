@@ -132,7 +132,13 @@
             loadRequest() {
                 return this.$axios.get(`/api/request/${this.id}`).then(request => {
                     this.record = request
-                }) 
+                })
+            },
+
+            loadRequestError() {
+                return this.$axios.get(`/api/error/request/${this.id}`).then(exception => {
+                    this.exception = exception
+                })
             },
 
             loadMessagesInfo() {
@@ -145,7 +151,7 @@
                         this.wsIncomingLength = info.websocket.length.incoming
                         this.wsOutcomingLength = info.websocket.length.outcoming
                     }
-                }) 
+                })
             },
         },
 
@@ -165,6 +171,7 @@
             })
 
             this.loadRequest()
+            this.loadRequestError()
             this.loadMessagesInfo()
         },
         

@@ -5,7 +5,7 @@ from collections import defaultdict
 from collections import namedtuple
 import logging
 
-from ._misc import MsgDirection, dumps, is_subset_dict
+from ._misc import MsgDirection, is_subset_dict
 from ._state import DEBUGGER_KEY
 from ._timeguard import TimeGuardFactory
 
@@ -51,4 +51,4 @@ class Subcriber:
         self._state.emitter.off(family=id(self))
 
     def _send(self, message):
-        return ensure_future(self._websocket.send_json(message, dumps=dumps))
+        return ensure_future(self._websocket.send_json(message))

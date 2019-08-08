@@ -102,13 +102,14 @@
                 messagesIncomingCount: 0,
                 messagesOutcomingCount: 0,
                 startupTime: DateTime.utc(0),
-                now: DateTime.utc(),
+                nowTime: DateTime.utc(),
                 filter: {
                     datestart: datestart,
                     datestop: datestop,
                 },
             }
         },
+        
         methods: {
             formatDateTime(datetime) {
                 return formatDateTime(datetime)
@@ -118,7 +119,12 @@
             },
 
             loadMessagesStatus() {
-                return this.$axios.get(`/api/request/message/status`).then(status => {
+                return this.$axios.get(`/api/request/message/status`, {
+                    params: {
+                        datestart: datefns.getTime(this.filter.datestart),
+                        datestop: datefns.getTime(this.filter.datestop),
+                    }
+                }).then(status => {
                     this.messagesIncomingCount = status.websocket.length.incoming
                     this.messagesOutcomingCount = status.websocket.length.outcoming
                 }) 
@@ -132,7 +138,7 @@
 
             startInterval() {
                 this.$interval = setInterval(() => {
-                    this.now = DateTime.utc()
+                    this.nowTime = DateTime.utc()
                 }, 1000)
             },
 
@@ -148,15 +154,15 @@
 
         computed: {
             startupDuration() {
-                return this.now.diff(this.startupTime).toFormat('dd:hh:mm:ss')
+                return this.nowTime.diff(this.startupTime).toFormat('dd:hh:mm:ss')
             },
 
             requestsPerSecond() {
-                return (this.requestsCount / this.now.diff(this.startupTime).as('seconds')).toFixed(2)
+                return (this.requestsCount / this.nowTime.diff(this.startupTime).as('seconds')).toFixed(2)
             },
 
             messagesPerSecond() {
-                return (this.messagesCount / this.now.diff(this.startupTime).as('seconds')).toFixed(2)
+                return (this.messagesCount / this.nowTime.diff(this.startupTime).as('seconds')).toFixed(2)
             },
 
             messagesCount() {
@@ -164,8 +170,13 @@
             },
         },
 
-        destroyed() {
-            this.stopInterval()
+        watch: {
+            'filter.datestop'(value) {
+                this.loadMessagesStatus()
+            },
+            'filter.datestart'(value) {
+                this.loadMessagesStatus()
+            },
         },
 
         created() {
@@ -180,6 +191,11 @@
 
         mounted() {
             this.load()
-        }
+        },
+
+        destroyed() {
+            this.stopInterval()
+        },
+
     }
 </script>

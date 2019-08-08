@@ -7,6 +7,8 @@ from voluptuous import Schema, Required, Coerce, Optional, All, ALLOW_EXTRA
 from voluptuous.error import CoerceInvalid
 from yarl import URL
 from pathlib import Path
+import traceback
+
 
 from ._subscriber import Subcriber
 from ._state import DEBUGGER_KEY, JINJA_KEY
@@ -119,6 +121,8 @@ async def _request_info(request):
 
     state = request.app[DEBUGGER_KEY]
     request_id = _optional_int_coerce(request.query.get('request', None))
+    datestart = _optional_int_coerce(request.query.get('datestart', None))
+    datestop = _optional_int_coerce(request.query.get('datestop', None))
 
     response.update({
         'websocket': {
@@ -146,12 +150,24 @@ async def _request(request):
     return json_response(state.find_request(request_id))
 
 
-async def _request_exception(request):
+async def _request_error(request):
     state = request.app[DEBUGGER_KEY]
-    return json_response(state.find_messages())
+    request_id = _optional_int_coerce(request.match_info['id'])
+    exception = state.find_request_error(request_id)
+
+    print(exception)
+
+    if exception is not None:
+        return json_response({
+            'class': type(exception).__name__,
+            'message': str(exception),
+            'traceback': traceback.format_tb(exception.__traceback__),
+        })
+
+    return json_response()
 
 
-async def _request_exceptions(request):
+async def _request_errors(request):
     state = request.app[DEBUGGER_KEY]
     return json_response(state.find_messages())
 
@@ -168,8 +184,8 @@ def build_routes(prefix):
         ('GET', prefix + '/api/request/message/status', _request_info),
         ('GET', prefix + '/api/request', _requests),
         ('GET', prefix + '/api/request/{id}', _request),
-        ('GET', prefix + '/api/request_exception', _request_exceptions),
-        ('GET', prefix + '/api/request_exception/{id}', _request_exception),
+        ('GET', prefix + '/api/error/request', _request_errors),
+        ('GET', prefix + '/api/error/request/{id}', _request_error),
         ('GET', prefix + '/api/status', _status),
         ('GET', prefix + _URL_POSTFIX_EVENT, _event),
     ]

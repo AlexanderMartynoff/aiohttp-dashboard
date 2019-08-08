@@ -23,6 +23,7 @@
             inputClass: {type: String},
             datepickerModal: {type: String},
         },
+
         data() {
             return {
                 displayValue: null,
@@ -34,8 +35,8 @@
             inputClasses() {
                 return _.chain(this.inputClass).split(' ').concat([
                     'form-control',
-                    'datepicker-input'
-                    ]).value()
+                    'datepicker-input',
+                ]).value()
             },
 
             eventInputClick() {

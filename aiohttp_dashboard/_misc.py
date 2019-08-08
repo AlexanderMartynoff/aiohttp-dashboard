@@ -21,23 +21,6 @@ def is_subset_dict(subset_dict, superset_dict):
     return True
 
 
-class JSONEncoder(json.JSONEncoder):
-
-    def default(self, data):
-        if isinstance(data, Exception):
-
-            return {
-                'class': type(data).__name__,
-                'message': str(data),
-                'traceback': traceback.format_tb(data.__traceback__),
-            }
-        return data
-
-
-def dumps(data):
-    return json.dumps(data, cls=JSONEncoder)
-
-
 class MsgDirection(Enum):
     OUTBOUND = 1
     INCOMING = 2
