@@ -8,8 +8,11 @@
                              :hover="true"
                              :items="requests"
                              :fields="fields"
-                             striped
-                             class="table-pointer">
+                             :selectable="true"
+                             :show-empty="true"
+                             empty-html="Records not found"
+                             class="table-pointer"
+                             striped>
 
                     <template slot="status" slot-scope="record">
                         <span class="badge" :class="getStatusClassByCode(record.value)">
@@ -22,7 +25,7 @@
             </div>
         </div>
 
-        <bar v-if="requests" sticky="bottom" align="center" :card="false">            
+        <bar v-if="requests.length" sticky="bottom" align="center" :card="false">            
             <b-pagination :limit="3" :per-page="50" v-model="page" align="center"/>
         </bar>
     </div>
@@ -33,17 +36,34 @@
     import _ from "lodash"
     import {EventService} from '@/websocket'
     import {router} from '@/router'
-
+    import {formatDateTime} from '@/misc'
 
     export default {
         data: () => ({
-            fields: {
-                status: {label: 'Status'},
-                path: {label: 'Path'},
-                method: {label: 'Method'},
-                starttime: {label: 'Begin time'},
-                stoptime: {label: 'End time'},
-            },
+            fields: [
+                {
+                    key: 'status',
+                    label: 'Status',
+                },
+                {
+                    key: 'path',
+                    label: 'Path',
+                },
+                {
+                    key: 'method',
+                    label: 'Method',
+                },
+                {
+                    key: 'starttime',
+                    label: 'Begin time',
+                    formatter: value => formatDateTime(value),
+                },
+                {
+                    key: 'stoptime',
+                    label: 'End time',
+                    formatter: value => formatDateTime(value),
+                },
+            ],
 
             requests: [],
             page: 1,

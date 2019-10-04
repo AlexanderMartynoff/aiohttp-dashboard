@@ -121,17 +121,15 @@ async def _request_info(request):
 
     state = request.app[DEBUGGER_KEY]
     request_id = _optional_int_coerce(request.query.get('request', None))
-    datestart = _optional_int_coerce(request.query.get('datestart', None))
-    datestop = _optional_int_coerce(request.query.get('datestop', None))
+    time_start = _optional_int_coerce(request.query.get('datestart', None))
+    time_stop = _optional_int_coerce(request.query.get('datestop', None))
 
     response.update({
         'websocket': {
-            'length': {
-                'incoming': state.count_messages(
-                    request_id, MsgDirection.INCOMING),
-                'outcoming': state.count_messages(
-                    request_id, MsgDirection.OUTBOUND),
-            }
+            'countincoming': state.count_messages(
+                request_id, MsgDirection.INCOMING, time_start, time_stop),
+            'countoutcoming': state.count_messages(
+                request_id, MsgDirection.OUTBOUND, time_start, time_stop),
         }
     })
 
@@ -141,6 +139,17 @@ async def _request_info(request):
 async def _requests(request):
     state = request.app[DEBUGGER_KEY]
     return json_response(state.find_requests())
+
+
+async def _requests_info(request):
+    state = request.app[DEBUGGER_KEY]
+    time_start = _optional_int_coerce(request.query.get('datestart', None))
+    time_stop = _optional_int_coerce(request.query.get('datestop', None))
+    requests = state.find_requests(time_start=time_start, time_stop=time_stop)
+
+    return json_response({
+        'count': len(requests)
+    })
 
 
 async def _request(request):
@@ -154,8 +163,6 @@ async def _request_error(request):
     state = request.app[DEBUGGER_KEY]
     request_id = _optional_int_coerce(request.match_info['id'])
     exception = state.find_request_error(request_id)
-
-    print(exception)
 
     if exception is not None:
         return json_response({
@@ -172,6 +179,13 @@ async def _request_errors(request):
     return json_response(state.find_messages())
 
 
+async def _request_errors_status(request):
+    state = request.app[DEBUGGER_KEY]
+    return json_response({
+        'count': len(state.find_request_errors()),
+    })
+
+
 async def _status(request):
     state = request.app[DEBUGGER_KEY]
     return json_response(state.status())
@@ -183,7 +197,9 @@ def build_routes(prefix):
         ('GET', prefix + '/api/message', _messages),
         ('GET', prefix + '/api/request/message/status', _request_info),
         ('GET', prefix + '/api/request', _requests),
+        ('GET', prefix + '/api/request/status', _requests_info),
         ('GET', prefix + '/api/request/{id}', _request),
+        ('GET', prefix + '/api/error/request/status', _request_errors_status),
         ('GET', prefix + '/api/error/request', _request_errors),
         ('GET', prefix + '/api/error/request/{id}', _request_error),
         ('GET', prefix + '/api/status', _status),

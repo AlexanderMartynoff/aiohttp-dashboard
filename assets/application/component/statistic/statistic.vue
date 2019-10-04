@@ -7,7 +7,7 @@
         <div class="row mt-3 mb-3">
 
             <div class="col-md-6 mt-3 mt-md-0">
-                <b-card class="shadow h-100" title="Time">
+                <b-card class="shadow h-100" title="Control panel">
                     <h2>
                         <code>{{formatDateTime(startupTime)}}</code>
                         <span class="d-block text-muted text-small">application start time</span>
@@ -34,7 +34,7 @@
                                                             v-model="filter.datestop">
                                     </datepicker-modal-input>
                                 </b-input-group>
-                                <span class="d-block text-muted text-small">date range</span>
+                                <span class="d-block text-muted text-small">what interval are you interested in?</span>
                             </b-col>
                         </b-row>
                     </b-form>
@@ -42,7 +42,7 @@
             </div>
             <div class="col-md-6 mt-3 mt-md-0">
 
-                <b-card class="shadow h-100" title="Requests">
+                <b-card class="shadow h-100" title="Requests" @click="onRequestClick">
                     <h2>
                         <code>{{requestsCount}}</code>
                         <span class="d-block text-muted text-small">total number</span>
@@ -72,7 +72,7 @@
             <div class="col-md-6 mt-3 mt-md-0">
                 <b-card class="shadow h-100" title="Exceptions">
                     <h2>
-                        <code>558 068</code>
+                        <code>{{requestsErrorCount}}</code>
                         <span class="d-block text-muted text-small">total number</span>
                     </h2>
                 </b-card>
@@ -86,23 +86,32 @@
 
 
 <script type="text/javascript">
-    import {DateTime, Duration} from "luxon"
     import {EventService} from '@/websocket'
+    import {router} from '@/router'
     import {formatDateTime} from "@/misc"
-    import datefns from 'date-fns'
+    import {
+        startOfDay,
+        addDays,
+        getTime,
+        fromUnixTime,
+        format,
+        formatDistance,
+        formatDistanceStrict,
+    } from 'date-fns'
 
 
     export default {
         data: () => {
-            const datestop = new Date()
-            const datestart = datefns.subMonths(datestop, 1)
+            const datestart = startOfDay(new Date())
+            const datestop = addDays(datestart, 1)
 
             return {
                 requestsCount: 0,
+                requestsErrorCount: 0,
                 messagesIncomingCount: 0,
                 messagesOutcomingCount: 0,
-                startupTime: DateTime.utc(0),
-                nowTime: DateTime.utc(),
+                startupTime: new Date(0),
+                nowTime: new Date(),
                 filter: {
                     datestart: datestart,
                     datestop: datestop,
@@ -111,34 +120,57 @@
         },
         
         methods: {
+            onRequestClick() {
+                router.push({path: `/requests`})
+            },
+
             formatDateTime(datetime) {
-                return formatDateTime(datetime)
+                return format(datetime, 'cccc, yyyy, HH:mm:ss')
             },
 
             loadRequestsStatus() {
+                return this.$axios.get(`/api/request/status`, {
+                    params: {
+                        datestart: getTime(this.filter.datestart),
+                        datestop: getTime(this.filter.datestop),
+                    }
+                }).then(status => {
+                    this.requestsCount = status.count
+                }) 
             },
 
             loadMessagesStatus() {
                 return this.$axios.get(`/api/request/message/status`, {
                     params: {
-                        datestart: datefns.getTime(this.filter.datestart),
-                        datestop: datefns.getTime(this.filter.datestop),
+                        datestart: getTime(this.filter.datestart),
+                        datestop: getTime(this.filter.datestop),
                     }
                 }).then(status => {
-                    this.messagesIncomingCount = status.websocket.length.incoming
-                    this.messagesOutcomingCount = status.websocket.length.outcoming
+                    this.messagesIncomingCount = status.websocket.countincoming
+                    this.messagesOutcomingCount = status.websocket.countoutcoming
+                }) 
+            },
+
+            loadErrorsStatus() {
+                return this.$axios.get(`/api/error/request/status`, {
+                    params: {
+                        datestart: getTime(this.filter.datestart),
+                        datestop: getTime(this.filter.datestop),
+                    }
+                }).then(status => {
+                    this.requestsErrorCount = status.count
                 }) 
             },
 
             loadStatus() {
                 return this.$axios.get('/api/status').then(status => {
-                    this.startupTime = DateTime.fromSeconds(status.startup)
+                    this.startupTime = fromUnixTime(status.startup)
                 }) 
             },
 
             startInterval() {
                 this.$interval = setInterval(() => {
-                    this.nowTime = DateTime.utc()
+                    this.nowTime = new Date()
                 }, 1000)
             },
 
@@ -149,20 +181,22 @@
             load() {
                 this.loadStatus()
                 this.loadMessagesStatus()
+                this.loadRequestsStatus()
+                this.loadErrorsStatus()
             },
         },
 
         computed: {
             startupDuration() {
-                return this.nowTime.diff(this.startupTime).toFormat('dd:hh:mm:ss')
+                return formatDistanceStrict(this.startupTime, this.nowTime)
             },
 
             requestsPerSecond() {
-                return (this.requestsCount / this.nowTime.diff(this.startupTime).as('seconds')).toFixed(2)
+                return 0
             },
 
             messagesPerSecond() {
-                return (this.messagesCount / this.nowTime.diff(this.startupTime).as('seconds')).toFixed(2)
+                return 0
             },
 
             messagesCount() {
@@ -173,9 +207,13 @@
         watch: {
             'filter.datestop'(value) {
                 this.loadMessagesStatus()
+                this.loadRequestsStatus()
+                this.loadErrorsStatus()
             },
             'filter.datestart'(value) {
                 this.loadMessagesStatus()
+                this.loadRequestsStatus()
+                this.loadErrorsStatus()
             },
         },
 
@@ -186,12 +224,15 @@
                 this.loadMessagesStatus()
             })
 
-            this.startInterval()
-        },
+            this.$event.on('http', event => {
+                this.loadRequestsStatus()
+                this.loadErrorsStatus()
+            })
 
-        mounted() {
+            this.startInterval()
             this.load()
         },
+
 
         destroyed() {
             this.stopInterval()

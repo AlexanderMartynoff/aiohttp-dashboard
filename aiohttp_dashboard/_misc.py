@@ -3,8 +3,11 @@ from asyncio import iscoroutine, isfuture, ensure_future, gather
 from inspect import iscoroutinefunction, isfunction, ismethod, isclass
 from collections import defaultdict, OrderedDict, Sequence
 from enum import Enum
-import traceback
-import json
+from time import time
+
+
+def timestamp():
+    return time() * 1000
 
 
 def to_list(_):

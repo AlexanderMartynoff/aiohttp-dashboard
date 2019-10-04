@@ -13,7 +13,7 @@
 
         <div class="row mt-3 mb-3">
             <div class="col-md-12">
-                <b-card class="shadow h-100" title="WebSocket">
+                <b-card class="shadow h-100" title="Messages">
                     <b-list-group>
                         <b-list-group-item v-for="message in messages"
                                            @click="showDetail(message)"
@@ -21,7 +21,7 @@
 
                             <i class="fas fa-long-arrow-alt-up" v-if="message.direction == 'OUTBOUND'"></i>
                             <i class="fa fa-long-arrow-alt-down" v-else></i>
-                            {{message.time}}
+                            {{message.datetime}}
                         </b-list-group-item>
                     </b-list-group>
                 </b-card>
@@ -47,6 +47,8 @@
 
 <script>
     import {EventService} from '@/websocket'
+    import {formatDateTime} from '@/misc'
+    import _ from "lodash"
 
     export default {
         data () {
@@ -108,7 +110,9 @@
                         limit: 25, 
                     }
                 }).then(messages => {
-                    this.messages = messages
+                    this.messages = _.map(messages, message => _.merge(message, {
+                        datetime: formatDateTime(message.time, true)
+                    }))
                 }) 
             },
 
@@ -119,8 +123,8 @@
                     }
                 }).then(info => {
                     if (info.websocket) {
-                        this.incomingLength = info.websocket.length.incoming
-                        this.outcomingLength = info.websocket.length.outcoming
+                        this.incomingLength = info.websocket.countincoming
+                        this.outcomingLength = info.websocket.countoutcoming
                     }
                 }) 
             },

@@ -1,7 +1,7 @@
 <template>
-    <b-card header="Error" class="flex-card">
-        <b-alert :show="true" state="warning">Page not found</b-alert>
-    </b-card>
+    <b-alert class="m-3" :show="true" variant="danger">
+        <h1>Error :(</h1>
+    </b-alert>
 </template>
 
 <script>

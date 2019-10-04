@@ -19,6 +19,7 @@ class EventEmitter:
         self._handlers.append((event, handler, name, family))
 
     def off(self, name=None, family=None):
+        # DOIT: rename these vars but how? 
         for event_, handler, name_, family_ in self._handlers[:]:
             if name_ == name or family_ == family:
                 self._handlers.remove((event_, handler, name_, family_))

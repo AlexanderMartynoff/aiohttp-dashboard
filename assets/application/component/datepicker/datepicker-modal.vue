@@ -11,14 +11,14 @@
 
 <script type="text/javascript">
     import _ from 'lodash'
-    import datefns from 'date-fns'
+    import {format} from 'date-fns'
 
     export default {
         props: {
             name: String,
             format: {
                 type: String,
-                default: 'dddd, Do MMMM, YYYY',
+                default: 'cccc, yyyy/MM/dd',
             },
         },
 
@@ -39,7 +39,7 @@
 
             title() {
                 if (this.date) {
-                    return datefns.format(this.date, this.format)
+                    return format(this.date, this.format)
                 }
             },
         },

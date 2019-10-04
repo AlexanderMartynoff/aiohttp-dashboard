@@ -16,6 +16,9 @@
                 <b-nav-item href="#/requests">
                     <code>[REQUESTS]</code>
                 </b-nav-item>
+                <b-nav-item href="#/messages">
+                    <code>[MESSAGES]</code>
+                </b-nav-item>
             </b-navbar-nav>
         </b-collapse>
     </b-navbar>

@@ -39,7 +39,7 @@ prod_requires = [
     'aiohttp',
     'aiohttp_jinja2',
     'voluptuous',
-    'voluptuous',
+    'attrs',
 ]
 
 dev_requires = prod_requires + [

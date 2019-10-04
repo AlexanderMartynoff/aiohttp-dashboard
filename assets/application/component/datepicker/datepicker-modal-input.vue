@@ -9,7 +9,7 @@
 
 <script type="text/javascript">
     import _ from 'lodash'
-    import datefns from 'date-fns'
+    import * as datefns from 'date-fns'
 
     export default {
         props: {
@@ -18,7 +18,7 @@
             },
             format: {
                 type: String,
-                default: 'YYYY/MM/DD',
+                default: 'yyyy/MM/dd',
             },
             inputClass: {type: String},
             datepickerModal: {type: String},

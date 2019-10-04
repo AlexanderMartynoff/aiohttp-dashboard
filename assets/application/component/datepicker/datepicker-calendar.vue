@@ -9,7 +9,7 @@
                     <button type="button"
                             :class="getCalendarBtnSpecialClasses(date)"
                             @click="onDayClick(date)">
-                        {{format(date, 'DD')}}
+                        {{format(date, 'dd')}}
                     </button>
                 </td>
             </tr>
@@ -41,7 +41,7 @@
 
 <script type="text/javascript">
     import _ from 'lodash'
-    import datefns from 'date-fns'
+    import * as datefns from 'date-fns'
 
     const modes = {
         month: 'month',
@@ -170,7 +170,10 @@
                     .range(6)
                     .map(weekDayNumber => {
                         const startWeekDay = datefns.addDays(startDayCalendar, weekDayNumber * 7)
-                        return datefns.eachDay(startWeekDay, datefns.addDays(startWeekDay, 6))
+                        return datefns.eachDayOfInterval({
+                            start: startWeekDay,
+                            end: datefns.addDays(startWeekDay, 6),
+                        })
                     }).value()
             },
         },

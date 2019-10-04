@@ -94,6 +94,7 @@
 <script>
     import {router} from '@/router';
     import {EventService} from '@/websocket'
+    import {formatDateTime} from '@/misc'
     import _ from "lodash"
 
     export default {
@@ -130,8 +131,11 @@
             },
 
             loadRequest() {
-                return this.$axios.get(`/api/request/${this.id}`).then(request => {
-                    this.record = request
+                return this.$axios.get(`/api/request/${this.id}`).then(record => {
+                    this.record = _.merge(record, {
+                        starttime: formatDateTime(record.starttime),
+                        stoptime: formatDateTime(record.stoptime),
+                    })
                 })
             },
 
@@ -148,8 +152,8 @@
                     }
                 }).then(info => {
                     if (info.websocket) {
-                        this.wsIncomingLength = info.websocket.length.incoming
-                        this.wsOutcomingLength = info.websocket.length.outcoming
+                        this.wsIncomingLength = info.websocket.countincoming
+                        this.wsOutcomingLength = info.websocket.countoutcoming
                     }
                 })
             },
