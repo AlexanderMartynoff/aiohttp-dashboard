@@ -68,8 +68,8 @@ class State:
         self._time_start = time()
         self._emitter = EventEmitter()
 
-        self._requests = _QueueDict(dict)
-        self._requests_errors = _QueueDict(lambda: None)
+        self._requests = _QueueDict()
+        self._requests_errors = _QueueDict()
         self._messages = _QueueDict(_Deque)
         self._messages_errors = _QueueDict(_Deque)
 
@@ -165,6 +165,9 @@ class State:
 
     def append_message(self, direction, request, message):
         request_id, message_id = id(request), id(message)
+
+        if request_id not in self._messages:
+            self._messages[request_id] = _Deque()
 
         self._messages[request_id].appendleft({
             'id': message_id,

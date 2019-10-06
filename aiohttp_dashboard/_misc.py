@@ -31,7 +31,7 @@ class MsgDirection(Enum):
 
 class QueueDict(OrderedDict):
 
-    def __init__(self, maxlen, default, **kwargs):
+    def __init__(self, maxlen, default=lambda: None, **kwargs):
         self._maxlen = maxlen
         self._default = default
 
@@ -43,8 +43,11 @@ class QueueDict(OrderedDict):
         while len(self) > self._maxlen:
             self.popitem(last=False)
 
+    def __contains__(self, key):
+        return super().__contains__(key)
+
     def __getitem__(self, key):
         if key not in self:
-            self.__setitem__(key, self._default())
+            return self._default()
 
         return super().__getitem__(key)
