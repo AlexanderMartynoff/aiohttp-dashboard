@@ -133,8 +133,8 @@
             loadRequest() {
                 return this.$axios.get(`/api/request/${this.id}`).then(record => {
                     this.record = _.merge(record, {
-                        starttime: formatDateTime(record.starttime),
-                        stoptime: formatDateTime(record.stoptime),
+                        starttime: formatDateTime(record.starttime, true),
+                        stoptime: formatDateTime(record.stoptime, true),
                     })
                 })
             },
@@ -165,13 +165,13 @@
             this.$event.on('websocket', message => {
                 this.loadMessagesInfo()
             }, {
-                request: this.id,
+                conditions: {request: this.id},
             })
 
             this.$event.on('http', request => {
                 this.loadRequest()
             }, {
-                request: this.id,
+                conditions: {request: this.id},
             })
 
             this.loadRequest()

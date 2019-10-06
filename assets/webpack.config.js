@@ -50,8 +50,8 @@ module.exports = {
     plugins: [
         new CopyWebpackPlugin([
             { from: resolve('node_modules/bootstrap/dist/css/bootstrap.css') },
-            { from: resolve('node_modules/@fortawesome/fontawesome-free-webfonts/css'), to: "font-awesome/css", ignore: ["*.map"] },
-            { from: resolve('node_modules/@fortawesome/fontawesome-free-webfonts/webfonts'), to: "font-awesome/webfonts" },
+            { from: resolve('node_modules/@fortawesome/fontawesome-free/css'), to: "font-awesome/css", ignore: ["*.map"] },
+            { from: resolve('node_modules/@fortawesome/fontawesome-free/webfonts'), to: "font-awesome/webfonts" },
         ])
     ]
 }

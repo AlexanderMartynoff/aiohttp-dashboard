@@ -4,18 +4,9 @@
         <datepicker-modal name="datepicker-datestart"></datepicker-modal>
         <datepicker-modal name="datepicker-datestop"></datepicker-modal>
 
-        <div class="row mt-3 mb-3">
-
-            <div class="col-md-6 mt-3 mt-md-0">
-                <b-card class="shadow h-100" title="Control panel">
-                    <h2>
-                        <code>{{formatDateTime(startupTime)}}</code>
-                        <span class="d-block text-muted text-small">application start time</span>
-                    </h2>
-                    <h2>
-                        <code>{{startupDuration}}</code>
-                        <span class="d-block text-muted text-small">application work duration</span>
-                    </h2>
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <pane title="Settings">
                     <b-form class="mt-3">
                         <b-row>
                             <b-col md="12">
@@ -34,53 +25,79 @@
                                                             v-model="filter.datestop">
                                     </datepicker-modal-input>
                                 </b-input-group>
-                                <span class="d-block text-muted text-small">what interval are you interested in?</span>
+                                <span class="d-block text-small">what interval are you interested in?</span>
                             </b-col>
                         </b-row>
                     </b-form>
-                </b-card>
+                </pane>
             </div>
+ 
             <div class="col-md-6 mt-3 mt-md-0">
-
-                <b-card class="shadow h-100" title="Requests" @click="onRequestClick">
+                <pane hover-variant="warning" title="Status">
                     <h2>
-                        <code>{{requestsCount}}</code>
-                        <span class="d-block text-muted text-small">total number</span>
+                        <code>{{formatDateTime(startupTime)}}</code>
+                        <span class="d-block text-small">application start time</span>
                     </h2>
                     <h2>
-                        <code>{{requestsPerSecond}}</code>
-                        <span class="d-block text-muted text-small">number per second</span>
+                        <code>{{startupDuration}}</code>
+                        <span class="d-block text-small">application work duration</span>
                     </h2>
-                </b-card>
+                </pane>
             </div>
+
         </div>
 
         <div class="row mt-3 mb-3">
-            <div class="col-md-6">
-                <b-card class="shadow h-100" title="Messages">
-                    <h2>
-                        <code>{{messagesCount}}</code>
-                        <span class="d-block text-muted text-small">total number</span>
-                    </h2>
-                    <h2>
-                        <code>{{messagesPerSecond}}</code>
-                        <span class="d-block text-muted text-small">number per second</span>
-                    </h2>
-                </b-card>
-            </div>
+            <div class="col-md-6 mb-3 mb-md-0">
 
-            <div class="col-md-6 mt-3 mt-md-0">
-                <b-card class="shadow h-100" title="Exceptions">
+                <pane hover-variant="warning" title="Requests" @click="onRequestClick">
+                    
+                    <b-row>
+                        <b-col md="6">
+                            <h2>
+                                <code>{{requestsCount}}</code>
+                                <span class="d-block text-small">total number</span>
+                            </h2>  
+                        </b-col>
+                        <b-col md="6">
+                            <h2>
+                                <code>{{requestsPerSecond}}</code>
+                                <span class="d-block text-small">number per second</span>
+                            </h2>
+                        </b-col>
+                    </b-row>
+                </pane>
+            </div>
+            <div class="col-md-6">
+                <pane hover-variant="warning" title="Messages">
+                    <b-row>
+                        <b-col md="6">
+                            <h2>
+                                <code>{{messagesCount}}</code>
+                                <span class="d-block text-small">total number</span>
+                            </h2>
+                        </b-col>
+                        <b-col md="6">
+                            <h2>
+                                <code>{{messagesPerSecond}}</code>
+                                <span class="d-block text-small">number per second</span>
+                            </h2>
+                        </b-col>
+                    </b-row>
+                </pane>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <pane hover-variant="warning" title="Exceptions">
                     <h2>
                         <code>{{requestsErrorCount}}</code>
-                        <span class="d-block text-muted text-small">total number</span>
+                        <span class="d-block text-small">total number</span>
                     </h2>
-                </b-card>
+                </pane>
             </div>
-
         </div>
-
-
     </div>
 </template>
 
@@ -177,13 +194,6 @@
             stopInterval() {
                 clearInterval(this.$interval)
             },
-
-            load() {
-                this.loadStatus()
-                this.loadMessagesStatus()
-                this.loadRequestsStatus()
-                this.loadErrorsStatus()
-            },
         },
 
         computed: {
@@ -229,10 +239,9 @@
                 this.loadErrorsStatus()
             })
 
+            this.loadStatus()
             this.startInterval()
-            this.load()
         },
-
 
         destroyed() {
             this.stopInterval()

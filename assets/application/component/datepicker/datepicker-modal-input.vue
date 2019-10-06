@@ -18,7 +18,7 @@
             },
             format: {
                 type: String,
-                default: 'yyyy/MM/dd',
+                default: 'yyyy/MM/dd H:mm:ss',
             },
             inputClass: {type: String},
             datepickerModal: {type: String},

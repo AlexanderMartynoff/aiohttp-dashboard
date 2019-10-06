@@ -2,7 +2,7 @@
     <div class="container-fluid my-3">
         <div class="row mt-3 mb-3">
             <div class="col-md-12">
-                <b-card class="shadow" title="Requests">
+                <b-card class="shadow" header="Requests">
                     <b-table @row-clicked="(item, index) => details(item.id, index)" 
                              :responsive="true"
                              :hover="true"

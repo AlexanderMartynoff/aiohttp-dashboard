@@ -160,12 +160,18 @@ class EventService {
     onerror() {
 
     }
-    
-    on(event, callback, conditions, name) {
+
+    // event, callback, conditions, name
+
+    // const subscription = this._service.subscribe('subscribe', callback, {
+    //     event,
+    //     name,
+    //     conditions,
+    // })
+    on(event, callback, data) {
         const subscription = this._service.subscribe('subscribe', callback, {
             event,
-            name,
-            conditions,
+            ...data,
         })
 
         this._events.push(subscription)

@@ -21,28 +21,37 @@ class Subcriber:
         self._websocket = websocket
 
     def subscribe(self, message):
-        conditions = message['data']['conditions']
+        conditions = message['data'].get('conditions', None)
+        immediate = message['data'].get('immediate', True)
+        chanel = message['data']['event']
 
         @timeguard
-        def send(event):
+        def send(event: str):
             self._send({
                 'id': message['id'],
                 'event': event,
             })
 
         def subscribtion(event: str, parameters: dict):
-            if conditions and not is_subset_dict(
-                    conditions, parameters):
+            if conditions and not is_subset_dict(conditions, parameters):
                 return
 
             send(event, _state=event.__class__.__name__)
 
         self._state.emitter.on(
-            event=message['data']['event'],
+            event=chanel,
             handler=subscribtion,
             name=message['id'],
             family=id(self),
         )
+
+        if immediate:
+            self._send({
+                'id': message['id'],
+                'event': chanel,
+            })
+
+            logger.info(f'Immediate sending for event `{chanel}`')
 
     def unsubscribe(self, message):
         self._state.emitter.off(name=message['data']['id'])

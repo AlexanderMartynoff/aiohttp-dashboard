@@ -10,12 +10,12 @@ import Box from '@/component/box/box'
 import BoxHeader from '@/component/box/box-header'
 import BoxBody from '@/component/box/box-body'
 import BoxFooter from '@/component/box/box-footer'
+import Pane from '@/component/widget/pane'
 
 import TopMenu from '@/component/menu/top'
 import SettingsWindow from '@/component/settings/window'
 import IndexGrid from '@/component/requests/master'
 import Clock from '@/component/clock/clock'
-import DropdpownPane from '@/component/widget/dropdpown-pane'
 import Alert from '@/component/widget/alert'
 import Layout from '@/component/layout/layout'
 import Bar from '@/component/bar/bar'
@@ -45,7 +45,6 @@ const components = {
     TopMenu,
     IndexGrid,
     Clock,
-    DropdpownPane,
     Alert,
     Layout,
     SettingsWindow,
@@ -54,6 +53,7 @@ const components = {
     DatepickerCalendar,
     DatepickerModal,
     DatepickerModalInput,
+    Pane,
 }
 
 for (const key in components) {

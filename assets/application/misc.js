@@ -4,7 +4,7 @@ function formatDateTime(dateTime, inlcudeMs=false) {
     let pattern = `yyyy-MM-dd H:mm:ss`
 
     if (inlcudeMs) {
-        pattern += ` SSS`
+        pattern += `:SSS`
     }
 
     return format(dateTime, pattern)

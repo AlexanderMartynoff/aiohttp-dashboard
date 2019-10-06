@@ -137,7 +137,7 @@
                 this.loadMessages()
                 this.loadMessagesInfo()
             }, {
-                request: this.id,
+                conditions: {request: this.id},
             })
 
             this.loadMessages()

@@ -1,27 +1,31 @@
 <template>
-    <b-navbar toggleable type="light" variant="light" class="shadow-sm z-index-1">
-        <div class="navbar-controll">
-            <b-button variant="light" v-b-toggle.collapse>
-                <i class="fas fa-bars"></i>
-            </b-button>
-        </div>
-        <b-navbar-brand class="d-none d-lg-block">
-            <code><i class="fas fa-tachometer-alt"></i> [aiottp_dashboard]</code>
-        </b-navbar-brand>
-        <b-collapse id="collapse" is-nav>
-            <b-navbar-nav>
-                <b-nav-item href="#/statistic">
-                    <code>[DASHBOARD]</code>
-                </b-nav-item>
-                <b-nav-item href="#/requests">
-                    <code>[REQUESTS]</code>
-                </b-nav-item>
-                <b-nav-item href="#/messages">
-                    <code>[MESSAGES]</code>
-                </b-nav-item>
-            </b-navbar-nav>
-        </b-collapse>
-    </b-navbar>
+
+<b-navbar toggleable="lg" type="light" variant="light" class="shadow-sm">
+    <b-navbar-brand href="#">
+        <code><i class="fas fa-tachometer-alt"></i> [aiottp_dashboard]</code>
+    </b-navbar-brand>
+
+    <b-navbar-toggle target="collapse"></b-navbar-toggle>
+
+    <b-collapse id="collapse" is-nav>
+        <b-navbar-nav>
+            <b-nav-item href="#/statistic">
+                <i class="fas fa-chart-bar"></i> Overview
+            </b-nav-item>
+            <b-nav-item href="#/requests">
+                <i class="fas fa-globe"></i> Requests
+            </b-nav-item>
+            <b-nav-item href="#/messages">
+                <i class="far fa-envelope"></i> Messages
+            </b-nav-item>
+            <b-nav-item href="#/errors">
+                <i class="fas fa-bug"></i> Errors
+            </b-nav-item>
+        </b-navbar-nav>
+    </b-collapse>
+  </b-navbar>
+
+
 </template>
 
 
