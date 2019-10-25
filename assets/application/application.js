@@ -60,7 +60,7 @@ for (const key in components) {
     Vue.component(key, components[key])
 }
 
-const application = new Vue({
+const _application = new Vue({
     router, el: '.application',
     axios: {
         baseURL: environment.getParameter('aiohttp-dashboard-prefix'),

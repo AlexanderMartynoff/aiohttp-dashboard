@@ -13,10 +13,10 @@
                 <i class="fas fa-chart-bar"></i> Overview
             </b-nav-item>
             <b-nav-item href="#/requests">
-                <i class="fas fa-globe"></i> Requests
+                <i class="fas fa-globe"></i> HTTP
             </b-nav-item>
             <b-nav-item href="#/messages">
-                <i class="far fa-envelope"></i> Messages
+                <i class="fas fa-envelope-open"></i> Websocket
             </b-nav-item>
             <b-nav-item href="#/errors">
                 <i class="fas fa-bug"></i> Errors

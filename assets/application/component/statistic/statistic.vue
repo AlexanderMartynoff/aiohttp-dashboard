@@ -6,6 +6,19 @@
 
         <div class="row mt-3">
             <div class="col-md-6">
+                <pane hover-variant="warning" title="Status">
+                    <h2>
+                        <code>{{formatDateTime(startupTime)}}</code>
+                        <span class="d-block text-small">application start time</span>
+                    </h2>
+                    <h2>
+                        <code>{{startupDuration}}</code>
+                        <span class="d-block text-small">application work duration</span>
+                    </h2>
+                </pane>
+            </div>
+
+            <div class="col-md-6 mt-3 mt-md-0">
                 <pane title="Settings">
                     <b-form class="mt-3">
                         <b-row>
@@ -29,19 +42,6 @@
                             </b-col>
                         </b-row>
                     </b-form>
-                </pane>
-            </div>
- 
-            <div class="col-md-6 mt-3 mt-md-0">
-                <pane hover-variant="warning" title="Status">
-                    <h2>
-                        <code>{{formatDateTime(startupTime)}}</code>
-                        <span class="d-block text-small">application start time</span>
-                    </h2>
-                    <h2>
-                        <code>{{startupDuration}}</code>
-                        <span class="d-block text-small">application work duration</span>
-                    </h2>
                 </pane>
             </div>
 

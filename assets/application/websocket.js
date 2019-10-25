@@ -161,13 +161,6 @@ class EventService {
 
     }
 
-    // event, callback, conditions, name
-
-    // const subscription = this._service.subscribe('subscribe', callback, {
-    //     event,
-    //     name,
-    //     conditions,
-    // })
     on(event, callback, data) {
         const subscription = this._service.subscribe('subscribe', callback, {
             event,

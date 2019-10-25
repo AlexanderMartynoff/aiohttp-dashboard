@@ -5,11 +5,11 @@ from queue import Queue
 from collections import deque, defaultdict
 from functools import partial
 from os.path import join
-import logging
 from inspect import isfunction
 from time import time
+from typing import Any, Sequence
 import attr
-from typing import Any
+import logging
 
 from ._misc import MsgDirection, QueueDict, timestamp
 from ._event_emitter import EventEmitter
@@ -22,7 +22,7 @@ JINJA_KEY = __name__ + '-jinja'
 _LIMIT = 50000
 
 
-def _slice(sequence, start=0, limit=None):
+def _slice(sequence: Sequence, start: int = 0, limit: int = None) -> Sequence:
     if limit is None:
         stop = None
     else:

@@ -21,7 +21,7 @@ class Subcriber:
         self._websocket = websocket
 
     def subscribe(self, message):
-        conditions = message['data'].get('conditions', None)
+        conditions = message['data'].get('conditions')
         immediate = message['data'].get('immediate', True)
         chanel = message['data']['event']
 

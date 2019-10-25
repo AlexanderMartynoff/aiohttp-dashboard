@@ -1,5 +1,6 @@
 from uuid import uuid4
 from collections import defaultdict, Sequence
+from typing import Union, List, Callable, TypeVar, Generic, Any
 
 
 class EventEmitter:

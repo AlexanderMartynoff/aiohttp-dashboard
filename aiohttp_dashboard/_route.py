@@ -1,4 +1,5 @@
 import logging
+from typing import Tuple, List
 import time
 from os.path import join, normpath, isabs, dirname, abspath
 from aiohttp_jinja2 import template, web
@@ -55,13 +56,8 @@ _unsubscribe_schema = Schema({
 def _build_event_endpoint(request):
     prefix = request.app[DEBUGGER_PREFIX_KEY]
 
-    if request.secure:
-        scheme = 'wss'
-    else:
-        scheme = 'ws'
-
     return URL.build(
-        scheme=scheme,
+        scheme='wss' if request.secure else 'ws',
         host=request.url.host,
         port=request.url.port,
         path=prefix + _URL_POSTFIX_EVENT,
@@ -191,7 +187,7 @@ async def _status(request):
     return json_response(state.status())
 
 
-def build_routes(prefix):
+def build_routes(prefix) -> Tuple[List[Tuple], List[Tuple]]:
     routes = [
         ('GET', prefix, _index),
         ('GET', prefix + '/api/message', _messages),
