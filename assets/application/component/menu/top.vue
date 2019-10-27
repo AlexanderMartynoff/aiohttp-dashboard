@@ -16,10 +16,13 @@
                 <i class="fas fa-globe"></i> HTTP
             </b-nav-item>
             <b-nav-item href="#/messages">
-                <i class="fas fa-envelope-open"></i> Websocket
+                <i class="fas fa-envelope-open"></i> Messages
             </b-nav-item>
             <b-nav-item href="#/errors">
                 <i class="fas fa-bug"></i> Errors
+            </b-nav-item>
+            <b-nav-item href="#/logs">
+                <i class="fas fa-map"></i> Logs
             </b-nav-item>
         </b-navbar-nav>
     </b-collapse>

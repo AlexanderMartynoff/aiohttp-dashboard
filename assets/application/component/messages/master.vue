@@ -14,16 +14,21 @@
         <div class="row mt-3 mb-3">
             <div class="col-md-12">
                 <b-card class="shadow h-100" title="Messages">
-                    <b-list-group>
-                        <b-list-group-item v-for="message in messages"
-                                           @click="showDetail(message)"
-                                           button>
+                    <b-table :responsive="true"
+                             :hover="true"
+                             :items="messages"
+                             :fields="fields"
+                             :show-empty="true"
+                             empty-html="Records not found"
+                             class="table-pointer"
+                             striped>
 
-                            <i class="fas fa-long-arrow-alt-up" v-if="message.direction == 'OUTBOUND'"></i>
-                            <i class="fa fa-long-arrow-alt-down" v-else></i>
-                            {{message.datetime}}
-                        </b-list-group-item>
-                    </b-list-group>
+                        <template v-slot:cell(direction)="direction">
+                            <i class="fas" :class="getStatusClassByDirection(direction)"></i>
+                        </template>
+
+                    </b-table>
+
                 </b-card>
 
                 <b-modal ref="detail"
@@ -55,6 +60,23 @@
             return {
                 message: {},
                 messages: [],
+                fields: [
+                    {
+                        key: 'direction',
+                        label: '',
+                        tdClass: 'icon-td',
+                        thClass: 'icon-th',
+                    },
+                    {
+                        key: 'datetime',
+                        label: 'Datetime',
+                    },
+                    {
+                        key: 'size',
+                        label: 'Size',
+                        formatter: value => _.isString(value) ? value.length : 0
+                    },
+                ],
                 limit: 25,
                 incomingLength: 0,
                 outcomingLength: 0,
@@ -72,6 +94,9 @@
         },
 
         methods: {
+            getStatusClassByDirection(value) {
+                return value === 'INCOMING' ? 'fa-arrow-circle-down' : 'fa-arrow-circle-up';
+            },
 
             showDetail (message) {
                 this.message = message
@@ -111,7 +136,7 @@
                     }
                 }).then(messages => {
                     this.messages = _.map(messages, message => _.merge(message, {
-                        datetime: formatDateTime(message.time, true)
+                        datetime: formatDateTime(message.time, true),
                     }))
                 }) 
             },

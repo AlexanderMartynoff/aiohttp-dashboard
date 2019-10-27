@@ -60,4 +60,5 @@ class Subcriber:
         self._state.emitter.off(family=id(self))
 
     def _send(self, message):
-        return ensure_future(self._websocket.send_json(message))
+        if not self._websocket.closed:
+            return ensure_future(self._websocket.send_json(message))

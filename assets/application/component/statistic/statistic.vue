@@ -69,7 +69,7 @@
                 </pane>
             </div>
             <div class="col-md-6">
-                <pane hover-variant="warning" title="Messages">
+                <pane hover-variant="warning" title="Messages"  @click="onMessagesClick">
                     <b-row>
                         <b-col md="6">
                             <h2>
@@ -139,6 +139,9 @@
         methods: {
             onRequestClick() {
                 router.push({path: `/requests`})
+            },
+            onMessagesClick() {
+                router.push({path: `/messages`})
             },
 
             formatDateTime(datetime) {
