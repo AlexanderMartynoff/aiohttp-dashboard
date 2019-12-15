@@ -40,6 +40,8 @@ prod_requires = [
     'aiohttp_jinja2',
     'voluptuous',
     'attrs',
+    'tortoise',
+    'python-rapidjson',
 ]
 
 dev_requires = prod_requires + [

@@ -1,5 +1,6 @@
 from . import _setup
 from . import _route
+from . import _database
 
 
 def setup(prefix, application):
@@ -12,4 +13,5 @@ def setup(prefix, application):
         routes,
         static_routes,
         _route.resource_paths,
+        _setup.TinyDBState(),
     )

@@ -122,9 +122,9 @@ async def _request_info(request):
 
     response.update({
         'websocket': {
-            'countincoming': state.count_messages(
+            'countincoming': await state.count_messages(
                 request_id, MsgDirection.INCOMING, time_start, time_stop),
-            'countoutcoming': state.count_messages(
+            'countoutcoming': await state.count_messages(
                 request_id, MsgDirection.OUTBOUND, time_start, time_stop),
         }
     })
