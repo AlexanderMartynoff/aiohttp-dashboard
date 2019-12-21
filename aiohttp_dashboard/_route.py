@@ -134,7 +134,7 @@ async def _request_info(request):
 
 async def _requests(request):
     state = request.app[DEBUGGER_KEY]
-    return json_response(state.find_requests())
+    return json_response(await state.search_requests())
 
 
 async def _requests_info(request):

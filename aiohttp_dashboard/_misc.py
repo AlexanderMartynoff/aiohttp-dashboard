@@ -10,8 +10,8 @@ def timestamp():
     return time() * 1000
 
 
-def to_list(_):
-    return list(_) if isinstance(_, Sequence) else [_]
+def to_list(value):
+    return list(value) if isinstance(value, Sequence) else [value]
 
 
 def is_subset_dict(subset_dict, superset_dict):
@@ -27,27 +27,3 @@ def is_subset_dict(subset_dict, superset_dict):
 class MsgDirection(Enum):
     OUTBOUND = 1
     INCOMING = 2
-
-
-class QueueDict(OrderedDict):
-
-    def __init__(self, maxlen, default=lambda: None, **kwargs):
-        self._maxlen = maxlen
-        self._default = default
-
-        super().__init__(**kwargs)
-
-    def __setitem__(self, key, value):
-        super().__setitem__(key, value)
-
-        while len(self) > self._maxlen:
-            self.popitem(last=False)
-
-    def __contains__(self, key):
-        return super().__contains__(key)
-
-    def __getitem__(self, key):
-        if key not in self:
-            return self._default()
-
-        return super().__getitem__(key)

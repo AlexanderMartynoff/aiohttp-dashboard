@@ -4,11 +4,12 @@ from aiohttp.web import WebSocketResponse, Response, RouteTableDef
 from functools import partial
 from os.path import join, normpath, isabs, dirname, abspath
 import time
+from asyncio import ensure_future
 
 
 from ._state import DEBUGGER_KEY, JINJA_KEY, State
 from ._event_emitter import EventEmitter
-from ._misc import MsgDirection, QueueDict, timestamp
+from ._misc import MsgDirection, timestamp
 
 
 DEBUGGER_PREFIX_KEY = DEBUGGER_KEY + '-prefix'
@@ -21,10 +22,10 @@ def normalize_prefix(prefix):
 
 
 def setup(prefix, application, routes,
-          static_routes, resource_paths, state):
+          static_routes, resource_paths, config):
 
     application[DEBUGGER_PREFIX_KEY] = prefix
-    application[DEBUGGER_KEY] = State()
+    application[DEBUGGER_KEY] = State(config)
 
     _setup_routes(application, routes)
     _setup_static_routes(application, static_routes)
@@ -59,62 +60,10 @@ def _is_sutable_request(request):
     return not request.path.startswith(request.app[DEBUGGER_PREFIX_KEY])
 
 
-def _dump_request(request):
-    _id = id(request)
-    peername, _ = request.transport.get_extra_info('peername')
-
-    return {
-        'id': _id,
-        'scheme': request.scheme,
-        'host': request.host,
-        'path': request.raw_path,
-        'method': request.method,
-        'starttime': timestamp(),
-        'requestheaders': dict(request.headers),
-        'peername': peername,
-    }
-
-
-def _dump_response(request, response):
-    _id = id(request)
-    body = response.text if isinstance(
-        response, Response) else None
-    websocket = True if isinstance(
-        response, WebSocketResponse) else False
-
-    return {
-        'id': _id,
-        'stoptime': timestamp(),
-        'responseheaders': dict(response.headers),
-        'status': response.status,
-        'reason': response.reason,
-        'body': body,
-        'websocket': websocket,
-    }
-
-
-def _dump_request_error(message):
-    return {}
-
-
-def _dump_message(message):
-    return {}
-
-
 async def _on_request(request, handler):
     if _is_sutable_request(request):
-        state = request.app[DEBUGGER_KEY]
-        record = _dump_request(request)
-
-        state.add_request(record)
-
-        state.emitter.fire('http.request', {
-            'request': record['id'],
-        })
-
-        state.emitter.fire('http', {
-            'request': record['id'],
-        })
+        ensure_future(
+            request.app[DEBUGGER_KEY].add_request(request))
 
         try:
             return await handler(request)
@@ -128,18 +77,8 @@ async def _on_request(request, handler):
 
 async def _on_response(request, response):
     if _is_sutable_request(request):
-        state = request.app[DEBUGGER_KEY]
-        record = _dump_response(request, response)
-
-        state.add_response(record)
-
-        state.emitter.fire('http.response', {
-            'request': record['id'],
-        })
-
-        state.emitter.fire('http', {
-            'request': record['id'],
-        })
+        ensure_future(
+            request.app[DEBUGGER_KEY].add_response(request, response))
 
         if isinstance(response, WebSocketResponse):
             _ws_resposne_decorate(request, response)
@@ -147,8 +86,8 @@ async def _on_response(request, response):
 
 def _on_websocket_msg(direction, request, message):
     if _is_sutable_request(request):
-        request.app[DEBUGGER_KEY].add_message(
-            direction, request, message)
+        ensure_future(
+            request.app[DEBUGGER_KEY].add_message(direction, request, message))
 
 
 def _ws_resposne_decorate(request, response):

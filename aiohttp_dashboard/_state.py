@@ -1,121 +1,155 @@
 from datetime import datetime
 from asyncio import ensure_future
-from aiohttp.web import WebSocketResponse, Response
+from aiohttp.web import Request, Response
 from queue import Queue
 from collections import deque, defaultdict
 from functools import partial
 from os.path import join
 from inspect import isfunction
 from time import time
-from typing import Any, Sequence, Tuple, TypeVar, Dict
+from typing import Any, Sequence, Tuple, TypeVar, Dict, List
 import logging
-from tortoise import QuerySet
+from motor.motor_asyncio import AsyncIOMotorClient
+from voluptuous import (
+    Schema,
+    Required,
+    Coerce,
+    Optional,
+    All,
+    ALLOW_EXTRA,
+)
 
 
-from ._misc import MsgDirection, QueueDict, timestamp
+from ._misc import MsgDirection, timestamp
 from ._event_emitter import EventEmitter
-from ._model import Request, RequestError, Message
 
 
 logger = logging.getLogger(__name__)
-
-
-_T = TypeVar('T')
-
-_QueryResult_T = Dict[str, Any]
-_QueryResultCount_T = Tuple[_QueryResult_T, int]
 
 
 DEBUGGER_KEY = __name__
 JINJA_KEY = __name__ + '-jinja'
 
 
+_config_schema = Schema({
+    Optional('mongo', default=dict): Schema({
+        Optional('port', default=27017): int,
+        Optional('host', default='localhost'): str,
+        Optional('database', default='aiohttp_dashboard'): str,
+    }, extra=ALLOW_EXTRA)
+}, extra=ALLOW_EXTRA)
+
+
 class State:
 
-    def __init__(self):
-        self._time_start = time()
-        self._emitter = EventEmitter()
+    def __init__(self, config: Dict[str, Any]):
+        self._config = _config_schema(config)
 
-    async def add_request(self, request):
+        self._emitter = EventEmitter()
+        self._motor = AsyncIOMotorClient('mongodb://{}:{}'.format(
+            self._config['mongo']['host'],
+            self._config['mongo']['port'],
+        ))
+
+        self._database = self._motor[self._config['mongo']['database']]
+
+    async def add_request(self, request: Request) -> int:
         id_ = id(request)
         peername, _ = request.transport.get_extra_info('peername')
 
-        return await Request.create(
-            id=id_,
-            host=request.host,
-            scheme=request.scheme,
-            method=request.method,
-            path=request.raw_path,
-            peername=peername,
-            headers_request=dict(request.headers),
-            time_start=timestamp()
-        )
+        await self._database.requests.insert_one({
+            'id': id_,
+            'host': request.host,
+            'scheme': request.scheme,
+            'method': request.method,
+            'path': request.raw_path,
+            'peername': peername,
+            'headers_request': dict(request.headers),
+            'time_start': timestamp(),
+        })
 
-    async def add_response(self, request, response):
+        self.emitter.fire('http.request', {
+            'request': id_,
+        })
+
+        self.emitter.fire('http', {
+            'request': id_,
+        })
+
+        return id_
+
+    async def add_response(self, request: Request,
+                           response: Response) -> int:
         id_ = id(request)
 
         body = response.text if isinstance(
             response, Response) else None
 
-        await Request.filter(id=id_).update(
-            status=response.status,
-            reason=response.reason,
-            body=body,
-            headers_response=dict(response.headers),
-        )
+        await self._database.requests.update_one({'id': id_}, {
+            '$set': {
+                'status': response.status,
+                'reason': response.reason,
+                'body': body,
+                'headers_response': dict(response.headers),
+            }
+        })
 
-    async def get_request(self, id_):
-        await Request.get(id=id_)
+        self.emitter.fire('http.request', {
+            'request': id_,
+        })
 
-    async def search_requests(self, time_start=None,
-                              time_stop=None, status_code=None,
-                              offset=None, limit=None) -> _QueryResultCount_T:
-        query = Request.filter()
+        self.emitter.fire('http', {
+            'request': id_,
+        })
+
+        return id_
+
+    async def add_message(self, direction: str,
+                          request: Request, message: Dict[Any, Any]) -> int:
+        return
+
+    async def add_request_error(self, request: Request,
+                                exception: Exception) -> int:
+        raise NotImplementedError()
+
+    async def add_message_error(self, request: Request,
+                                exception: Exception) -> int:
+        raise NotImplementedError()
+
+    async def find_request(self, id_) -> Dict[Any, Any]:
+        return await self._requests.find_one({'id': id_})
+
+    async def search_requests(
+        self, time_start=None, time_stop=None,
+        status_code=None, limit=0, skip=0
+    ) -> List[Dict[Any, Any]]:
+        query = {}
 
         if time_start and time_stop:
-            query = Request.filter(
-                time_start__gte=time_start,
-                time_stop__lte=time_stop,
-            )
+            query.update({
+                'time_start': {
+                    '$gte': time_start,
+                    '$lte': time_stop,
+                }
+            })
 
         if status_code:
-            query = query.filter(status_code=status_code)
+            query.update({'status_code': status_code})
 
-        count = await query.count()
+        records = await self._database.requests \
+            .find(query, limit=limit, skip=0, projection={'_id': False}) \
+            .to_list(None)
 
-        if limit:
-            query = query.limit(limit)
-
-        if offset:
-            query = query.offset(offset)
-
-        return await query.values(), count
+        return records
 
     async def count_requests(self, time_start=None,
                              time_stop=None, status_code=None) -> int:
-        query = Request.filter()
-
-        if time_start and time_stop:
-            query = Request.filter(
-                time_start__gte=time_start,
-                time_stop__lte=time_stop,
-            )
-
-        if status_code:
-            query = query.filter(status_code=status_code)
-
-        return await query.count()
-
-    async def add_request_error(self, request, exception):
-        raise NotImplementedError()
+        return 0
 
     async def search_request_error(self, request_id):
         raise NotImplementedError()
 
     async def search_request_errors(self):
-        raise NotImplementedError()
-
-    async def add_message(self, direction, request, message):
         raise NotImplementedError()
 
     async def search_messages(self, id_=None, direction=None,
@@ -128,7 +162,7 @@ class State:
 
     async def status(self):
         return {
-            'time-start': self._time_start
+            'time-start': 0
         }
 
     @property

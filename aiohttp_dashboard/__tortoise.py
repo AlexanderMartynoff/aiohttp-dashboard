@@ -1,42 +1,25 @@
 """
 This example demonstrates most basic operations with single model
 """
-from tortoise import Tortoise, fields, run_async
-from tortoise.models import Model
+from __future__ import annotations
+
+import asyncio
+from motor import motor_asyncio as motor
 
 
-class Event(Model):
-    id = fields.IntField(pk=True)
-    name = fields.TextField()
-    datetime = fields.DatetimeField(null=True)
-    json = fields.JSONField(null=True)
-
-    class Meta:
-        table = "event"
-
-    def __str__(self):
-        return self.name
+loop = asyncio.get_event_loop()
 
 
-async def run():
-    await Tortoise.init(db_url="sqlite://:memory:", modules={"models": ["__main__"]})
-    await Tortoise.generate_schemas()
-
-    event = await Event.create(name="Test", json={1: 2})
-    event_2 = await Event.create(name="Test 2", json={2: 2})
+client = motor.AsyncIOMotorClient('mongodb://localhost:27017')
 
 
-    events = Event.filter()
-    # >>> Updated name
-
-    for _ in await events:
-        print(_.json)
-
-    events = events.filter(id__in=[1])
-
-    for _ in await events.values():
-        print(_)
+database = client.aiohttp_dashboard
 
 
-if __name__ == "__main__":
-    run_async(run())
+async def get():
+    elemetns = await database.requests.find({}).to_list(None)
+
+    print(elemetns)
+
+
+loop.run_until_complete(get())
