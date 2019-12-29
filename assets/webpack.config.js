@@ -1,5 +1,8 @@
 let path = require('path')
 let CopyWebpackPlugin = require('copy-webpack-plugin')
+const VueLoaderPlugin = require('vue-loader/lib/plugin')
+const autoprefixer = require('autoprefixer')
+
 
 let resolve = (dir) => {
     return path.join(__dirname, dir)
@@ -7,6 +10,7 @@ let resolve = (dir) => {
 
 
 module.exports = {
+    mode: 'development',
     entry: {
         application: resolve('./application/application.js')
     },
@@ -25,21 +29,42 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.styl$/i,
-                use: ['style-loader', 'css-loader', 'stylus-loader']
-            },
-            {
                 test: /\.vue$/,
                 loader: 'vue-loader'
             },
             {
                 test: /\.js$/,
-                loader: 'babel-loader',
-                include: [resolve('application')],
-                query: {
-                    presets: 'es2015',
-                    plugins: ['transform-es2015-destructuring', 'transform-object-rest-spread']
-                }
+                exclude: /(node_modules|bower_components)/,
+                use: {
+                    loader: 'babel-loader',
+                    options: {
+                      presets: ['@babel/preset-env']
+                    }
+                },
+            },
+            {
+                test: /\.s[ac]ss$/i,
+                use: [
+                    {
+                        loader: 'style-loader'
+                    },
+                    {
+                        loader: 'css-loader'
+                    },
+                    {
+                        loader: 'postcss-loader',
+                        options: {
+                            plugins: [
+                                autoprefixer({
+                                    browsersist: ['ie >= 8', 'last 4 version']
+                                })
+                            ],
+                        }
+                    },
+                    {
+                        loader:'sass-loader'
+                    }
+                ],
             },
             {
                 test: /\.css$/,
@@ -48,6 +73,7 @@ module.exports = {
         ]
     },
     plugins: [
+        new VueLoaderPlugin(),
         new CopyWebpackPlugin([
             { from: resolve('node_modules/bootstrap/dist/css/bootstrap.css') },
             { from: resolve('node_modules/@fortawesome/fontawesome-free/css'), to: "font-awesome/css", ignore: ["*.map"] },

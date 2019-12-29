@@ -1,0 +1,25 @@
+.datepicker-dropdown {
+    position: absolute;
+    z-index: 10000;
+}
+
+.datepicker-input[readonly] {
+    background-color: transparent !important;
+}
+
+.datepicker-calendar-display-month-btn {
+    min-width: 90px;
+}
+
+.datepicker-calendar-table td,
+.datepicker-calendar-table th {
+    text-align: center;
+}
+
+.datepicker-calendar-table .btn {
+    box-shadow: none;
+}
+
+.datepicker-calendar-table td .btn {
+    padding: 3px;
+}

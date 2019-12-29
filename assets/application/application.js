@@ -28,9 +28,8 @@ import DatepickerModalInput from '@/component/datepicker/datepicker-modal-input'
 import Axios from '@/axios'
 
 
-import "@/style/aiohttp-debugger.styl"
-import "@/style/bootstrap-override.styl"
-import "@/style/datepicker.styl"
+import "@/style/aiohttp-dashboard.scss"
+import "@/style/datepicker.scss"
 
 
 Vue.use(Axios)
