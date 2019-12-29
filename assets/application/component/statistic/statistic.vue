@@ -149,7 +149,7 @@
             },
 
             loadRequestsStatus() {
-                return this.$axios.get(`/api/request/status`, {
+                return this.$axios.get(`/api/status/request`, {
                     params: {
                         datestart: getTime(this.filter.datestart),
                         datestop: getTime(this.filter.datestop),
@@ -160,7 +160,7 @@
             },
 
             loadMessagesStatus() {
-                return this.$axios.get(`/api/request/message/status`, {
+                return this.$axios.get(`/api/status/message`, {
                     params: {
                         datestart: getTime(this.filter.datestart),
                         datestop: getTime(this.filter.datestop),
@@ -172,7 +172,7 @@
             },
 
             loadErrorsStatus() {
-                return this.$axios.get(`/api/error/request/status`, {
+                return this.$axios.get(`/api/status/error/request`, {
                     params: {
                         datestart: getTime(this.filter.datestart),
                         datestop: getTime(this.filter.datestop),
@@ -184,7 +184,7 @@
 
             loadStatus() {
                 return this.$axios.get('/api/status').then(status => {
-                    this.startupTime = fromUnixTime(status.startup)
+                    this.startupTime = fromUnixTime(status['time-start'])
                 }) 
             },
 

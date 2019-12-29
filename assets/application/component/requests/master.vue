@@ -33,7 +33,7 @@
 
 
 <script type="text/javascript">
-    import _ from "lodash"
+    import _ from 'lodash'
     import {EventService} from '@/websocket'
     import {router} from '@/router'
     import {formatDateTime} from '@/misc'
@@ -54,12 +54,12 @@
                     label: 'Method',
                 },
                 {
-                    key: 'starttime',
+                    key: 'time_start',
                     label: 'Begin time',
                     formatter: value => formatDateTime(value),
                 },
                 {
-                    key: 'stoptime',
+                    key: 'time_stop',
                     label: 'End time',
                     formatter: value => formatDateTime(value),
                 },
@@ -85,7 +85,7 @@
 
             loadRequests() {
                 return this.$axios.get('/api/request').then(requests => {
-                    this.requests = requests
+                    this.requests = requests.records
                 }) 
             }
         },
@@ -96,8 +96,6 @@
             this.$event.on('http', message => {
                 this.loadRequests()
             });
-            
-            this.loadRequests()
         },
         
         destroyed: function() {

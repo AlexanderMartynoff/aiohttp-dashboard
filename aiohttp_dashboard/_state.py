@@ -18,7 +18,8 @@ from voluptuous import (
     All,
     ALLOW_EXTRA,
 )
-
+from asyncio import Future
+import asyncio
 
 from ._misc import MsgDirection, timestamp
 from ._event_emitter import EventEmitter
@@ -52,6 +53,7 @@ class State:
         ))
 
         self._database = self._motor[self._config['mongo']['database']]
+        self._time = time()
 
     async def add_request(self, request: Request) -> int:
         id_ = id(request)
@@ -68,11 +70,11 @@ class State:
             'time_start': timestamp(),
         })
 
-        self.emitter.fire('http.request', {
+        self._emitter.fire('http.request', {
             'request': id_,
         })
 
-        self.emitter.fire('http', {
+        self._emitter.fire('http', {
             'request': id_,
         })
 
@@ -90,15 +92,16 @@ class State:
                 'status': response.status,
                 'reason': response.reason,
                 'body': body,
+                'time_stop': timestamp(),
                 'headers_response': dict(response.headers),
             }
         })
 
-        self.emitter.fire('http.request', {
+        self._emitter.fire('http.request', {
             'request': id_,
         })
 
-        self.emitter.fire('http', {
+        self._emitter.fire('http', {
             'request': id_,
         })
 
@@ -117,7 +120,8 @@ class State:
         raise NotImplementedError()
 
     async def find_request(self, id_) -> Dict[Any, Any]:
-        return await self._requests.find_one({'id': id_})
+        return await self._database.requests.find_one(
+            {'id': id_}, projection={'_id': False})
 
     async def search_requests(
         self, time_start=None, time_stop=None,
@@ -142,9 +146,22 @@ class State:
 
         return records
 
-    async def count_requests(self, time_start=None,
-                             time_stop=None, status_code=None) -> int:
-        return 0
+    async def count_requests(self, time_start=None, time_stop=None,
+                             status_code=None) -> int:
+        query = {}
+
+        if time_start and time_stop:
+            query.update({
+                'time_start': {
+                    '$gte': time_start,
+                    '$lte': time_stop,
+                }
+            })
+
+        if status_code:
+            query.update({'status_code': status_code})
+
+        return await self._database.requests.count_documents(query)
 
     async def search_request_error(self, request_id):
         raise NotImplementedError()
@@ -162,7 +179,7 @@ class State:
 
     async def status(self):
         return {
-            'time-start': 0
+            'time-start': self._time
         }
 
     @property

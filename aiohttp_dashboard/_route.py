@@ -92,7 +92,8 @@ async def _event(request):
                 elif message_json['endpoint'] == 'unsubscribe':
                     subscriber.unsubscribe(_unsubscribe_schema(message_json))
             except Exception:
-                logger.exception('An error occurred while processing the message')
+                logger.exception(
+                    'An error occurred while processing the message')
     finally:
         subscriber.cancel()
 
@@ -101,50 +102,50 @@ async def _event(request):
 
 async def _messages(request):
     state = request.app[DEBUGGER_KEY]
-    request_id = _optional_int_coerce(request.query.get('request'))
+    id_ = _optional_int_coerce(request.query.get('request'))
     start = _optional_int_coerce(request.query.get('start'))
     limit = _optional_int_coerce(request.query.get('limit'))
 
-    return json_response(state.find_messages(
-        request_id=request_id,
+    return json_response(await state.find_messages(
+        id_=id_,
         slice_start=start,
         slice_limit=limit,
     ))
 
 
-async def _request_info(request):
-    response = {}
-
+async def _message_status(request):
     state = request.app[DEBUGGER_KEY]
-    request_id = _optional_int_coerce(request.query.get('request', None))
+    id_ = _optional_int_coerce(request.query.get('request', None))
     time_start = _optional_int_coerce(request.query.get('datestart', None))
     time_stop = _optional_int_coerce(request.query.get('datestop', None))
 
-    response.update({
+    response = {
         'websocket': {
-            'countincoming': await state.count_messages(
-                request_id, MsgDirection.INCOMING, time_start, time_stop),
-            'countoutcoming': await state.count_messages(
-                request_id, MsgDirection.OUTBOUND, time_start, time_stop),
+            'countincoming': 0,
+            'countoutcoming': 0,
         }
-    })
+    }
 
     return json_response(response)
 
 
 async def _requests(request):
     state = request.app[DEBUGGER_KEY]
-    return json_response(await state.search_requests())
+    requests = await state.search_requests()
+    return json_response({
+        'records': requests,
+    })
 
 
-async def _requests_info(request):
+async def _requests_status(request):
     state = request.app[DEBUGGER_KEY]
     time_start = _optional_int_coerce(request.query.get('datestart', None))
     time_stop = _optional_int_coerce(request.query.get('datestop', None))
-    requests = state.find_requests(time_start=time_start, time_stop=time_stop)
+    count_requests = await state.count_requests(
+        time_start=time_start, time_stop=time_stop)
 
     return json_response({
-        'count': len(requests)
+        'count': count_requests,
     })
 
 
@@ -152,13 +153,13 @@ async def _request(request):
     state = request.app[DEBUGGER_KEY]
     request_id = _optional_int_coerce(request.match_info['id'])
 
-    return json_response(state.find_request(request_id))
+    return json_response(await state.find_request(request_id))
 
 
 async def _request_error(request):
     state = request.app[DEBUGGER_KEY]
     request_id = _optional_int_coerce(request.match_info['id'])
-    exception = state.find_request_error(request_id)
+    exception = await state.find_request_error(request_id)
 
     if exception is not None:
         return json_response({
@@ -172,34 +173,38 @@ async def _request_error(request):
 
 async def _request_errors(request):
     state = request.app[DEBUGGER_KEY]
-    return json_response(state.find_messages())
+    return json_response(await state.find_messages())
 
 
 async def _request_errors_status(request):
     state = request.app[DEBUGGER_KEY]
     return json_response({
-        'count': len(state.find_request_errors()),
+        'count': 0,
     })
 
 
 async def _status(request):
     state = request.app[DEBUGGER_KEY]
-    return json_response(state.status())
+    return json_response(await state.status())
 
 
 def build_routes(prefix) -> Tuple[List[Tuple], List[Tuple]]:
     routes = [
+        # index.html
         ('GET', prefix, _index),
+        # websocket event bus connector
+        ('GET', prefix + _URL_POSTFIX_EVENT, _event),
+        # get data urls
         ('GET', prefix + '/api/message', _messages),
-        ('GET', prefix + '/api/request/message/status', _request_info),
         ('GET', prefix + '/api/request', _requests),
-        ('GET', prefix + '/api/request/status', _requests_info),
         ('GET', prefix + '/api/request/{id}', _request),
-        ('GET', prefix + '/api/error/request/status', _request_errors_status),
         ('GET', prefix + '/api/error/request', _request_errors),
         ('GET', prefix + '/api/error/request/{id}', _request_error),
+        # get status data urls
         ('GET', prefix + '/api/status', _status),
-        ('GET', prefix + _URL_POSTFIX_EVENT, _event),
+        ('GET', prefix + '/api/status/message', _message_status),
+        ('GET', prefix + '/api/status/request', _requests_status),
+        ('GET', prefix + '/api/status/error/request', _request_errors_status),
     ]
 
     static_routes = [
