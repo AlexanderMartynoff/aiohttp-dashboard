@@ -3,6 +3,51 @@
         <div class="row mt-3 mb-3">
             <div class="col-md-12">
                 <b-card class="shadow" header="Requests">
+                    <datepicker-modal name="datepicker-datestart"></datepicker-modal>
+                    <datepicker-modal name="datepicker-datestop"></datepicker-modal>
+
+
+                    <b-form class="mb-3">
+                        <b-row>
+                            <b-col md="6">
+                                <b-input-group>
+                                    <div class="input-group-prepend">
+                                        <button class="btn btn-primary" type="button">
+                                            <i class="far fa-calendar-alt"></i>
+                                        </button>
+                                    </div>
+                                    <datepicker-modal-input name="datestart"
+                                                            datepicker-modal="datepicker-datestart"
+                                                            v-model="filter.datestart">
+                                    </datepicker-modal-input>
+                                    <datepicker-modal-input name="datestop"
+                                                            datepicker-modal="datepicker-datestop"
+                                                            v-model="filter.datestop">
+                                    </datepicker-modal-input>
+                                </b-input-group>
+                            </b-col>
+                            <b-col md="3" class="mt-3 mt-md-0">
+                                <b-input-group>
+                                    <b-form-input v-model="filter.code" placeholder="HTTP code"/>
+                                    <template #append>
+                                        <b-dropdown text="Code" variant="success">
+                                            <b-dropdown-item>404</b-dropdown-item>
+                                            <b-dropdown-item>50*</b-dropdown-item>
+                                        </b-dropdown>
+                                    </template>
+                                </b-input-group>
+                            </b-col>
+                            <b-col md="3" class="mt-3 mt-md-0">
+                                <b-form-select v-model="filter.method">
+                                    <option value="get">GET</option>
+                                    <option value="post">POST</option>
+                                    <option value="post">HEAD</option>
+                                    <option value="post">DELETE</option>
+                                    <option value="post">PUT</option>
+                                </b-form-select>
+                            </b-col>
+                        </b-row>
+                    </b-form>
                     <b-table @row-clicked="(item, index) => details(item.id, index)" 
                              :responsive="true"
                              :hover="true"
@@ -24,10 +69,6 @@
                 </b-card>
             </div>
         </div>
-
-        <bar v-if="requests.length" sticky="bottom" align="center" :card="false">            
-            <b-pagination :limit="3" :per-page="50" v-model="page" align="center"/>
-        </bar>
     </div>
 </template>
 
@@ -40,6 +81,10 @@
 
     export default {
         data: () => ({
+            filter: {
+                datestart: new Date(),
+                datestop: new Date(),
+            },
             fields: [
                 {
                     key: 'status',
@@ -66,7 +111,6 @@
             ],
 
             requests: [],
-            page: 1,
         }),
         methods: {
             details: function(id) {
@@ -84,7 +128,12 @@
             },
 
             loadRequests() {
-                return this.$axios.get('/api/request').then(requests => {
+                return this.$axios.get('/api/request', {
+                    params: {
+                        limit: 25,
+                        skip: 0,
+                    },
+                }).then(requests => {
                     this.requests = requests.records
                 }) 
             }

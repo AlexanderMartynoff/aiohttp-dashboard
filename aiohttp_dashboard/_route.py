@@ -25,9 +25,9 @@ _PATH_STATIC = Path(__file__).resolve().parent / 'static'
 _int_coerce = Coerce(int)
 
 
-def _optional_int_coerce(value):
+def _optional_int_coerce(value, default=None):
     if value is None:
-        return
+        return default
 
     return _int_coerce(value)
 
@@ -103,13 +103,13 @@ async def _event(request):
 async def _messages(request):
     state = request.app[DEBUGGER_KEY]
     id_ = _optional_int_coerce(request.query.get('request'))
-    start = _optional_int_coerce(request.query.get('start'))
+    skip = _optional_int_coerce(request.query.get('skip'), 0)
     limit = _optional_int_coerce(request.query.get('limit'))
 
-    return json_response(await state.find_messages(
+    return json_response(await state.search_messages(
         id_=id_,
-        slice_start=start,
-        slice_limit=limit,
+        skip=skip,
+        limit=limit,
     ))
 
 
@@ -131,7 +131,11 @@ async def _message_status(request):
 
 async def _requests(request):
     state = request.app[DEBUGGER_KEY]
-    requests = await state.search_requests()
+    limit = _optional_int_coerce(request.query.get('limit'))
+    skip = _optional_int_coerce(request.query.get('skip'), 0)
+
+    requests = await state.search_requests(limit=limit, skip=skip)
+
     return json_response({
         'records': requests,
     })
@@ -159,7 +163,7 @@ async def _request(request):
 async def _request_error(request):
     state = request.app[DEBUGGER_KEY]
     request_id = _optional_int_coerce(request.match_info['id'])
-    exception = await state.find_request_error(request_id)
+    exception = await state.search_request_error(request_id)
 
     if exception is not None:
         return json_response({
@@ -195,9 +199,11 @@ def build_routes(prefix) -> Tuple[List[Tuple], List[Tuple]]:
         # websocket event bus connector
         ('GET', prefix + _URL_POSTFIX_EVENT, _event),
         # get data urls
-        ('GET', prefix + '/api/message', _messages),
         ('GET', prefix + '/api/request', _requests),
         ('GET', prefix + '/api/request/{id}', _request),
+
+        ('GET', prefix + '/api/message', _messages),
+
         ('GET', prefix + '/api/error/request', _request_errors),
         ('GET', prefix + '/api/error/request/{id}', _request_error),
         # get status data urls

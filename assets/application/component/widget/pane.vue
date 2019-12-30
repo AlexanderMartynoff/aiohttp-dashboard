@@ -26,6 +26,10 @@ export default {
             type: String,
             default: 'default',
         },
+        pointer: {
+            type: Boolean,
+            default: true,
+        }
     },
     data () {
         const theme = this.computeTheme(this.variant)
@@ -41,7 +45,7 @@ export default {
         classes() {
             let classes = ['pane', 'shadow', 'h-100']
 
-            if (!_.isEqual(this.hoverVariant, this.variant)) {
+            if (this.pointer) {
                 classes.push('pointer')
             }
             

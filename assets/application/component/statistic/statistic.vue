@@ -6,7 +6,7 @@
 
         <div class="row mt-3">
             <div class="col-md-6">
-                <pane hover-variant="warning" title="Status">
+                <pane title="Status">
                     <h2>
                         <code>{{formatDateTime(startupTime)}}</code>
                         <span class="d-block text-small">application start time</span>
@@ -50,7 +50,7 @@
         <div class="row mt-3 mb-3">
             <div class="col-md-6 mb-3 mb-md-0">
 
-                <pane hover-variant="warning" title="Requests" @click="onRequestClick">
+                <pane title="Requests" @click="onRequestClick">
                     
                     <b-row>
                         <b-col md="6">
@@ -69,7 +69,7 @@
                 </pane>
             </div>
             <div class="col-md-6">
-                <pane hover-variant="warning" title="Messages"  @click="onMessagesClick">
+                <pane title="Messages" @click="onMessagesClick">
                     <b-row>
                         <b-col md="6">
                             <h2>
@@ -90,7 +90,7 @@
 
         <div class="row mt-3">
             <div class="col-md-6">
-                <pane hover-variant="warning" title="Exceptions">
+                <pane title="Exceptions">
                     <h2>
                         <code>{{requestsErrorCount}}</code>
                         <span class="d-block text-small">total number</span>

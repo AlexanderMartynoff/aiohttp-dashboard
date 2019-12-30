@@ -75,7 +75,6 @@ module.exports = {
     plugins: [
         new VueLoaderPlugin(),
         new CopyWebpackPlugin([
-            { from: resolve('node_modules/bootstrap/dist/css/bootstrap.css') },
             { from: resolve('node_modules/@fortawesome/fontawesome-free/css'), to: "font-awesome/css", ignore: ["*.map"] },
             { from: resolve('node_modules/@fortawesome/fontawesome-free/webfonts'), to: "font-awesome/webfonts" },
         ])

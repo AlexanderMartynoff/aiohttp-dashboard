@@ -1,15 +1,5 @@
 <template>
     <div class="container-fluid my-3">
-        <bar v-if="wsLength" sticky="top">
-            <b-nav>
-                <b-nav-item active @click="openMessages">
-                    <i class="fas fa-arrows-alt-v"></i> {{wsLength}}
-                    <i class="fa fa-long-arrow-alt-down"></i> {{wsIncomingLength}}
-                    <i class="fa fa-long-arrow-alt-up" aria-hidden="true"></i> {{wsOutcomingLength}}
-                </b-nav-item>
-            </b-nav>
-        </bar>
-
         <div class="row mt-3" v-if="record">
             <div class="col-md-6">
                 <b-card class="shadow h-100" title="Info">
@@ -59,7 +49,7 @@
                             </template>
 
                             <b-list-group>
-                                <b-list-group-item button v-for="value, key in record.requestheaders">
+                                <b-list-group-item button v-for="value, key in record.headers_request" :key="key">
                                     <span>{{key}}:</span> <code>{{truncate(value)}}</code>
                                 </b-list-group-item>
                             </b-list-group>
@@ -72,7 +62,7 @@
                             </template>
 
                             <ul class="list-group">
-                                <li class="list-group-item" v-for="(value, key) in record.responseheaders">
+                                <li class="list-group-item" v-for="(value, key) in record.headers_response">
                                     <span>{{key}}:</span> <code>{{truncate(value)}}</code>
                                 </li>
                             </ul>
@@ -146,7 +136,7 @@
             },
 
             loadMessagesInfo() {
-                return this.$axios.get(`/api/request/message/status`, {
+                return this.$axios.get(`/api/status/message`, {
                     params: {
                         request: this.id,
                     }

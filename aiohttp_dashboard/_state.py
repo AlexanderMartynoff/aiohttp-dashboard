@@ -1,3 +1,4 @@
+from enum import Enum
 from datetime import datetime
 from asyncio import ensure_future
 from aiohttp.web import Request, Response
@@ -18,8 +19,6 @@ from voluptuous import (
     All,
     ALLOW_EXTRA,
 )
-from asyncio import Future
-import asyncio
 
 from ._misc import MsgDirection, timestamp
 from ._event_emitter import EventEmitter
@@ -32,7 +31,7 @@ DEBUGGER_KEY = __name__
 JINJA_KEY = __name__ + '-jinja'
 
 
-_config_schema = Schema({
+_schema_config = Schema({
     Optional('mongo', default=dict): Schema({
         Optional('port', default=27017): int,
         Optional('host', default='localhost'): str,
@@ -42,9 +41,11 @@ _config_schema = Schema({
 
 
 class State:
+    """ Summary CRUD API for application state.
+    """
 
     def __init__(self, config: Dict[str, Any]):
-        self._config = _config_schema(config)
+        self._config = _schema_config(config)
 
         self._emitter = EventEmitter()
         self._motor = AsyncIOMotorClient('mongodb://{}:{}'.format(
@@ -107,17 +108,23 @@ class State:
 
         return id_
 
-    async def add_message(self, direction: str,
+    async def add_message(self, direction: MsgDirection,
                           request: Request, message: Dict[Any, Any]) -> int:
-        return
+
+        await self._database.messages.insert_one({
+            'id': id(message),
+            'request_id': id(request),
+            'direction': direction.name,
+            'message': message,
+        })
 
     async def add_request_error(self, request: Request,
                                 exception: Exception) -> int:
-        raise NotImplementedError()
+        ...
 
     async def add_message_error(self, request: Request,
                                 exception: Exception) -> int:
-        raise NotImplementedError()
+        ...
 
     async def find_request(self, id_) -> Dict[Any, Any]:
         return await self._database.requests.find_one(
@@ -127,6 +134,10 @@ class State:
         self, time_start=None, time_stop=None,
         status_code=None, limit=0, skip=0
     ) -> List[Dict[Any, Any]]:
+
+        print(limit)
+        print(skip)
+
         query = {}
 
         if time_start and time_stop:
@@ -141,7 +152,7 @@ class State:
             query.update({'status_code': status_code})
 
         records = await self._database.requests \
-            .find(query, limit=limit, skip=0, projection={'_id': False}) \
+            .find(query, limit=limit, skip=skip, projection={'_id': False}) \
             .to_list(None)
 
         return records
@@ -164,18 +175,21 @@ class State:
         return await self._database.requests.count_documents(query)
 
     async def search_request_error(self, request_id):
-        raise NotImplementedError()
+        ...
 
     async def search_request_errors(self):
-        raise NotImplementedError()
+        ...
 
     async def search_messages(self, id_=None, direction=None,
                               time_start=None, time_stop=None,
-                              slice_start=None, slice_limit=None):
-        raise NotImplementedError()
+                              limit=0, skip=0):
+
+        return await self._database.messages \
+            .find({}, limit=limit, skip=skip, projection={'_id': False}) \
+            .to_list(None)
 
     async def count_messages(self):
-        raise NotImplementedError()
+        ...
 
     async def status(self):
         return {

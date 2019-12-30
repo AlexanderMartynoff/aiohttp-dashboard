@@ -1,16 +1,6 @@
 <template>
     <div class="container-fluid my-3">
 
-        <bar sticky="top">
-            <b-nav>
-                <b-nav-item active>
-                    <i class="fas fa-arrows-alt-v"></i> {{bothLength}}
-                    <i class="fa fa-long-arrow-alt-down"></i> {{incomingLength}}
-                    <i class="fa fa-long-arrow-alt-up" aria-hidden="true"></i> {{outcomingLength}}
-                </b-nav-item>
-            </b-nav>
-        </bar>
-
         <div class="row mt-3 mb-3">
             <div class="col-md-12">
                 <b-card class="shadow h-100" title="Messages">
@@ -21,10 +11,11 @@
                              :show-empty="true"
                              empty-html="Records not found"
                              class="table-pointer"
+                             @row-clicked="showDetail"
                              striped>
 
                         <template v-slot:cell(direction)="direction">
-                            <i class="fas" :class="getStatusClassByDirection(direction)"></i>
+                            <i class="fas" :class="getStatusClassByDirection(direction.value)"></i>
                         </template>
 
                     </b-table>
@@ -38,14 +29,10 @@
                          @hidden="onDetailHidden"
                          hide-footer
                          centered>
-                    <pre><code>{{format(message.body)}}</code></pre>
+                    <pre><code>{{format(message.message)}}</code></pre>
                 </b-modal>
             </div>
         </div>
-
-        <bar v-if="messages" sticky="bottom" align="center" :card="false">            
-            <b-pagination :limit="3" :per-page="50" v-model="page" align="center"/>
-        </bar>
     </div>
 </template>
 
@@ -71,16 +58,9 @@
                         key: 'datetime',
                         label: 'Datetime',
                     },
-                    {
-                        key: 'size',
-                        label: 'Size',
-                        formatter: value => _.isString(value) ? value.length : 0
-                    },
                 ],
-                limit: 25,
                 incomingLength: 0,
                 outcomingLength: 0,
-                page: 1,
             }
         },
         props: {
@@ -95,7 +75,8 @@
 
         methods: {
             getStatusClassByDirection(value) {
-                return value === 'INCOMING' ? 'fa-arrow-circle-down' : 'fa-arrow-circle-up';
+                return value === 'INCOMING' ? 'fa-arrow-circle-down' :
+                    'fa-arrow-circle-up';
             },
 
             showDetail (message) {
@@ -142,7 +123,7 @@
             },
 
             loadMessagesInfo() {
-                return this.$axios.get(`/api/request/message/status`, {
+                return this.$axios.get(`/api/status/message`, {
                     params: {
                         request: this.id,
                     }
