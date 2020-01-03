@@ -8,17 +8,10 @@ from functools import partial
 from os.path import join
 from inspect import isfunction
 from time import time
-from typing import Any, Sequence, Tuple, TypeVar, Dict, List
+from typing import Any, Sequence, Tuple, TypeVar, Dict, List, Optional
 import logging
 from motor.motor_asyncio import AsyncIOMotorClient
-from voluptuous import (
-    Schema,
-    Required,
-    Coerce,
-    Optional,
-    All,
-    ALLOW_EXTRA,
-)
+import voluptuous
 
 from ._misc import MsgDirection, timestamp
 from ._event_emitter import EventEmitter
@@ -31,21 +24,21 @@ DEBUGGER_KEY = __name__
 JINJA_KEY = __name__ + '-jinja'
 
 
-_schema_config = Schema({
-    Optional('mongo', default=dict): Schema({
-        Optional('port', default=27017): int,
-        Optional('host', default='localhost'): str,
-        Optional('database', default='aiohttp_dashboard'): str,
-    }, extra=ALLOW_EXTRA)
-}, extra=ALLOW_EXTRA)
+_schema_config = voluptuous.Schema({
+    voluptuous.Optional('mongo', default=dict): voluptuous.Schema({
+        voluptuous.Optional('port', default=27017): int,
+        voluptuous.Optional('host', default='localhost'): str,
+        voluptuous.Optional('database', default='aiohttp_dashboard'): str,
+    }, extra=voluptuous.ALLOW_EXTRA)
+}, extra=voluptuous.ALLOW_EXTRA)
 
 
 class State:
-    """ Summary CRUD API for application state.
+    """ Summary CRUD API for holding application state.
     """
 
-    def __init__(self, config: Dict[str, Any]):
-        self._config = _schema_config(config)
+    def __init__(self, config: Optional[dict]):
+        self._config: dict = _schema_config(config or {})
 
         self._emitter = EventEmitter()
         self._motor = AsyncIOMotorClient('mongodb://{}:{}'.format(
@@ -134,10 +127,6 @@ class State:
         self, time_start=None, time_stop=None,
         status_code=None, limit=0, skip=0
     ) -> List[Dict[Any, Any]]:
-
-        print(limit)
-        print(skip)
-
         query = {}
 
         if time_start and time_stop:

@@ -63,7 +63,7 @@ def _is_sutable_request(request):
 async def _on_request(request, handler):
     if _is_sutable_request(request):
         state = request.app[DEBUGGER_KEY]
-        request['_persistent_future'] = ensure_future(
+        request['_dashboard_add_future'] = ensure_future(
             state.add_request(request))
 
         try:
@@ -76,10 +76,8 @@ async def _on_request(request, handler):
 
 
 async def _add_response(request, response):
-    try:
-        await asyncio.wait_for(request['_persistent_future'], timeout=30)
-    except (asyncio.TimeoutError, KeyError):
-        return
+    await asyncio.wait_for(
+        request['_dashboard_add_future'], timeout=30)
 
     await request.app[DEBUGGER_KEY].add_response(
         request, response)
@@ -102,7 +100,8 @@ def _on_websocket_msg(direction, request, message):
 
 def _ws_resposne_decorate(request, response):
     """ Apply monkey patching for some methods of `response` object
-        for call `_on_websocket_msg` hook when message will received.  
+        for call `_on_websocket_msg` hook when message will received
+        or sended.
     """
     async def ping_decorator(message):
         _on_websocket_msg(MsgDirection.OUTBOUND, request, message)

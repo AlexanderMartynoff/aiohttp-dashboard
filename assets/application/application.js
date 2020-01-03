@@ -27,7 +27,7 @@ import DatepickerModalInput from '@/component/datepicker/datepicker-modal-input'
 
 import Axios from '@/axios'
 
-import "@/style/_index.scss"
+import "@/style/index.scss"
 import "@/style/_datepicker.scss"
 
 

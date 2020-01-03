@@ -3,7 +3,7 @@
 
         <div class="row mt-3 mb-3">
             <div class="col-md-12">
-                <b-card class="shadow h-100" title="Messages">
+                <b-card class="shadow h-100" header="Messages">
                     <b-table :responsive="true"
                              :hover="true"
                              :items="messages"

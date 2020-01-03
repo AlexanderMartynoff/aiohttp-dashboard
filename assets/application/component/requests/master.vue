@@ -39,6 +39,7 @@
                             </b-col>
                             <b-col md="3" class="mt-3 mt-md-0">
                                 <b-form-select v-model="filter.method">
+                                    <option :value="null"></option>
                                     <option value="get">GET</option>
                                     <option value="post">POST</option>
                                     <option value="post">HEAD</option>
@@ -84,6 +85,8 @@
             filter: {
                 datestart: new Date(),
                 datestop: new Date(),
+                method: null,
+                code: null,
             },
             fields: [
                 {
