@@ -26,6 +26,8 @@ logger = logging.getLogger(__name__)
 DEBUGGER_KEY = __name__
 JINJA_KEY = __name__ + '-jinja'
 
+_Documents = List[Dict[Any, Any]]
+_Query = Dict[str, Any]
 
 _schema_config = voluptuous.Schema({
     voluptuous.Optional('mongo', default=dict): voluptuous.Schema({
@@ -123,46 +125,51 @@ class State:
         return await self._database.requests.find_one(
             {'id': id_}, projection={'_id': False})
 
-    async def search_requests(
-        self, time_start=None, time_stop=None,
-        status_code=None, limit=0, skip=0
-    ) -> List[Dict[Any, Any]]:
-        query = {}
+    async def search_requests(self, query: _Query) -> _Documents:
+        criteria = {}
 
-        if time_start and time_stop:
-            query.update({
+        if 'time_start' in query and 'time_stop' in query:
+            criteria.update({
                 'time_start': {
-                    '$gte': time_start,
-                    '$lte': time_stop,
+                    '$gte': query['time_start'],
+                    '$lte': query['time_stop'],
                 }
             })
 
-        if status_code:
-            query.update({'status_code': status_code})
+        if 'status_code' in query:
+            criteria.update({
+                'status_code': query['status_code']
+            })
 
         records = await self._database.requests \
-            .find(query, limit=limit, skip=skip, projection={'_id': False}) \
+            .find(
+                criteria,
+                limit=query.get('limit', 100),
+                skip=query.get('skip', 0),
+                projection={'_id': False}
+            ) \
             .sort('time_start', DESCENDING) \
             .to_list(None)
 
         return records
 
-    async def count_requests(self, time_start=None, time_stop=None,
-                             status_code=None) -> int:
-        query = {}
+    async def count_requests(self, query: _Query) -> int:
+        criteria = {}
 
-        if time_start and time_stop:
-            query.update({
+        if 'time_start' in query and 'time_stop' in query:
+            criteria.update({
                 'time_start': {
-                    '$gte': time_start,
-                    '$lte': time_stop,
+                    '$gte': query['time_start'],
+                    '$lte': query['time_stop'],
                 }
             })
 
-        if status_code:
-            query.update({'status_code': status_code})
+        if 'status_code' in query:
+            criteria.update({
+                'status_code': query['status_code']
+            })
 
-        return await self._database.requests.count_documents(query)
+        return await self._database.requests.count_documents(criteria)
 
     async def add_request_error(self, request: Request,
                                 exception: Exception) -> int:
@@ -181,17 +188,33 @@ class State:
         return await self._database.request_errors \
             .find_one({'request_id': request_id}, projection={'_id': False})
 
-    async def search_request_errors(self):
-        ...
+    async def search_messages(self, query: _Query) -> _Documents:
+        criteria = {}
 
-    async def search_messages(self, id_=None, direction=None,
-                              time_start=None, time_stop=None,
-                              limit=0, skip=0):
+        if query.get('request_id') is not None:
+            criteria.update({
+                'request_id': query['request_id']
+            })
 
-        return await self._database.messages \
-            .find({}, limit=limit, skip=skip, projection={'_id': False}) \
+        if 'time_start' in query and 'time_stop' in query:
+            criteria.update({
+                'time': {
+                    '$gte': query['time_start'],
+                    '$lte': query['time_stop'],
+                }
+            })
+
+        records = await self._database.messages \
+            .find(
+                criteria,
+                limit=query.get('limit', 100),
+                skip=query.get('skip', 0),
+                projection={'_id': False}
+            ) \
             .sort('time', DESCENDING) \
             .to_list(None)
+
+        return records
 
     async def count_messages(self):
         ...
@@ -204,3 +227,15 @@ class State:
     @property
     def emitter(self):
         return self._emitter
+
+
+class RequestAPI:
+    ...
+
+
+class MessageAPI:
+    ...
+
+
+class ErrorAPI:
+    ...

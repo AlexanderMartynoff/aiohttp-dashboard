@@ -24,7 +24,7 @@ _PATH_STATIC = Path(__file__).resolve().parent / 'static'
 _int_coerce = Coerce(int)
 
 
-def _optional_int_coerce(value, default=None):
+def _to_int(value, default=None):
     if value is None:
         return default
 
@@ -50,6 +50,11 @@ _unsubscribe_schema = Schema({
         Required('id'): str,
     })
 })
+
+_query_schema = Schema({
+    Optional('skiip'): Coerce(int),
+    Optional('limit'): Coerce(int),
+}, extra=ALLOW_EXTRA)
 
 
 def _build_event_endpoint(request):
@@ -101,22 +106,22 @@ async def _event(request):
 
 async def _messages(request):
     state = request.app[DEBUGGER_KEY]
-    id_ = _optional_int_coerce(request.query.get('request'))
-    skip = _optional_int_coerce(request.query.get('skip'), 0)
-    limit = _optional_int_coerce(request.query.get('limit'))
 
-    return json_response(await state.search_messages(
-        id_=id_,
-        skip=skip,
-        limit=limit,
-    ))
+    messages = await state.search_messages({
+        **request.query,
+        'request_id': _to_int(request.query.get('request')),
+        'skip': _to_int(request.query.get('skip'), 0),
+        'limit': _to_int(request.query.get('limit'), 0),
+    })
+
+    return json_response(messages)
 
 
 async def _message_status(request):
     state = request.app[DEBUGGER_KEY]
-    id_ = _optional_int_coerce(request.query.get('request', None))
-    time_start = _optional_int_coerce(request.query.get('datestart', None))
-    time_stop = _optional_int_coerce(request.query.get('datestop', None))
+    id_ = _to_int(request.query.get('request', None))
+    time_start = _to_int(request.query.get('datestart', None))
+    time_stop = _to_int(request.query.get('datestop', None))
 
     response = {
         'websocket': {
@@ -130,10 +135,12 @@ async def _message_status(request):
 
 async def _requests(request):
     state = request.app[DEBUGGER_KEY]
-    limit = _optional_int_coerce(request.query.get('limit'))
-    skip = _optional_int_coerce(request.query.get('skip'), 0)
 
-    requests = await state.search_requests(limit=limit, skip=skip)
+    requests = await state.search_requests({
+        **request.query,
+        'skip': _to_int(request.query.get('skip'), 0),
+        'limit': _to_int(request.query.get('limit'), 0),
+    })
 
     return json_response({
         'records': requests,
@@ -142,10 +149,12 @@ async def _requests(request):
 
 async def _requests_status(request):
     state = request.app[DEBUGGER_KEY]
-    time_start = _optional_int_coerce(request.query.get('datestart', None))
-    time_stop = _optional_int_coerce(request.query.get('datestop', None))
-    count_requests = await state.count_requests(
-        time_start=time_start, time_stop=time_stop)
+
+    count_requests = await state.count_requests({
+        **request.query,
+        'time_start': _to_int(request.query.get('datestart')),
+        'time_stop': _to_int(request.query.get('datestop')),
+    })
 
     return json_response({
         'count': count_requests,
@@ -154,14 +163,14 @@ async def _requests_status(request):
 
 async def _request(request):
     state = request.app[DEBUGGER_KEY]
-    request_id = _optional_int_coerce(request.match_info['id'])
+    request_id = _to_int(request.match_info['id'])
 
     return json_response(await state.find_request(request_id))
 
 
 async def _request_error(request):
     state = request.app[DEBUGGER_KEY]
-    request_id = _optional_int_coerce(request.match_info['id'])
+    request_id = _to_int(request.match_info['id'])
 
     return json_response(await state.find_request_error(request_id))
 
