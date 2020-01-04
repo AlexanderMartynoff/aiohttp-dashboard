@@ -8,7 +8,6 @@ from voluptuous import Schema, Required, Coerce, Optional, All, ALLOW_EXTRA
 from voluptuous.error import CoerceInvalid
 from yarl import URL
 from pathlib import Path
-import traceback
 
 
 from ._subscriber import Subcriber
