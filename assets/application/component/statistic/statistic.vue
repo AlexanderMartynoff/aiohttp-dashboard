@@ -248,7 +248,7 @@
 
         destroyed() {
             this.stopInterval()
+            this.$event.off()
         },
-
     }
 </script>

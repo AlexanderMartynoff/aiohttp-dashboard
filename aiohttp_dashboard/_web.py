@@ -8,7 +8,7 @@ from voluptuous import Schema, Required, Coerce, Optional, All, ALLOW_EXTRA
 from voluptuous.error import CoerceInvalid
 from yarl import URL
 from pathlib import Path
-
+from json import loads
 
 from ._subscriber import Subcriber
 from ._state import DEBUGGER_KEY, JINJA_KEY
@@ -50,6 +50,14 @@ _unsubscribe_schema = Schema({
         Required('id'): str,
     })
 })
+
+_criteria_schema = Schema({
+    Optional('statuscode'): Coerce(int),
+    Optional('timestart'): Coerce(int),
+    Optional('timestop'): Coerce(int),
+    Optional('skip'): Coerce(int),
+    Optional('limit'): Coerce(int),
+}, extra=ALLOW_EXTRA)
 
 
 def _build_event_endpoint(request):
@@ -130,42 +138,19 @@ async def _message_status(request):
 
 async def _requests(request):
     state = request.app[DEBUGGER_KEY]
-
-    query = {}
-
-    if 'statuscode' in request.query:
-        query['statuscode'] = _int_coerce(request.query['statuscode'])
-
-    if 'timestart' in request.query:
-        query['timestart'] = _int_coerce(request.query['timestart'])
-
-    if 'timestop' in request.query:
-        query['timestop'] = _int_coerce(request.query['timestop'])
-
-    if 'skip' in request.query:
-        query['skip'] = _int_coerce(request.query['skip'])
-
-    if 'limit' in request.query:
-        query['limit'] = _int_coerce(request.query['limit'])
-
-    requests = await state.api_request.find(query)
+    criteria = _criteria_schema({**request.query})
 
     return json_response({
-        'records': requests,
+        'records': await state.api_request.find(criteria),
     })
 
 
 async def _requests_status(request):
     state = request.app[DEBUGGER_KEY]
-
-    count = await state.api_request.count({
-        **request.query,
-        'timestart': _to_int(request.query.get('timestart')),
-        'timestop': _to_int(request.query.get('timestop')),
-    })
+    criteria = _criteria_schema({**request.query})
 
     return json_response({
-        'count': count,
+        'count': await state.api_request.count(criteria),
     })
 
 
