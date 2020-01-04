@@ -104,7 +104,7 @@ async def _messages(request):
 
     messages = await state.api_message.find({
         **request.query,
-        'request_id': _to_int(request.query.get('request')),
+        'requestid': _to_int(request.query.get('request')),
         'skip': _to_int(request.query.get('skip'), 0),
         'limit': _to_int(request.query.get('limit'), 0),
     })
@@ -131,11 +131,24 @@ async def _message_status(request):
 async def _requests(request):
     state = request.app[DEBUGGER_KEY]
 
-    requests = await state.api_request.find({
-        **request.query,
-        'skip': _to_int(request.query.get('skip'), 0),
-        'limit': _to_int(request.query.get('limit'), 0),
-    })
+    query = {}
+
+    if 'statuscode' in request.query:
+        query['statuscode'] = _int_coerce(request.query['statuscode'])
+
+    if 'timestart' in request.query:
+        query['timestart'] = _int_coerce(request.query['timestart'])
+
+    if 'timestop' in request.query:
+        query['timestop'] = _int_coerce(request.query['timestop'])
+
+    if 'skip' in request.query:
+        query['skip'] = _int_coerce(request.query['skip'])
+
+    if 'limit' in request.query:
+        query['limit'] = _int_coerce(request.query['limit'])
+
+    requests = await state.api_request.find(query)
 
     return json_response({
         'records': requests,
@@ -147,8 +160,8 @@ async def _requests_status(request):
 
     count = await state.api_request.count({
         **request.query,
-        'time_start': _to_int(request.query.get('datestart')),
-        'time_stop': _to_int(request.query.get('datestop')),
+        'timestart': _to_int(request.query.get('timestart')),
+        'timestop': _to_int(request.query.get('timestop')),
     })
 
     return json_response({

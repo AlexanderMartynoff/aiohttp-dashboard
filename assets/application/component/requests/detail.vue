@@ -49,7 +49,7 @@
                             </template>
 
                             <b-list-group>
-                                <b-list-group-item button v-for="value, key in record.headers_request" :key="key">
+                                <b-list-group-item button v-for="value, key in record.headersrequest" :key="key">
                                     <span>{{key}}:</span> <code>{{truncate(value)}}</code>
                                 </b-list-group-item>
                             </b-list-group>
@@ -62,7 +62,7 @@
                             </template>
 
                             <ul class="list-group">
-                                <li class="list-group-item" v-for="(value, key) in record.headers_response">
+                                <li class="list-group-item" v-for="(value, key) in record.headersresponse">
                                     <span>{{key}}:</span> <code>{{truncate(value)}}</code>
                                 </li>
                             </ul>

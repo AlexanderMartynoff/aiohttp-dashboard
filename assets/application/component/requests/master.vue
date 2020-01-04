@@ -17,11 +17,11 @@
                                     </div>
                                     <datepicker-modal-input name="datestart"
                                                             datepicker-modal="datepicker-datestart"
-                                                            v-model="filter.datestart">
+                                                            v-model="filter.timestart">
                                     </datepicker-modal-input>
                                     <datepicker-modal-input name="datestop"
                                                             datepicker-modal="datepicker-datestop"
-                                                            v-model="filter.datestop">
+                                                            v-model="filter.timestop">
                                     </datepicker-modal-input>
                                 </b-input-group>
                             </b-col>
@@ -39,15 +39,15 @@
                             <b-col md="3" class="mt-3 mt-md-0">
                                 <b-form-select v-model="filter.method">
                                     <option :value="null"></option>
-                                    <option value="get">GET</option>
-                                    <option value="post">POST</option>
-                                    <option value="post">HEAD</option>
-                                    <option value="post">DELETE</option>
-                                    <option value="post">PUT</option>
+                                    <option value="GET">GET</option>
+                                    <option value="POST">POST</option>
+                                    <option value="HEAD">HEAD</option>
+                                    <option value="DELETE">DELETE</option>
+                                    <option value="PUT">PUT</option>
                                 </b-form-select>
                             </b-col>
                             <b-col md="1" class="mt-3 mt-md-0">
-                                <b-button variant="primary" class="justify-btn">
+                                <b-button variant="primary" class="justify-btn" @click="loadRequests">
                                     <i class="fas fa-search"></i>
                                 </b-button>
                             </b-col>
@@ -83,42 +83,52 @@
     import {EventService} from '@/websocket'
     import {router} from '@/router'
     import {formatDateTime} from '@/misc'
+    import {
+        startOfDay,
+        addDays,
+    } from 'date-fns'
 
     export default {
-        data: () => ({
-            filter: {
-                datestart: new Date(),
-                datestop: new Date(),
-                method: null,
-                code: null,
-            },
-            fields: [
-                {
-                    key: 'status',
-                    label: 'Status',
+        data: () => {
+            const timestart = startOfDay(new Date())
+            const timestop = addDays(timestart, 1)
+            
+            return {
+                filter: {
+                    timestart,
+                    timestop,
+                    method: null,
+                    code: null,
                 },
-                {
-                    key: 'path',
-                    label: 'Path',
-                },
-                {
-                    key: 'method',
-                    label: 'Method',
-                },
-                {
-                    key: 'time_start',
-                    label: 'Begin time',
-                    formatter: value => formatDateTime(value),
-                },
-                {
-                    key: 'time_stop',
-                    label: 'End time',
-                    formatter: value => formatDateTime(value),
-                },
-            ],
+                fields: [
+                    {
+                        key: 'status',
+                        label: 'Status',
+                    },
+                    {
+                        key: 'path',
+                        label: 'Path',
+                    },
+                    {
+                        key: 'method',
+                        label: 'Method',
+                    },
+                    {
+                        key: 'time_start',
+                        label: 'Begin time',
+                        formatter: value => formatDateTime(value),
+                    },
+                    {
+                        key: 'time_stop',
+                        label: 'End time',
+                        formatter: value => formatDateTime(value),
+                    },
+                ],
 
-            requests: [],
-        }),
+                requests: [],
+            }
+
+        },
         methods: {
             details: function(id) {
                 router.push({path: `/request/detail/${id}`})
@@ -137,8 +147,10 @@
             loadRequests() {
                 return this.$axios.get('/api/request', {
                     params: {
-                        limit: 25,
-                        skip: 0,
+                        timestart: this.filter.timestart.getTime(),
+                        timestop: this.filter.timestop.getTime(),
+                        method: this.filter.method,
+                        statuscode: this.filter.code,
                     },
                 }).then(requests => {
                     this.requests = requests.records

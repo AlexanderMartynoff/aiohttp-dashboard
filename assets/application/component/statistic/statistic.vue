@@ -184,7 +184,7 @@
 
             loadStatus() {
                 return this.$axios.get('/api/status').then(status => {
-                    this.startupTime = fromUnixTime(status['time-start'])
+                    this.startupTime = fromUnixTime(status['timestart'])
                 }) 
             },
 

@@ -85,7 +85,7 @@ class StatusAPI:
 
     async def get(self):
         return {
-            'time-start': self._time
+            'timestart': self._time
         }
 
 
@@ -109,8 +109,8 @@ class RequestAPI:
             'method': request.method,
             'path': request.raw_path,
             'peername': peername,
-            'headers_request': dict(request.headers),
-            'time_start': timestamp(),
+            'headersrequest': dict(request.headers),
+            'timestart': timestamp(),
         })
 
         self._emitter.fire('http.request', {
@@ -137,8 +137,8 @@ class RequestAPI:
                 'status': response.status,
                 'reason': response.reason,
                 'body': body,
-                'time_stop': timestamp(),
-                'headers_response': dict(response.headers),
+                'timestop': timestamp(),
+                'headersresponse': dict(response.headers),
             }
         })
 
@@ -159,17 +159,22 @@ class RequestAPI:
     async def find(self, query: _Query) -> _Documents:
         criteria = {}
 
-        if 'time_start' in query and 'time_stop' in query:
+        if 'timestart' in query and 'timestop' in query:
             criteria.update({
-                'time_start': {
-                    '$gte': query['time_start'],
-                    '$lte': query['time_stop'],
+                'timestart': {
+                    '$gte': query['timestart'],
+                    '$lte': query['timestop'],
                 }
             })
 
-        if 'status_code' in query:
+        if 'statuscode' in query:
             criteria.update({
-                'status_code': query['status_code']
+                'status': query['statuscode']
+            })
+
+        if 'method' in query:
+            criteria.update({
+                'method': query['method']
             })
 
         records = await self._database.requests \
@@ -179,7 +184,7 @@ class RequestAPI:
                 skip=query.get('skip', 0),
                 projection={'_id': False}
             ) \
-            .sort('time_start', DESCENDING) \
+            .sort('timestart', DESCENDING) \
             .to_list(None)
 
         return records
@@ -187,17 +192,17 @@ class RequestAPI:
     async def count(self, query: _Query) -> int:
         criteria = {}
 
-        if 'time_start' in query and 'time_stop' in query:
+        if 'timestart' in query and 'timestop' in query:
             criteria.update({
-                'time_start': {
-                    '$gte': query['time_start'],
-                    '$lte': query['time_stop'],
+                'timeStart': {
+                    '$gte': query['timestart'],
+                    '$lte': query['timestop'],
                 }
             })
 
-        if 'status_code' in query:
+        if 'statuscode' in query:
             criteria.update({
-                'status_code': query['status_code']
+                'status': query['statuscode']
             })
 
         return await self._database.requests.count_documents(criteria)
@@ -209,11 +214,11 @@ class MessageAPI:
         self._emitter = emitter
 
     async def add(self, direction: MsgDirection,
-                          request: Request, message: Dict[Any, Any]) -> int:
+                  request: Request, message: Dict[Any, Any]) -> int:
 
         await self._database.messages.insert_one({
             'id': id(message),
-            'request_id': id(request),
+            'requestid': id(request),
             'direction': direction.name,
             'message': message,
             'time': timestamp(),
@@ -222,16 +227,16 @@ class MessageAPI:
     async def find(self, query: _Query) -> _Documents:
         criteria = {}
 
-        if query.get('request_id') is not None:
+        if query.get('requestid') is not None:
             criteria.update({
-                'request_id': query['request_id']
+                'requestid': query['requestid']
             })
 
-        if 'time_start' in query and 'time_stop' in query:
+        if 'timestart' in query and 'timestop' in query:
             criteria.update({
                 'time': {
-                    '$gte': query['time_start'],
-                    '$lte': query['time_stop'],
+                    '$gte': query['timestart'],
+                    '$lte': query['timestop'],
                 }
             })
 
@@ -262,7 +267,7 @@ class ErrorAPI:
         await self._database.request_errors.insert_one({
             'id': id(exception),
             'type': ErrorType.__module__ + '.' + ErrorType.__name__,
-            'request_id': id(request),
+            'requestid': id(request),
             'time': timestamp(),
             'message': str(exception),
             'traceback': traceback.format_tb(exception.__traceback__),
@@ -270,4 +275,4 @@ class ErrorAPI:
 
     async def find_one(self, request_id):
         return await self._database.request_errors \
-            .find_one({'request_id': request_id}, projection={'_id': False})
+            .find_one({'requestid': request_id}, projection={'_id': False})
