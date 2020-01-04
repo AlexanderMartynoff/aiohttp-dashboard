@@ -51,11 +51,6 @@ _unsubscribe_schema = Schema({
     })
 })
 
-_query_schema = Schema({
-    Optional('skiip'): Coerce(int),
-    Optional('limit'): Coerce(int),
-}, extra=ALLOW_EXTRA)
-
 
 def _build_event_endpoint(request):
     prefix = request.app[DEBUGGER_PREFIX_KEY]
@@ -107,7 +102,7 @@ async def _event(request):
 async def _messages(request):
     state = request.app[DEBUGGER_KEY]
 
-    messages = await state.search_messages({
+    messages = await state.api_message.find({
         **request.query,
         'request_id': _to_int(request.query.get('request')),
         'skip': _to_int(request.query.get('skip'), 0),
@@ -136,7 +131,7 @@ async def _message_status(request):
 async def _requests(request):
     state = request.app[DEBUGGER_KEY]
 
-    requests = await state.search_requests({
+    requests = await state.api_request.find({
         **request.query,
         'skip': _to_int(request.query.get('skip'), 0),
         'limit': _to_int(request.query.get('limit'), 0),
@@ -150,14 +145,14 @@ async def _requests(request):
 async def _requests_status(request):
     state = request.app[DEBUGGER_KEY]
 
-    count_requests = await state.count_requests({
+    count = await state.api_request.count({
         **request.query,
         'time_start': _to_int(request.query.get('datestart')),
         'time_stop': _to_int(request.query.get('datestop')),
     })
 
     return json_response({
-        'count': count_requests,
+        'count': count,
     })
 
 
@@ -165,19 +160,15 @@ async def _request(request):
     state = request.app[DEBUGGER_KEY]
     request_id = _to_int(request.match_info['id'])
 
-    return json_response(await state.find_request(request_id))
+    return json_response(
+        await state.api_request.find_one(request_id))
 
 
 async def _request_error(request):
     state = request.app[DEBUGGER_KEY]
     request_id = _to_int(request.match_info['id'])
 
-    return json_response(await state.find_request_error(request_id))
-
-
-async def _request_errors(request):
-    state = request.app[DEBUGGER_KEY]
-    return json_response(await state.find_messages())
+    return json_response(await state.api_error.find_one(request_id))
 
 
 async def _request_errors_status(request):
@@ -189,7 +180,7 @@ async def _request_errors_status(request):
 
 async def _status(request):
     state = request.app[DEBUGGER_KEY]
-    return json_response(await state.status())
+    return json_response(await state.api_status.get())
 
 
 def build_routes(prefix) -> Tuple[List[Tuple], List[Tuple]]:
@@ -201,10 +192,7 @@ def build_routes(prefix) -> Tuple[List[Tuple], List[Tuple]]:
         # get data urls
         ('GET', prefix + '/api/request', _requests),
         ('GET', prefix + '/api/request/{id}', _request),
-
         ('GET', prefix + '/api/message', _messages),
-
-        ('GET', prefix + '/api/error/request', _request_errors),
         ('GET', prefix + '/api/error/request/{id}', _request_error),
         # get status data urls
         ('GET', prefix + '/api/status', _status),

@@ -63,22 +63,25 @@ async def _on_request(request, handler):
     if _is_sutable_request(request):
         state = request.app[DEBUGGER_KEY]
         request['_dashboard_add_future'] = ensure_future(
-            state.add_request(request))
+            state.api_request.add(request))
 
         try:
             return await handler(request)
         except Exception as exception:
-            ensure_future(state.add_request_error(request, exception))
+            ensure_future(
+                state.api_error.add(request, exception))
             raise exception
 
     return await handler(request)
 
 
 async def _add_response(request, response):
+    state = request.app[DEBUGGER_KEY]
+
     await asyncio.wait_for(
         request['_dashboard_add_future'], timeout=30)
 
-    await request.app[DEBUGGER_KEY].add_response(
+    await state.api_request.do_finish(
         request, response)
 
     if isinstance(response, WebSocketResponse):
@@ -93,8 +96,10 @@ async def _on_response(request, response):
 
 def _on_websocket_msg(direction, request, message):
     if _is_sutable_request(request):
+        state = request.app[DEBUGGER_KEY]
+
         ensure_future(
-            request.app[DEBUGGER_KEY].add_message(direction, request, message))
+            state.api_message.add(direction, request, message))
 
 
 def _ws_resposne_decorate(request, response):
@@ -102,6 +107,7 @@ def _ws_resposne_decorate(request, response):
         for call `_on_websocket_msg` hook when message will received
         or sended.
     """
+
     async def ping_decorator(message):
         _on_websocket_msg(MsgDirection.OUTBOUND, request, message)
         return await ping(message)

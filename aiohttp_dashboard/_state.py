@@ -45,16 +45,60 @@ class State:
     def __init__(self, config: Optional[dict]):
         self._config: dict = _schema_config(config or {})
 
-        self._emitter = EventEmitter()
         self._motor = AsyncIOMotorClient('mongodb://{}:{}'.format(
             self._config['mongo']['host'],
             self._config['mongo']['port'],
         ))
 
         self._database = self._motor[self._config['mongo']['database']]
+        self._emitter = EventEmitter()
+
+        self._api_status = StatusAPI()
+        self._api_request = RequestAPI(self._database, self._emitter)
+        self._api_message = MessageAPI(self._database, self._emitter)
+        self._api_error = ErrorAPI(self._database, self._emitter)
+
+    @property
+    def emitter(self):
+        return self._emitter
+
+    @property
+    def api_status(self):
+        return self._api_status
+
+    @property
+    def api_request(self):
+        return self._api_request
+
+    @property
+    def api_message(self):
+        return self._api_message
+
+    @property
+    def api_error(self):
+        return self._api_error
+
+
+class StatusAPI:
+    def __init__(self):
         self._time = time()
 
-    async def add_request(self, request: Request) -> int:
+    async def get(self):
+        return {
+            'time-start': self._time
+        }
+
+
+class RequestAPI:
+
+    def __init__(self, database, emitter):
+        self._database = database
+        self._emitter = emitter
+
+    async def add(self, request: Request) -> int:
+        """Insert new request record into database.
+        """
+
         id_ = id(request)
         peername, _ = request.transport.get_extra_info('peername')
 
@@ -79,8 +123,10 @@ class State:
 
         return id_
 
-    async def add_response(self, request: Request,
-                           response: Response) -> int:
+    async def do_finish(self, request: Request, response: Response) -> int:
+        """Finished existing request record into database.
+        """
+
         id_ = id(request)
 
         body = response.text if isinstance(
@@ -106,26 +152,11 @@ class State:
 
         return id_
 
-    async def add_message(self, direction: MsgDirection,
-                          request: Request, message: Dict[Any, Any]) -> int:
-
-        await self._database.messages.insert_one({
-            'id': id(message),
-            'request_id': id(request),
-            'direction': direction.name,
-            'message': message,
-            'time': timestamp(),
-        })
-
-    async def add_message_error(self, request: Request,
-                                exception: Exception) -> int:
-        ...
-
-    async def find_request(self, id_) -> Dict[Any, Any]:
+    async def find_one(self, id_) -> Dict[Any, Any]:
         return await self._database.requests.find_one(
             {'id': id_}, projection={'_id': False})
 
-    async def search_requests(self, query: _Query) -> _Documents:
+    async def find(self, query: _Query) -> _Documents:
         criteria = {}
 
         if 'time_start' in query and 'time_stop' in query:
@@ -153,7 +184,7 @@ class State:
 
         return records
 
-    async def count_requests(self, query: _Query) -> int:
+    async def count(self, query: _Query) -> int:
         criteria = {}
 
         if 'time_start' in query and 'time_stop' in query:
@@ -171,24 +202,24 @@ class State:
 
         return await self._database.requests.count_documents(criteria)
 
-    async def add_request_error(self, request: Request,
-                                exception: Exception) -> int:
-        ErrorType = type(exception)
 
-        await self._database.request_errors.insert_one({
-            'id': id(exception),
-            'type': ErrorType.__module__ + '.' + ErrorType.__name__,
+class MessageAPI:
+    def __init__(self, database, emitter):
+        self._database = database
+        self._emitter = emitter
+
+    async def add(self, direction: MsgDirection,
+                          request: Request, message: Dict[Any, Any]) -> int:
+
+        await self._database.messages.insert_one({
+            'id': id(message),
             'request_id': id(request),
+            'direction': direction.name,
+            'message': message,
             'time': timestamp(),
-            'message': str(exception),
-            'traceback': traceback.format_tb(exception.__traceback__),
         })
 
-    async def find_request_error(self, request_id):
-        return await self._database.request_errors \
-            .find_one({'request_id': request_id}, projection={'_id': False})
-
-    async def search_messages(self, query: _Query) -> _Documents:
+    async def find(self, query: _Query) -> _Documents:
         criteria = {}
 
         if query.get('request_id') is not None:
@@ -216,26 +247,27 @@ class State:
 
         return records
 
-    async def count_messages(self):
+    async def count(self):
         ...
-
-    async def status(self):
-        return {
-            'time-start': self._time
-        }
-
-    @property
-    def emitter(self):
-        return self._emitter
-
-
-class RequestAPI:
-    ...
-
-
-class MessageAPI:
-    ...
 
 
 class ErrorAPI:
-    ...
+    def __init__(self, database, emitter):
+        self._database = database
+        self._emitter = emitter
+
+    async def add(self, request: Request, exception: Exception) -> int:
+        ErrorType = type(exception)
+
+        await self._database.request_errors.insert_one({
+            'id': id(exception),
+            'type': ErrorType.__module__ + '.' + ErrorType.__name__,
+            'request_id': id(request),
+            'time': timestamp(),
+            'message': str(exception),
+            'traceback': traceback.format_tb(exception.__traceback__),
+        })
+
+    async def find_one(self, request_id):
+        return await self._database.request_errors \
+            .find_one({'request_id': request_id}, projection={'_id': False})
