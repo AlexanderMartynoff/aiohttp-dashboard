@@ -163,16 +163,8 @@ async def _request(request):
 async def _request_error(request):
     state = request.app[DEBUGGER_KEY]
     request_id = _optional_int_coerce(request.match_info['id'])
-    exception = await state.search_request_error(request_id)
 
-    if exception is not None:
-        return json_response({
-            'class': type(exception).__name__,
-            'message': str(exception),
-            'traceback': traceback.format_tb(exception.__traceback__),
-        })
-
-    return json_response()
+    return json_response(await state.find_request_error(request_id))
 
 
 async def _request_errors(request):

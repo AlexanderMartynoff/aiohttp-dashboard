@@ -11,7 +11,10 @@ from time import time
 from typing import Any, Sequence, Tuple, TypeVar, Dict, List, Optional
 import logging
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import ASCENDING, DESCENDING
 import voluptuous
+import traceback
+
 
 from ._misc import MsgDirection, timestamp
 from ._event_emitter import EventEmitter
@@ -109,11 +112,8 @@ class State:
             'request_id': id(request),
             'direction': direction.name,
             'message': message,
+            'time': timestamp(),
         })
-
-    async def add_request_error(self, request: Request,
-                                exception: Exception) -> int:
-        ...
 
     async def add_message_error(self, request: Request,
                                 exception: Exception) -> int:
@@ -142,6 +142,7 @@ class State:
 
         records = await self._database.requests \
             .find(query, limit=limit, skip=skip, projection={'_id': False}) \
+            .sort('time_start', DESCENDING) \
             .to_list(None)
 
         return records
@@ -163,8 +164,22 @@ class State:
 
         return await self._database.requests.count_documents(query)
 
-    async def search_request_error(self, request_id):
-        ...
+    async def add_request_error(self, request: Request,
+                                exception: Exception) -> int:
+        ErrorType = type(exception)
+
+        await self._database.request_errors.insert_one({
+            'id': id(exception),
+            'type': ErrorType.__module__ + '.' + ErrorType.__name__,
+            'request_id': id(request),
+            'time': timestamp(),
+            'message': str(exception),
+            'traceback': traceback.format_tb(exception.__traceback__),
+        })
+
+    async def find_request_error(self, request_id):
+        return await self._database.request_errors \
+            .find_one({'request_id': request_id}, projection={'_id': False})
 
     async def search_request_errors(self):
         ...
@@ -175,6 +190,7 @@ class State:
 
         return await self._database.messages \
             .find({}, limit=limit, skip=skip, projection={'_id': False}) \
+            .sort('time', DESCENDING) \
             .to_list(None)
 
     async def count_messages(self):

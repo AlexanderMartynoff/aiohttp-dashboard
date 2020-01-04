@@ -4,6 +4,51 @@
         <div class="row mt-3 mb-3">
             <div class="col-md-12">
                 <b-card class="shadow h-100" header="Messages">
+
+                    <datepicker-modal name="datepicker-datestart"></datepicker-modal>
+                    <datepicker-modal name="datepicker-datestop"></datepicker-modal>
+
+
+                    <b-form class="mb-3">
+                        <b-row>
+                            <b-col md="5">
+                                <b-input-group>
+                                    <div class="input-group-prepend">
+                                        <button class="btn btn-primary" type="button">
+                                            <i class="far fa-calendar-alt"></i>
+                                        </button>
+                                    </div>
+                                    <datepicker-modal-input name="datestart"
+                                                            datepicker-modal="datepicker-datestart"
+                                                            v-model="filter.datestart">
+                                    </datepicker-modal-input>
+                                    <datepicker-modal-input name="datestop"
+                                                            datepicker-modal="datepicker-datestop"
+                                                            v-model="filter.datestop">
+                                    </datepicker-modal-input>
+                                </b-input-group>
+                            </b-col>
+
+                            <b-col md="3" class="mt-3 mt-md-0">
+                                <b-form-input v-model="filter.content" placeholder="Content"/>
+                            </b-col>
+
+                            <b-col md="3" class="mt-3 mt-md-0">
+                                <b-form-select v-model="filter.direction">
+                                    <option :value="null"></option>
+                                    <option value="get">Income</option>
+                                    <option value="post">Outcome</option>
+                                </b-form-select>
+                            </b-col>
+                            <b-col md="1" class="mt-3 mt-md-0">
+                                <b-button variant="primary" class="justify-btn">
+                                    <i class="fas fa-search"></i>
+                                </b-button>
+                            </b-col>
+                        </b-row>
+                    </b-form>
+
+
                     <b-table :responsive="true"
                              :hover="true"
                              :items="messages"
@@ -16,6 +61,10 @@
 
                         <template v-slot:cell(direction)="direction">
                             <i class="fas" :class="getStatusClassByDirection(direction.value)"></i>
+                        </template>
+
+                        <template v-slot:cell(message)="message">
+                            <code>{{truncateString(message.value)}}</code>
                         </template>
 
                     </b-table>
@@ -45,18 +94,25 @@
     export default {
         data () {
             return {
+                filter: {
+                    datestart: new Date(),
+                    datestop: new Date(),
+                },
                 message: {},
                 messages: [],
                 fields: [
                     {
                         key: 'direction',
                         label: '',
-                        tdClass: 'icon-td',
-                        thClass: 'icon-th',
+                        class: 'messages-table-column-direction'
                     },
                     {
-                        key: 'datetime',
+                        key: 'time',
                         label: 'Datetime',
+                    },
+                    {
+                        key: 'message',
+                        label: 'Message',
                     },
                 ],
                 incomingLength: 0,
@@ -77,6 +133,13 @@
             getStatusClassByDirection(value) {
                 return value === 'INCOMING' ? 'fa-arrow-circle-down' :
                     'fa-arrow-circle-up';
+            },
+
+            truncateString(value, limit = 100) {
+                if (value && value.length > limit) {
+                    return value.substring(0, limit) + '...'
+                }
+                return value
             },
 
             showDetail (message) {
@@ -119,7 +182,7 @@
                     this.messages = _.map(messages, message => _.merge(message, {
                         datetime: formatDateTime(message.time, true),
                     }))
-                }) 
+                })
             },
 
             loadMessagesInfo() {

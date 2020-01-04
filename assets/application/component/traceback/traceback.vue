@@ -4,7 +4,7 @@
             <pre>{{format(exception)}}</pre>
         </code>
         <code>
-            <pre>{{exception.class}}: {{exception.message}}</pre>
+            <pre>{{exception.type}}: {{exception.message}}</pre>
         </code>
     </b-card>
 </template>

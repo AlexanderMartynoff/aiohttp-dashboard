@@ -2,7 +2,7 @@
     <div class="container-fluid my-3">
         <div class="row mt-3" v-if="record">
             <div class="col-md-6">
-                <b-card class="shadow h-100" title="Info">
+                <b-card class="shadow h-100" header="Info">
                     <ul class="list-group overflow-auto">
                         <li class="list-group-item list-group-item-warning block" v-if="record.status">
                             <div>

@@ -3,7 +3,6 @@ from jinja2 import FileSystemLoader
 from aiohttp.web import WebSocketResponse, Response, RouteTableDef
 from functools import partial
 from os.path import join, normpath, isabs, dirname, abspath
-import time
 from asyncio import ensure_future, wait_for
 import asyncio
 

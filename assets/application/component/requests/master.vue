@@ -6,10 +6,9 @@
                     <datepicker-modal name="datepicker-datestart"></datepicker-modal>
                     <datepicker-modal name="datepicker-datestop"></datepicker-modal>
 
-
                     <b-form class="mb-3">
                         <b-row>
-                            <b-col md="6">
+                            <b-col md="5">
                                 <b-input-group>
                                     <div class="input-group-prepend">
                                         <button class="btn btn-primary" type="button">
@@ -46,6 +45,11 @@
                                     <option value="post">DELETE</option>
                                     <option value="post">PUT</option>
                                 </b-form-select>
+                            </b-col>
+                            <b-col md="1" class="mt-3 mt-md-0">
+                                <b-button variant="primary" class="justify-btn">
+                                    <i class="fas fa-search"></i>
+                                </b-button>
                             </b-col>
                         </b-row>
                     </b-form>
