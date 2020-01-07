@@ -59,36 +59,46 @@ def _is_sutable_request(request):
         request.app[DEBUGGER_PREFIX_KEY])
 
 
+async def _wait_for_request_id(request):
+    assert 'dsb_add_future' in request, \
+        'Request object must have a future for in db saving'
+
+    return await wait_for(
+        request['dsb_add_future'], timeout=30)
+
+
+async def _add_error(request, error):
+    state = request.app[DEBUGGER_KEY]
+    request_id = await _wait_for_request_id(request)
+    _error_id = await state.api_error.add(  # noqa
+        request_id, request, error)
+
+
 async def _on_request(request, handler):
     if _is_sutable_request(request):
         state = request.app[DEBUGGER_KEY]
-        request['_dashboard_add_future'] = ensure_future(
+        request['dsb_add_future'] = ensure_future(
             state.api_request.add(request))
 
         try:
             return await handler(request)
-        except Exception as exception:
+        except Exception as error:
             ensure_future(
-                state.api_error.add(request, exception))
-            raise exception
+                _add_error(request, error))
+            raise error
 
     return await handler(request)
 
 
 async def _add_response(request, response):
     state = request.app[DEBUGGER_KEY]
+    id_ = await _wait_for_request_id(request)
 
-    try:
-        await wait_for(
-            request['_dashboard_add_future'], timeout=30)
-    except (KeyError, TimeoutError) as exception:
-        await state.api_error.add(request, exception)
-    else:
-        await state.api_request.put_response(
-            request, response)
+    await state.api_request.put_response(
+        id_, request, response)
 
-        if isinstance(response, WebSocketResponse):
-            _ws_resposne_decorate(request, response)
+    if isinstance(response, WebSocketResponse):
+        _ws_resposne_decorate(request, response)
 
 
 async def _on_response(request, response):
@@ -97,12 +107,17 @@ async def _on_response(request, response):
             _add_response(request, response))
 
 
+async def _add_websocket_msg(direction, request, message):
+    state = request.app[DEBUGGER_KEY]
+    id_ = await _wait_for_request_id(request)
+    ensure_future(
+        state.api_message.add(id_, direction, request, message))
+
+
 def _on_websocket_msg(direction, request, message):
     if _is_sutable_request(request):
-        state = request.app[DEBUGGER_KEY]
-
         ensure_future(
-            state.api_message.add(direction, request, message))
+            _add_websocket_msg(direction, request, message))
 
 
 def _ws_resposne_decorate(request, response):

@@ -2,6 +2,7 @@
 """
 
 from asyncio import get_event_loop
+from typing import Dict, Callable
 
 
 class TimeGuardFactory:
@@ -14,8 +15,8 @@ class TimeGuardFactory:
 
 class _TimeGuardHolder:
 
-    def __init__(self, timeout, function):
-        self._states = {}
+    def __init__(self, timeout: int, function: Callable):
+        self._states: Dict[str, _TimeGuard] = {}
         self._timeout = timeout
         self._function = function
 
@@ -30,7 +31,7 @@ class _TimeGuardHolder:
 
 
 class _TimeGuard:
-    def __init__(self, timeout, function):
+    def __init__(self, timeout: int, function: Callable):
         self._timeout = timeout
         self._function = function
         self._last_time = None

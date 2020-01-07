@@ -15,6 +15,8 @@ from pymongo import ASCENDING, DESCENDING
 from voluptuous import Optional, Schema, ALLOW_EXTRA
 import traceback
 import typing
+import uuid
+import os
 
 from ._misc import MsgDirection, timestamp
 from ._event_emitter import EventEmitter
@@ -38,6 +40,12 @@ _schema_config = Schema({
 }, extra=ALLOW_EXTRA)
 
 
+def _id():
+    """ Used for generate id for documents.
+    """
+    return str(abs(hash(os.urandom(16))))
+
+
 class State:
     """ Contains CRUD API for holding application state and
         dashbooard configuration.
@@ -52,8 +60,16 @@ class State:
         ))
 
         self._database = self._motor[self._config['mongo']['database']]
-        self._emitter = EventEmitter()
 
+        # create uniq indexes for collections
+        self._database.requests.create_index([
+            ('id', DESCENDING)
+        ], unique=True)
+        self._database.messages.create_index([
+            ('id', DESCENDING)
+        ], unique=True)
+
+        self._emitter = EventEmitter()
         self._api_status = StatusAPI()
         self._api_request = RequestAPI(self._database, self._emitter)
         self._api_message = MessageAPI(self._database, self._emitter)
@@ -96,11 +112,11 @@ class RequestAPI:
         self._database = database
         self._emitter = emitter
 
-    async def add(self, request: Request) -> int:
+    async def add(self, request: Request) -> str:
         """Insert new request record into database.
         """
 
-        id_ = id(request)
+        id_ = _id()
         peername, _ = request.transport.get_extra_info('peername')
 
         await self._database.requests.insert_one({
@@ -124,11 +140,10 @@ class RequestAPI:
 
         return id_
 
-    async def put_response(self, request: Request, response: Response) -> int:
+    async def put_response(self, id_, request: Request,
+                           response: Response) -> int:
         """Put into existing request terminal data.
         """
-
-        id_ = id(request)
 
         body = response.text if isinstance(
             response, Response) else None
@@ -150,8 +165,6 @@ class RequestAPI:
         self._emitter.fire('http', {
             'request': id_,
         })
-
-        return id_
 
     async def find_one(self, id_) -> Dict[Any, Any]:
         return await self._database.requests.find_one(
@@ -214,16 +227,19 @@ class MessageAPI:
         self._database = database
         self._emitter = emitter
 
-    async def add(self, direction: MsgDirection,
-                  request: Request, message: Dict[Any, Any]) -> int:
+    async def add(self, request_id, direction: MsgDirection,
+                  request: Request, message: Dict[Any, Any]) -> str:
+        message_id = _id()
 
         await self._database.messages.insert_one({
-            'id': id(message),
-            'requestid': id(request),
+            'id': message_id,
+            'requestid': request_id,
             'direction': direction.name,
             'message': message,
             'time': timestamp(),
         })
+
+        return message_id
 
     async def find(self, query: _Query) -> _Documents:
         criteria = {}
@@ -262,13 +278,13 @@ class ErrorAPI:
         self._database = database
         self._emitter = emitter
 
-    async def add(self, request: Request, exception: Exception) -> int:
+    async def add(self, id_, request: Request, exception: Exception) -> str:
         Error = type(exception)
 
         await self._database.request_errors.insert_one({
-            'id': id(exception),
+            'id': _id(),
             'type': Error.__module__ + '.' + Error.__name__,
-            'requestid': id(request),
+            'requestid': id_,
             'time': timestamp(),
             'message': str(exception),
             'traceback': traceback.format_tb(exception.__traceback__),

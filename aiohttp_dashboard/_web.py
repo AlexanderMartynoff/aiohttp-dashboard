@@ -37,7 +37,7 @@ _subscribe_schema = Schema({
     Required('data'): Schema({
         Required('event'): str,
         Optional('conditions', default=dict): Schema({
-            Optional('request'): Coerce(int),
+            Optional('request'): Coerce(str),
         }, extra=ALLOW_EXTRA),
     })
 })
@@ -122,7 +122,7 @@ async def _messages(request):
 
 async def _message_status(request):
     state = request.app[DEBUGGER_KEY]
-    id_ = _to_int(request.query.get('request', None))
+    id_ = request.query.get('request', None)
     time_start = _to_int(request.query.get('datestart', None))
     time_stop = _to_int(request.query.get('datestop', None))
 
@@ -156,7 +156,7 @@ async def _requests_status(request):
 
 async def _request(request):
     state = request.app[DEBUGGER_KEY]
-    request_id = _to_int(request.match_info['id'])
+    request_id = request.match_info['id']
 
     return json_response(
         await state.api_request.find_one(request_id))
@@ -164,7 +164,7 @@ async def _request(request):
 
 async def _request_error(request):
     state = request.app[DEBUGGER_KEY]
-    request_id = _to_int(request.match_info['id'])
+    request_id = request.match_info['id']
 
     return json_response(await state.api_error.find_one(request_id))
 
