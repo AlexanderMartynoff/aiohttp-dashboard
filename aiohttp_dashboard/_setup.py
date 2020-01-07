@@ -3,8 +3,7 @@ from jinja2 import FileSystemLoader
 from aiohttp.web import WebSocketResponse, Response, RouteTableDef
 from functools import partial
 from os.path import join, normpath, isabs, dirname, abspath
-from asyncio import ensure_future, wait_for
-import asyncio
+from asyncio import ensure_future, wait_for, TimeoutError
 
 from ._state import DEBUGGER_KEY, JINJA_KEY, State
 from ._event_emitter import EventEmitter
@@ -56,7 +55,8 @@ async def _factory_on_request(application, handler):
 
 
 def _is_sutable_request(request):
-    return not request.path.startswith(request.app[DEBUGGER_PREFIX_KEY])
+    return not request.path.startswith(
+        request.app[DEBUGGER_PREFIX_KEY])
 
 
 async def _on_request(request, handler):
@@ -78,14 +78,17 @@ async def _on_request(request, handler):
 async def _add_response(request, response):
     state = request.app[DEBUGGER_KEY]
 
-    await asyncio.wait_for(
-        request['_dashboard_add_future'], timeout=30)
+    try:
+        await wait_for(
+            request['_dashboard_add_future'], timeout=30)
+    except (KeyError, TimeoutError) as exception:
+        await state.api_error.add(request, exception)
+    else:
+        await state.api_request.put_response(
+            request, response)
 
-    await state.api_request.do_finish(
-        request, response)
-
-    if isinstance(response, WebSocketResponse):
-        _ws_resposne_decorate(request, response)
+        if isinstance(response, WebSocketResponse):
+            _ws_resposne_decorate(request, response)
 
 
 async def _on_response(request, response):

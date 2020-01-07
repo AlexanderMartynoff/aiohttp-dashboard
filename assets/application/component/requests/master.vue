@@ -3,8 +3,8 @@
         <div class="row mt-3 mb-3">
             <div class="col-md-12">
                 <b-card class="shadow" header="Requests">
-                    <datepicker-modal name="datepicker-datestart"></datepicker-modal>
-                    <datepicker-modal name="datepicker-datestop"></datepicker-modal>
+                    <datepicker-modal name="datepicker-datestart"/>
+                    <datepicker-modal name="datepicker-datestop"/>
 
                     <b-form class="mb-3">
                         <b-row>
@@ -17,17 +17,15 @@
                                     </div>
                                     <datepicker-modal-input name="datestart"
                                                             datepicker-modal="datepicker-datestart"
-                                                            v-model="filter.timestart">
-                                    </datepicker-modal-input>
+                                                            v-model="filter.timestart"/>
                                     <datepicker-modal-input name="datestop"
                                                             datepicker-modal="datepicker-datestop"
-                                                            v-model="filter.timestop">
-                                    </datepicker-modal-input>
+                                                            v-model="filter.timestop"/>
                                 </b-input-group>
                             </b-col>
                             <b-col md="3" class="mt-3 mt-md-0">
                                 <b-input-group>
-                                    <b-form-input v-model="filter.code" placeholder="HTTP code"/>
+                                    <b-form-input v-model="filter.code" placeholder="HTTP code" type="number"/>
                                     <template #append>
                                         <b-dropdown text="Code" variant="success">
                                             <b-dropdown-item>404</b-dropdown-item>
@@ -114,14 +112,14 @@
                         label: 'Method',
                     },
                     {
-                        key: 'time_start',
-                        label: 'Begin time',
+                        key: 'timestart',
+                        label: 'Time',
                         formatter: value => formatDateTime(value),
                     },
                     {
-                        key: 'time_stop',
-                        label: 'End time',
-                        formatter: value => formatDateTime(value),
+                        key: 'duration',
+                        label: 'Duration',
+                        formatter: value => 100,
                     },
                 ],
 
@@ -149,8 +147,8 @@
                     params: {
                         timestart: this.filter.timestart.getTime(),
                         timestop: this.filter.timestop.getTime(),
-                        method: this.filter.method,
-                        statuscode: this.filter.code,
+                        method: this.filter.method || null,
+                        statuscode: this.filter.code || null,
                     },
                 }).then(requests => {
                     this.requests = requests.records

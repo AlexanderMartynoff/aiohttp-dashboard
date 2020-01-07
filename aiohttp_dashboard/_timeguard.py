@@ -1,3 +1,6 @@
+""" Tool for limit function call at time range
+"""
+
 from asyncio import get_event_loop
 
 

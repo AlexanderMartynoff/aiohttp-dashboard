@@ -8,13 +8,13 @@ from functools import partial
 from os.path import join
 from inspect import isfunction
 from time import time
-from typing import Any, Sequence, Tuple, TypeVar, Dict, List, Optional
+from typing import Any, Sequence, Tuple, TypeVar, Dict, List
 import logging
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import ASCENDING, DESCENDING
-import voluptuous
+from voluptuous import Optional, Schema, ALLOW_EXTRA
 import traceback
-
+import typing
 
 from ._misc import MsgDirection, timestamp
 from ._event_emitter import EventEmitter
@@ -29,20 +29,21 @@ JINJA_KEY = __name__ + '-jinja'
 _Documents = List[Dict[Any, Any]]
 _Query = Dict[str, Any]
 
-_schema_config = voluptuous.Schema({
-    voluptuous.Optional('mongo', default=dict): voluptuous.Schema({
-        voluptuous.Optional('port', default=27017): int,
-        voluptuous.Optional('host', default='localhost'): str,
-        voluptuous.Optional('database', default='aiohttp_dashboard'): str,
-    }, extra=voluptuous.ALLOW_EXTRA)
-}, extra=voluptuous.ALLOW_EXTRA)
+_schema_config = Schema({
+    Optional('mongo', default=dict): Schema({
+        Optional('port', default=27017): int,
+        Optional('host', default='localhost'): str,
+        Optional('database', default='aiohttp_dashboard'): str,
+    }, extra=ALLOW_EXTRA)
+}, extra=ALLOW_EXTRA)
 
 
 class State:
-    """ Summary CRUD API for holding application state.
+    """ Contains CRUD API for holding application state and
+        dashbooard configuration.
     """
 
-    def __init__(self, config: Optional[dict]):
+    def __init__(self, config: typing.Optional[dict]):
         self._config: dict = _schema_config(config or {})
 
         self._motor = AsyncIOMotorClient('mongodb://{}:{}'.format(
@@ -123,8 +124,8 @@ class RequestAPI:
 
         return id_
 
-    async def do_finish(self, request: Request, response: Response) -> int:
-        """Finished existing request record into database.
+    async def put_response(self, request: Request, response: Response) -> int:
+        """Put into existing request terminal data.
         """
 
         id_ = id(request)
@@ -194,7 +195,7 @@ class RequestAPI:
 
         if 'timestart' in query and 'timestop' in query:
             criteria.update({
-                'timeStart': {
+                'timestart': {
                     '$gte': query['timestart'],
                     '$lte': query['timestop'],
                 }
@@ -262,11 +263,11 @@ class ErrorAPI:
         self._emitter = emitter
 
     async def add(self, request: Request, exception: Exception) -> int:
-        ErrorType = type(exception)
+        Error = type(exception)
 
         await self._database.request_errors.insert_one({
             'id': id(exception),
-            'type': ErrorType.__module__ + '.' + ErrorType.__name__,
+            'type': Error.__module__ + '.' + Error.__name__,
             'requestid': id(request),
             'time': timestamp(),
             'message': str(exception),
