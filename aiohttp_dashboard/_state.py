@@ -15,7 +15,6 @@ from pymongo import ASCENDING, DESCENDING
 from voluptuous import Optional, Schema, ALLOW_EXTRA
 import traceback
 import typing
-import uuid
 import os
 
 from ._misc import MsgDirection, timestamp
@@ -28,7 +27,8 @@ logger = logging.getLogger(__name__)
 DEBUGGER_KEY = __name__
 JINJA_KEY = __name__ + '-jinja'
 
-_Documents = List[Dict[Any, Any]]
+_Document = Dict[Any, Any]
+_Documents = List[_Document]
 _Query = Dict[str, Any]
 
 _schema_config = Schema({
@@ -40,7 +40,7 @@ _schema_config = Schema({
 }, extra=ALLOW_EXTRA)
 
 
-def _id():
+def _id() -> str:
     """ Used for generate id for documents.
     """
     return str(abs(hash(os.urandom(16))))
@@ -141,7 +141,7 @@ class RequestAPI:
         return id_
 
     async def put_response(self, id_, request: Request,
-                           response: Response) -> int:
+                           response: Response) -> None:
         """Put into existing request terminal data.
         """
 
@@ -166,7 +166,7 @@ class RequestAPI:
             'request': id_,
         })
 
-    async def find_one(self, id_) -> Dict[Any, Any]:
+    async def find_one(self, id_) -> _Document:
         return await self._database.requests.find_one(
             {'id': id_}, projection={'_id': False})
 
@@ -239,6 +239,11 @@ class MessageAPI:
             'time': timestamp(),
         })
 
+        self._emitter.fire('websocket', {
+            'requestid': request_id,
+            'messageid': message_id,
+        })
+
         return message_id
 
     async def find(self, query: _Query) -> _Documents:
@@ -278,18 +283,23 @@ class ErrorAPI:
         self._database = database
         self._emitter = emitter
 
-    async def add(self, id_, request: Request, exception: Exception) -> str:
+    async def add(self, request_id,
+                  request: Request, exception: Exception) -> str:
         Error = type(exception)
 
+        id_ = _id()
+
         await self._database.request_errors.insert_one({
-            'id': _id(),
+            'id': id_,
             'type': Error.__module__ + '.' + Error.__name__,
-            'requestid': id_,
+            'requestid': request_id,
             'time': timestamp(),
             'message': str(exception),
             'traceback': traceback.format_tb(exception.__traceback__),
         })
 
-    async def find_one(self, request_id):
+        return id_
+
+    async def find_one(self, request_id) -> _Document:
         return await self._database.request_errors \
             .find_one({'requestid': request_id}, projection={'_id': False})

@@ -109,6 +109,7 @@
                     {
                         key: 'time',
                         label: 'Datetime',
+                        formatter: value => formatDateTime(value),
                     },
                     {
                         key: 'message',

@@ -2,7 +2,16 @@ from __future__ import annotations
 
 from uuid import uuid4
 from collections import defaultdict, Sequence
-from typing import Union, List, Callable, TypeVar, Generic, Any, Dict, Optional
+from typing import (
+    Union,
+    List,
+    Callable,
+    TypeVar,
+    Generic,
+    Any,
+    Dict,
+    Optional
+)
 
 
 _Event = Union[str, List[str]]
@@ -15,7 +24,7 @@ class EventEmitter:
         self._handlers: List[_Handler] = []
 
     def on(self, event: _Event, handler: _Handler,
-           name: str ='default', family: str = 'default') -> None:
+           name: str = 'default', family: str = 'default') -> None:
 
         if isinstance(event, list):
             events = event

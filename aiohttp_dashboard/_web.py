@@ -112,7 +112,7 @@ async def _messages(request):
 
     messages = await state.api_message.find({
         **request.query,
-        'requestid': _to_int(request.query.get('request')),
+        'requestid': request.query.get('request'),
         'skip': _to_int(request.query.get('skip'), 0),
         'limit': _to_int(request.query.get('limit'), 0),
     })
