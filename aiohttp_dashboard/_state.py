@@ -15,7 +15,7 @@ from pymongo import ASCENDING, DESCENDING
 from voluptuous import Optional, Schema, ALLOW_EXTRA
 import traceback
 import typing
-import os
+import uuid
 
 from ._misc import MsgDirection, timestamp
 from ._event_emitter import EventEmitter
@@ -41,9 +41,9 @@ _schema_config = Schema({
 
 
 def _id() -> str:
-    """ Used for generate id for documents.
+    """Used for generate id for documents.
     """
-    return str(abs(hash(os.urandom(16))))
+    return uuid.uuid4().hex
 
 
 class State:
@@ -150,7 +150,7 @@ class _RequestAPI:
 
         await self._database.requests.update_one({'id': id_}, {
             '$set': {
-                'status': response.status,
+                'status': str(response.status),  # for search by re
                 'reason': response.reason,
                 'body': body,
                 'timestop': timestamp(),
@@ -183,7 +183,9 @@ class _RequestAPI:
 
         if 'statuscode' in query:
             criteria.update({
-                'status': query['statuscode']
+                'status': {
+                    '$regex': query['statuscode'],
+                }
             })
 
         if 'method' in query:
@@ -235,7 +237,7 @@ class _MessageAPI:
             'id': message_id,
             'requestid': request_id,
             'direction': direction.name,
-            'message': message,
+            'message': message,  # save always as a string
             'time': timestamp(),
         })
 
@@ -262,6 +264,18 @@ class _MessageAPI:
                 }
             })
 
+        if 'content' in query:
+            criteria.update({
+                'message': {
+                    '$regex': '.*{}.*'.format(query['content'])
+                }
+            })
+
+        if 'direction' in query:
+            criteria.update({
+                'direction': query['direction']
+            })
+
         records = await self._database.messages \
             .find(
                 criteria,
@@ -269,7 +283,7 @@ class _MessageAPI:
                 skip=query.get('skip', 0),
                 projection={'_id': False}
             ) \
-            .sort('time', DESCENDING) \
+            .sort('time', criteria.get('sort', DESCENDING)) \
             .to_list(None)
 
         return records

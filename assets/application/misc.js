@@ -16,5 +16,4 @@ function formatDateTime(dateTime, inlcudeMs=false) {
     return format(dateTime, pattern)
 }
 
-
 export {formatDateTime}

@@ -18,9 +18,6 @@
             <b-nav-item href="#/messages">
                 <i class="fas fa-plug"></i> WebSocket
             </b-nav-item>
-            <b-nav-item href="#/sql">
-                <i class="fas fa-database"></i> SQL
-            </b-nav-item>
         </b-navbar-nav>
     </b-collapse>
   </b-navbar>

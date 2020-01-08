@@ -52,7 +52,7 @@ _unsubscribe_schema = Schema({
 })
 
 _criteria_schema = Schema({
-    Optional('statuscode'): Coerce(int),
+    Optional('statuscode'): Coerce(str),
     Optional('timestart'): Coerce(int),
     Optional('timestop'): Coerce(int),
     Optional('skip'): Coerce(int),
@@ -109,13 +109,8 @@ async def _event(request):
 
 async def _messages(request):
     state = request.app[DEBUGGER_KEY]
-
-    messages = await state.api_message.find({
-        **request.query,
-        'requestid': request.query.get('request'),
-        'skip': _to_int(request.query.get('skip'), 0),
-        'limit': _to_int(request.query.get('limit'), 0),
-    })
+    criteria = _criteria_schema({**request.query})
+    messages = await state.api_message.find(criteria)
 
     return json_response(messages)
 

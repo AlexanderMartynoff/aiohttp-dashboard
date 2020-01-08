@@ -27,18 +27,18 @@
                             </b-col>
 
                             <b-col md="3" class="mt-3 mt-md-0">
-                                <b-form-input v-model="filter.content" placeholder="Content"/>
+                                <b-form-input v-model="filter.content" placeholder="Content ..."/>
                             </b-col>
 
                             <b-col md="3" class="mt-3 mt-md-0">
                                 <b-form-select v-model="filter.direction">
-                                    <option :value="null"></option>
-                                    <option value="get">Income</option>
-                                    <option value="post">Outcome</option>
+                                    <option :value="null">All directions</option>
+                                    <option value="INCOMING">Income</option>
+                                    <option value="OUTBOUND">Outcome</option>
                                 </b-form-select>
                             </b-col>
                             <b-col md="1" class="mt-3 mt-md-0">
-                                <b-button variant="primary" class="justify-btn">
+                                <b-button variant="primary" class="justify-btn" @click="loadMessages">
                                     <i class="fas fa-search"></i>
                                 </b-button>
                             </b-col>
@@ -102,6 +102,7 @@
                 filter: {
                     timestart,
                     timestop,
+                    direction: null,
                 },
                 message: {},
                 messages: [],
@@ -181,8 +182,10 @@
                 return this.$axios.get(`/api/message`, {
                     params: {
                         request: this.id,
-                        start: 0, 
-                        limit: 25, 
+                        timestart: this.filter.timestart.getTime(),
+                        timestop: this.filter.timestop.getTime(),
+                        content: this.filter.content || null,
+                        direction: this.filter.direction || null,
                     }
                 }).then(messages => {
                     this.messages = messages

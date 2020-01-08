@@ -1,5 +1,5 @@
 <template>
-    <b-card class="shadow traceback h-100" title="Stacktrace">
+    <b-card class="shadow traceback h-100" header="Stacktrace">
         <code>
             <pre>{{format(exception)}}</pre>
         </code>

@@ -25,23 +25,25 @@
                             </b-col>
                             <b-col md="3" class="mt-3 mt-md-0">
                                 <b-input-group>
-                                    <b-form-input v-model="filter.code" placeholder="HTTP code" type="number"/>
+                                    <b-form-input v-model="filter.code" placeholder="Status ..."/>
                                     <template #append>
                                         <b-dropdown text="Code" variant="success">
-                                            <b-dropdown-item>404</b-dropdown-item>
-                                            <b-dropdown-item>50*</b-dropdown-item>
+                                            <b-dropdown-item v-for="httpStatus in httpStatuses"
+                                                             @click="filter.code = httpStatus.value">
+                                                {{httpStatus.title}}
+                                            </b-dropdown-item>
                                         </b-dropdown>
                                     </template>
                                 </b-input-group>
                             </b-col>
                             <b-col md="3" class="mt-3 mt-md-0">
                                 <b-form-select v-model="filter.method">
-                                    <option :value="null"></option>
-                                    <option value="GET">GET</option>
-                                    <option value="POST">POST</option>
-                                    <option value="HEAD">HEAD</option>
-                                    <option value="DELETE">DELETE</option>
-                                    <option value="PUT">PUT</option>
+                                    <option :value="null">All methods</option>
+                                    <option value="GET">Get</option>
+                                    <option value="POST">Post</option>
+                                    <option value="HEAD">Head</option>
+                                    <option value="DELETE">Delete</option>
+                                    <option value="PUT">Put</option>
                                 </b-form-select>
                             </b-col>
                             <b-col md="1" class="mt-3 mt-md-0">
@@ -98,6 +100,14 @@
                     method: null,
                     code: null,
                 },
+                httpStatuses: [
+                    {title: 'All status', value: null},
+                    {title: 'Server errors (5xx)', value: '5.*'},
+                    {title: 'Client errors (4xx)', value: '4.*'},
+                    {title: 'Redirection (3xx)', value: '3.*'},
+                    {title: 'Success (2xx)', value: '2.*'},
+                    {title: 'Informational (1xx)', value: '1.*'},
+                ],
                 fields: [
                     {
                         key: 'status',
