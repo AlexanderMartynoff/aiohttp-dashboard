@@ -13,6 +13,7 @@ from typing import (
     Optional
 )
 
+from ._misc import ensure_list
 
 _Event = Union[str, List[str]]
 _Handler = Callable[[_Event, Dict[Any, Any]], None]
@@ -26,10 +27,7 @@ class EventEmitter:
     def on(self, event: _Event, handler: _Handler,
            name: str = 'default', family: str = 'default') -> None:
 
-        if isinstance(event, list):
-            events = event
-        else:
-            events = [event]
+        events = ensure_list(event)
 
         for event in events:
             self._on(event, handler, name, family)
@@ -39,7 +37,7 @@ class EventEmitter:
 
     def off(self, name: Optional[str] = None,
             family: Optional[str] = None) -> None:
-        # DOIT: rename these vars but how? 
+        # DOIT: rename these vars but how?
         for event_, handler, name_, family_ in self._handlers[:]:
             if name_ == name or family_ == family:
                 self._handlers.remove((event_, handler, name_, family_))

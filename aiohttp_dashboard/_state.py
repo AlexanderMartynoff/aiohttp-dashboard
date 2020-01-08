@@ -70,10 +70,10 @@ class State:
         ], unique=True)
 
         self._emitter = EventEmitter()
-        self._api_status = StatusAPI()
-        self._api_request = RequestAPI(self._database, self._emitter)
-        self._api_message = MessageAPI(self._database, self._emitter)
-        self._api_error = ErrorAPI(self._database, self._emitter)
+        self._api_status = _StatusAPI()
+        self._api_request = _RequestAPI(self._database, self._emitter)
+        self._api_message = _MessageAPI(self._database, self._emitter)
+        self._api_error = _ErrorAPI(self._database, self._emitter)
 
     @property
     def emitter(self):
@@ -96,7 +96,7 @@ class State:
         return self._api_error
 
 
-class StatusAPI:
+class _StatusAPI:
     def __init__(self):
         self._time = time()
 
@@ -106,7 +106,7 @@ class StatusAPI:
         }
 
 
-class RequestAPI:
+class _RequestAPI:
 
     def __init__(self, database, emitter):
         self._database = database
@@ -222,7 +222,7 @@ class RequestAPI:
         return await self._database.requests.count_documents(criteria)
 
 
-class MessageAPI:
+class _MessageAPI:
     def __init__(self, database, emitter):
         self._database = database
         self._emitter = emitter
@@ -278,16 +278,15 @@ class MessageAPI:
         ...
 
 
-class ErrorAPI:
+class _ErrorAPI:
     def __init__(self, database, emitter):
         self._database = database
         self._emitter = emitter
 
     async def add(self, request_id,
                   request: Request, exception: Exception) -> str:
-        Error = type(exception)
-
         id_ = _id()
+        Error = type(exception)
 
         await self._database.request_errors.insert_one({
             'id': id_,

@@ -5,9 +5,8 @@
             <div class="col-md-12">
                 <b-card class="shadow h-100" header="Messages">
 
-                    <datepicker-modal name="datepicker-datestart"></datepicker-modal>
-                    <datepicker-modal name="datepicker-datestop"></datepicker-modal>
-
+                    <datepicker-modal name="datepicker-datestart"/>
+                    <datepicker-modal name="datepicker-datestop"/>
 
                     <b-form class="mb-3">
                         <b-row>
@@ -20,12 +19,10 @@
                                     </div>
                                     <datepicker-modal-input name="datestart"
                                                             datepicker-modal="datepicker-datestart"
-                                                            v-model="filter.datestart">
-                                    </datepicker-modal-input>
+                                                            v-model="filter.timestart"/>
                                     <datepicker-modal-input name="datestop"
                                                             datepicker-modal="datepicker-datestop"
-                                                            v-model="filter.datestop">
-                                    </datepicker-modal-input>
+                                                            v-model="filter.timestop"/>
                                 </b-input-group>
                             </b-col>
 
@@ -91,12 +88,20 @@
     import {formatDateTime} from '@/misc'
     import _ from "lodash"
 
+    import {
+        startOfDay,
+        addDays,
+    } from 'date-fns'
+
     export default {
         data () {
+            const timestart = startOfDay(new Date())
+            const timestop = addDays(timestart, 1)
+
             return {
                 filter: {
-                    datestart: new Date(),
-                    datestop: new Date(),
+                    timestart,
+                    timestop,
                 },
                 message: {},
                 messages: [],
@@ -180,9 +185,7 @@
                         limit: 25, 
                     }
                 }).then(messages => {
-                    this.messages = _.map(messages, message => _.merge(message, {
-                        datetime: formatDateTime(message.time, true),
-                    }))
+                    this.messages = messages
                 })
             },
 

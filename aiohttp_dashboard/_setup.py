@@ -60,14 +60,20 @@ def _is_sutable_request(request):
 
 
 async def _wait_for_request_id(request):
+    state = request.app[DEBUGGER_KEY]
+
     assert 'dsb_add_future' in request, \
         'Request object must have a future for in db saving'
 
-    return await wait_for(
-        request['dsb_add_future'], timeout=30)
+    try:
+        return await wait_for(
+            request['dsb_add_future'], timeout=60)
+    except Exception as error:
+        await state.api_error.add(None, request, error)
+        raise
 
 
-async def _add_error(request, error):
+async def _add_request_error(request, error):
     state = request.app[DEBUGGER_KEY]
     request_id = await _wait_for_request_id(request)
     _error_id = await state.api_error.add(  # noqa
@@ -84,7 +90,7 @@ async def _on_request(request, handler):
             return await handler(request)
         except Exception as error:
             ensure_future(
-                _add_error(request, error))
+                _add_request_error(request, error))
             raise error
 
     return await handler(request)
@@ -148,11 +154,13 @@ def _ws_resposne_decorate(request, response):
         _on_websocket_msg(MsgDirection.OUTBOUND, request, data)
         return await send_bytes(data, compress)
 
-    send_bytes, response.send_bytes = response.send_bytes, send_bytes_decorator
+    send_bytes, response.send_bytes = \
+        response.send_bytes, send_bytes_decorator
 
     async def receive_decorator(timeout=None):
         message = await receive(timeout)
-        _on_websocket_msg(MsgDirection.INCOMING, request, message.data)
+        _on_websocket_msg(
+            MsgDirection.INCOMING, request, message.data)
 
         return message
 
