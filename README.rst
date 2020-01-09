@@ -56,4 +56,4 @@ The dashboard is available at ``/dashboard_prefix``
 Screenshots
 ***********
 
-![Alt text](./images/desctop-overview.png?raw=true "Optional Title")
+.. image:: /images/screen-overview.png
