@@ -68,7 +68,7 @@
                     </b-row>
                 </pane>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-4 mb-3 mb-md-0">
                 <pane title="Messages" @click="onMessagesClick">
                     <b-row>
                         <b-col md="6">

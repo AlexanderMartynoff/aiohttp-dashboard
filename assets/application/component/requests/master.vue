@@ -27,7 +27,7 @@
                                 <b-input-group>
                                     <b-form-input v-model="filter.code" placeholder="Status ..."/>
                                     <template #append>
-                                        <b-dropdown text="Code" variant="success">
+                                        <b-dropdown text="Code" variant="primary">
                                             <b-dropdown-item v-for="httpStatus in httpStatuses"
                                                              @click="filter.code = httpStatus.value">
                                                 {{httpStatus.title}}
