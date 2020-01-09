@@ -1,4 +1,9 @@
-import {format} from 'date-fns'
+import {
+    format,
+    isSameYear,
+    isSameDay,
+    isSameMonth
+} from 'date-fns'
 import _ from 'lodash'
 
 function formatDateTime(dateTime, inlcudeMs=false) {
@@ -7,7 +12,20 @@ function formatDateTime(dateTime, inlcudeMs=false) {
         return
     }
 
-    let pattern = `yyyy-MM-dd H:mm:ss`
+    let today = new Date()
+    let pattern = `HH:mm:ss`
+
+    if (!isSameDay(dateTime, today)) {
+        pattern = `dd ${pattern}`
+    }
+
+    if (!isSameMonth(dateTime, today)) {
+        pattern = `MM-${pattern}`
+    }
+
+    if (!isSameYear(dateTime, today)) {
+        pattern = `yyyy-${pattern}`
+    }
 
     if (inlcudeMs) {
         pattern += `:SSS`

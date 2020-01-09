@@ -2,7 +2,7 @@
 
 <b-navbar toggleable="lg" type="light" variant="light" class="shadow-sm">
     <b-navbar-brand href="#">
-        <code><i class="fas fa-tachometer-alt"></i> [aiottp_dashboard]</code>
+        <code><i class="fas fa-tachometer-alt"></i> [aiohttp_dashboard]</code>
     </b-navbar-brand>
 
     <b-navbar-toggle target="collapse"></b-navbar-toggle>

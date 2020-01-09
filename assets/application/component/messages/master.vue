@@ -75,7 +75,7 @@
                          @hidden="onDetailHidden"
                          hide-footer
                          centered>
-                    <pre><code>{{format(message.message)}}</code></pre>
+                    <pre class="p-1">{{format(message.message)}}</pre>
                 </b-modal>
             </div>
         </div>

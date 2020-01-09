@@ -110,6 +110,11 @@
                 ],
                 fields: [
                     {
+                        key: 'timestart',
+                        label: 'Time',
+                        formatter: value => formatDateTime(value),
+                    },
+                    {
                         key: 'status',
                         label: 'Status',
                     },
@@ -120,11 +125,6 @@
                     {
                         key: 'method',
                         label: 'Method',
-                    },
-                    {
-                        key: 'timestart',
-                        label: 'Time',
-                        formatter: value => formatDateTime(value),
                     },
                     {
                         key: 'duration',

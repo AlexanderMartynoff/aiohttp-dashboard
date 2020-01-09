@@ -1,7 +1,10 @@
-@import '../theme/sketchy/_variables.scss';
+$spacer: 0.7rem;
+$grid-gutter-width: 1.4rem;
+$card-spacer-x: 0.7rem;
+$card-spacer-y: 0.35rem;
+
 @import "~bootstrap/scss/bootstrap";
 @import '~bootstrap-vue';
-@import '../theme/sketchy/_bootswatch.scss';
 
 
 html,

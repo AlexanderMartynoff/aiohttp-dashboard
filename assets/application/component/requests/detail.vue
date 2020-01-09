@@ -4,7 +4,7 @@
             <div class="col-md-6">
                 <b-card class="shadow h-100" header="Info">
                     <ul class="list-group overflow-auto">
-                        <li class="list-group-item list-group-item-warning block" v-if="record.status">
+                        <li class="list-group-item block" v-if="record.status">
                             <div>
                                 <span>{{record.status}}</span>
                             </div>
@@ -13,16 +13,16 @@
                             </div>
                         </li>
                         <li class="list-group-item">
-                            <span>Client IP:</span> <code>{{record.ip}}</code>
+                            <span>Client IP:</span> <code>{{record.peername}}</code>
                         </li>
                         <li class="list-group-item">
                             <span>Path:</span> <code>{{record.path}}</code>
                         </li>
                         <li class="list-group-item">
-                            <span>Begin time:</span> <code>{{record.starttime}}</code>
+                            <span>Time:</span> <code>{{requestTimeStart}}</code>
                         </li>
                         <li class="list-group-item">
-                            <span>Done time:</span> <code>{{record.stoptime}}</code>
+                            <span>Duration:</span> <code>{{record.timestop}} sec</code>
                         </li>
                         <li class="list-group-item">
                             <span>Scheme:</span> <code>{{record.scheme}}</code>
@@ -42,10 +42,10 @@
             </div>
             <div class="col-md-6 mt-3 mt-md-0">
                 <b-card no-block no-body class="shadow h-100">
-                    <b-tabs small pills card>
+                    <b-tabs small card>
                         <b-tab title="Request">
                             <template slot="title">
-                                <i class="fas fa-arrow-right"></i> Headers
+                                Request headers
                             </template>
 
                             <b-list-group>
@@ -58,7 +58,7 @@
                         <b-tab title="Response">
 
                             <template slot="title">
-                                <i class="fas fa-arrow-left"></i> Headers
+                                Response headers
                             </template>
 
                             <ul class="list-group">
@@ -104,6 +104,10 @@
         computed: {
             wsLength() {
                 return this.wsIncomingLength + this.wsOutcomingLength
+            },
+
+            requestTimeStart() {
+                return formatDateTime(this.record.timestart)
             }
         },
 
