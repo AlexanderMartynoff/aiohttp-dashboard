@@ -5,7 +5,7 @@
         <datepicker-modal name="datepicker-datestop"></datepicker-modal>
 
         <div class="row mt-3">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <pane title="Status">
                     <h2>
                         <code>{{formatDateTime(startupTime)}}</code>
@@ -18,7 +18,7 @@
                 </pane>
             </div>
 
-            <div class="col-md-6 mt-3 mt-md-0">
+            <div class="col-md-8 mt-3 mt-md-0">
                 <pane title="Settings">
                     <b-form class="mt-3">
                         <b-row>
@@ -48,7 +48,7 @@
         </div>
 
         <div class="row mt-3 mb-3">
-            <div class="col-md-6 mb-3 mb-md-0">
+            <div class="col-md-4 mb-3 mb-md-0">
 
                 <pane title="Requests" @click="onRequestClick">
                     
@@ -68,7 +68,7 @@
                     </b-row>
                 </pane>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <pane title="Messages" @click="onMessagesClick">
                     <b-row>
                         <b-col md="6">
@@ -86,10 +86,8 @@
                     </b-row>
                 </pane>
             </div>
-        </div>
 
-        <div class="row mt-3">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <pane title="Exceptions">
                     <h2>
                         <code>{{requestsErrorCount}}</code>
@@ -98,6 +96,7 @@
                 </pane>
             </div>
         </div>
+
     </div>
 </template>
 
