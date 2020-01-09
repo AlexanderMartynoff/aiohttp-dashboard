@@ -51,3 +51,9 @@ Setup
 
 
 The dashboard is available at ``/dashboard_prefix``
+
+
+Screenshots
+***********
+
+[![N|Solid](./images/desctop-overview.png)]
