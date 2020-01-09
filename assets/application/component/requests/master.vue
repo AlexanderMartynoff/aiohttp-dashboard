@@ -84,6 +84,7 @@
     import {router} from '@/router'
     import {formatDateTime} from '@/misc'
     import {
+        differenceInMilliseconds,
         startOfDay,
         addDays,
     } from 'date-fns'
@@ -129,7 +130,10 @@
                     {
                         key: 'duration',
                         label: 'Duration',
-                        formatter: value => 100,
+                        formatter: (value, key, item) => (differenceInMilliseconds(
+                            new Date(item.timestop),
+                            new Date(item.timestart)
+                        ) + ' ms'),
                     },
                 ],
 

@@ -1,14 +1,6 @@
-from enum import Enum
-from datetime import datetime
-from asyncio import ensure_future
 from aiohttp.web import Request, Response
-from queue import Queue
-from collections import deque, defaultdict
-from functools import partial
-from os.path import join
-from inspect import isfunction
 from time import time
-from typing import Any, Sequence, Tuple, TypeVar, Dict, List
+from typing import Any, Dict, List
 import logging
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import ASCENDING, DESCENDING
@@ -41,14 +33,14 @@ _schema_config = Schema({
 
 
 def _id() -> str:
-    """Used for generate id for documents.
+    """ Used for generate id for documents.
     """
     return uuid.uuid4().hex
 
 
 class State:
     """ Contains CRUD API for holding application state and
-        dashbooard configuration.
+    dashbooard configuration.
     """
 
     def __init__(self, config: typing.Optional[dict]):
@@ -101,6 +93,8 @@ class _StatusAPI:
         self._time = time()
 
     async def get(self):
+        """ Return current
+        in the first approximation status. """
         return {
             'timestart': self._time
         }
@@ -113,7 +107,7 @@ class _RequestAPI:
         self._emitter = emitter
 
     async def add(self, request: Request) -> str:
-        """Insert new request record into database.
+        """ Insert new request record into database.
         """
 
         id_ = _id()
@@ -142,7 +136,7 @@ class _RequestAPI:
 
     async def put_response(self, id_, request: Request,
                            response: Response) -> None:
-        """Put into existing request terminal data.
+        """ Put into existing request terminal data.
         """
 
         body = response.text if isinstance(
@@ -184,7 +178,7 @@ class _RequestAPI:
         if 'statuscode' in query:
             criteria.update({
                 'status': {
-                    '$regex': query['statuscode'],
+                    '$regex': '^{}$'.format(query['statuscode']),
                 }
             })
 
@@ -230,7 +224,7 @@ class _MessageAPI:
         self._emitter = emitter
 
     async def add(self, request_id, direction: MsgDirection,
-                  request: Request, message: Dict[Any, Any]) -> str:
+                  request: Request, message: str) -> str:
         message_id = _id()
 
         await self._database.messages.insert_one({

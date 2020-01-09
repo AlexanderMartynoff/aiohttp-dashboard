@@ -1,34 +1,21 @@
 import logging
 from typing import Tuple, List
 import time
-from os.path import join, normpath, isabs, dirname, abspath
-from aiohttp_jinja2 import template, web
-from aiohttp.web import WebSocketResponse, RouteTableDef, json_response
-from voluptuous import Schema, Required, Coerce, Optional, All, ALLOW_EXTRA
-from voluptuous.error import CoerceInvalid
+from aiohttp_jinja2 import template
+from aiohttp.web import WebSocketResponse, json_response
+from voluptuous import Schema, Required, Coerce, Optional, ALLOW_EXTRA
 from yarl import URL
 from pathlib import Path
-from json import loads
 
 from ._subscriber import Subcriber
 from ._state import DEBUGGER_KEY, JINJA_KEY
 from ._setup import DEBUGGER_PREFIX_KEY
-from ._misc import MsgDirection
 
 logger = logging.getLogger(__name__)
 
 
 _URL_POSTFIX_EVENT = '/api/event'
 _PATH_STATIC = Path(__file__).resolve().parent / 'static'
-
-_int_coerce = Coerce(int)
-
-
-def _to_int(value, default=None):
-    if value is None:
-        return default
-
-    return _int_coerce(value)
 
 
 _subscribe_schema = Schema({
@@ -116,11 +103,6 @@ async def _messages(request):
 
 
 async def _message_status(request):
-    state = request.app[DEBUGGER_KEY]
-    id_ = request.query.get('request', None)
-    time_start = _to_int(request.query.get('datestart', None))
-    time_stop = _to_int(request.query.get('datestop', None))
-
     response = {
         'websocket': {
             'countincoming': 0,

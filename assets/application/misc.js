@@ -13,18 +13,10 @@ function formatDateTime(dateTime, inlcudeMs=false) {
     }
 
     let today = new Date()
-    let pattern = `HH:mm:ss`
-
-    if (!isSameDay(dateTime, today)) {
-        pattern = `dd ${pattern}`
-    }
-
-    if (!isSameMonth(dateTime, today)) {
-        pattern = `MM-${pattern}`
-    }
+    let pattern = `MMM do HH:mm:ss`
 
     if (!isSameYear(dateTime, today)) {
-        pattern = `yyyy-${pattern}`
+        pattern = `yyyy ${pattern}`
     }
 
     if (inlcudeMs) {

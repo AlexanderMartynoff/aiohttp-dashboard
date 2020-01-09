@@ -13,7 +13,7 @@ def timestamp():
     return time() * 1000
 
 
-def ensure_list(value: Union[Sequence[_T], _T]) -> List[_T]:
+def ensure_list(value: Union[_T, Sequence[_T]]) -> List[_T]:
     if isinstance(value, (str, bytes)):  # special rule for string
         return [value]
     elif isinstance(value, Sequence):

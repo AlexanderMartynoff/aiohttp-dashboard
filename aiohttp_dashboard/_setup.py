@@ -1,6 +1,6 @@
 import aiohttp_jinja2
 from jinja2 import FileSystemLoader
-from aiohttp.web import WebSocketResponse, Response, RouteTableDef
+from aiohttp.web import WebSocketResponse, Response, RouteTableDef, Request
 from functools import partial
 from os.path import join, normpath, isabs, dirname, abspath
 from asyncio import ensure_future, wait_for, TimeoutError

@@ -22,7 +22,7 @@
                             <span>Time:</span> <code>{{requestTimeStart}}</code>
                         </li>
                         <li class="list-group-item">
-                            <span>Duration:</span> <code>{{record.timestop}} sec</code>
+                            <span>Duration:</span> <code>{{requestDuration}}</code>
                         </li>
                         <li class="list-group-item">
                             <span>Scheme:</span> <code>{{record.scheme}}</code>
@@ -85,6 +85,9 @@
     import {router} from '@/router';
     import {EventService} from '@/websocket'
     import {formatDateTime} from '@/misc'
+    import {differenceInSeconds, differenceInMilliseconds} from 'date-fns'
+
+
     import _ from "lodash"
 
     export default {
@@ -108,6 +111,13 @@
 
             requestTimeStart() {
                 return formatDateTime(this.record.timestart)
+            },
+
+            requestDuration() {
+                return differenceInMilliseconds(
+                    new Date(this.record.timestop),
+                    new Date(this.record.timestart)
+                ) + ' ms'
             }
         },
 
