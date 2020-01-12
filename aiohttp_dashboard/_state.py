@@ -7,9 +7,10 @@ from pymongo import ASCENDING, DESCENDING
 from voluptuous import Optional, Schema, ALLOW_EXTRA
 import traceback
 import typing
-import uuid
+from asyncio import Task
 
-from ._misc import MsgDirection, timestamp
+
+from ._misc import MsgDirection, timestamp, uuid_
 from ._event_emitter import EventEmitter
 
 
@@ -30,12 +31,6 @@ _schema_config = Schema({
         Optional('database', default='aiohttp_dashboard'): str,
     }, extra=ALLOW_EXTRA)
 }, extra=ALLOW_EXTRA)
-
-
-def _id() -> str:
-    """ Used for generate id for documents.
-    """
-    return uuid.uuid4().hex
 
 
 class State:
@@ -110,8 +105,8 @@ class _RequestAPI:
         """ Insert new request record into database.
         """
 
-        id_ = _id()
         peername, _ = request.transport.get_extra_info('peername')
+        id_ = request['dsb_uuid']
 
         await self._database.requests.insert_one({
             'id': id_,
@@ -134,20 +129,25 @@ class _RequestAPI:
 
         return id_
 
-    async def put_response(self, id_, request: Request,
-                           response: Response) -> None:
+    async def put_response(self, request: Request, response: Response) -> None:
         """ Put into existing request terminal data.
         """
+        timestop = timestamp()
 
         body = response.text if isinstance(
             response, Response) else None
+
+        id_ = request['dsb_id']
+
+        # wait for task inserting into db
+        await request['dsb_add_task']
 
         await self._database.requests.update_one({'id': id_}, {
             '$set': {
                 'status': str(response.status),  # for search by re
                 'reason': response.reason,
                 'body': body,
-                'timestop': timestamp(),
+                'timestop': timestop,
                 'headersresponse': dict(response.headers),
             }
         })
@@ -225,10 +225,10 @@ class _MessageAPI:
 
     async def add(self, request_id, direction: MsgDirection,
                   request: Request, message: str) -> str:
-        message_id = _id()
+        id_ = uuid_()
 
         await self._database.messages.insert_one({
-            'id': message_id,
+            'id': id_,
             'requestid': request_id,
             'direction': direction.name,
             'message': message,  # save always as a string
@@ -237,10 +237,10 @@ class _MessageAPI:
 
         self._emitter.fire('websocket', {
             'requestid': request_id,
-            'messageid': message_id,
+            'messageid': id_,
         })
 
-        return message_id
+        return id_
 
     async def find(self, query: _Query) -> _Documents:
         criteria = {}
@@ -293,7 +293,7 @@ class _ErrorAPI:
 
     async def add(self, request_id,
                   request: Request, exception: Exception) -> str:
-        id_ = _id()
+        id_ = uuid_()
         Error = type(exception)
 
         await self._database.request_errors.insert_one({

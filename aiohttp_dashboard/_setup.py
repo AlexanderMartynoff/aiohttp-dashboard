@@ -3,11 +3,10 @@ from jinja2 import FileSystemLoader
 from aiohttp.web import WebSocketResponse, Response, RouteTableDef, Request
 from functools import partial
 from os.path import join, normpath, isabs, dirname, abspath
-from asyncio import ensure_future, wait_for, TimeoutError
+from asyncio import ensure_future, wait_for
 
 from ._state import DEBUGGER_KEY, JINJA_KEY, State
-from ._event_emitter import EventEmitter
-from ._misc import MsgDirection, timestamp
+from ._misc import MsgDirection, uuid_
 
 
 DEBUGGER_PREFIX_KEY = DEBUGGER_KEY + '-prefix'
@@ -59,31 +58,17 @@ def _is_sutable_request(request):
         request.app[DEBUGGER_PREFIX_KEY])
 
 
-async def _wait_for_request_id(request):
-    state = request.app[DEBUGGER_KEY]
-
-    assert 'dsb_add_future' in request, \
-        'Request object must have a future for in db saving'
-
-    try:
-        return await wait_for(
-            request['dsb_add_future'], timeout=60)
-    except Exception as error:
-        await state.api_error.add(None, request, error)
-        raise
-
-
 async def _add_request_error(request, error):
     state = request.app[DEBUGGER_KEY]
-    request_id = await _wait_for_request_id(request)
     _error_id = await state.api_error.add(  # noqa
-        request_id, request, error)
+        request, error)
 
 
 async def _on_request(request, handler):
     if _is_sutable_request(request):
         state = request.app[DEBUGGER_KEY]
-        request['dsb_add_future'] = ensure_future(
+        request['dsb_uuid'] = uuid_()
+        request['dsb_add_task'] = ensure_future(
             state.api_request.add(request))
 
         try:
@@ -98,10 +83,7 @@ async def _on_request(request, handler):
 
 async def _add_response(request, response):
     state = request.app[DEBUGGER_KEY]
-    id_ = await _wait_for_request_id(request)
-
-    await state.api_request.put_response(
-        id_, request, response)
+    await state.api_request.put_response(request, response)
 
     if isinstance(response, WebSocketResponse):
         _ws_resposne_decorate(request, response)
@@ -115,9 +97,8 @@ async def _on_response(request, response):
 
 async def _add_websocket_msg(direction, request, message):
     state = request.app[DEBUGGER_KEY]
-    id_ = await _wait_for_request_id(request)
     ensure_future(
-        state.api_message.add(id_, direction, request, message))
+        state.api_message.add(direction, request, message))
 
 
 def _on_websocket_msg(direction, request, message):

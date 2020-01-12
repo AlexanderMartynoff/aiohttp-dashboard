@@ -4,9 +4,16 @@ from inspect import iscoroutinefunction, isfunction, ismethod, isclass
 from enum import Enum
 from time import time
 from typing import List, Union, TypeVar, Sequence
+from uuid import uuid4
 
 
 _T = TypeVar('_T')
+
+
+def uuid_() -> str:
+    """ Used for generate id for documents.
+    """
+    return uuid4().hex
 
 
 def timestamp():
