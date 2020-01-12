@@ -111,7 +111,7 @@ class _RequestAPI:
         """
 
         id_ = _id()
-        peername, _ = request.transport.get_extra_info('peername')
+        host, port = request.transport.get_extra_info('peername')
 
         await self._database.requests.insert_one({
             'id': id_,
@@ -119,7 +119,7 @@ class _RequestAPI:
             'scheme': request.scheme,
             'method': request.method,
             'path': request.raw_path,
-            'peername': peername,
+            'peername': '{}:{}'.format(host, port),
             'headersrequest': dict(request.headers),
             'timestart': timestamp(),
         })
