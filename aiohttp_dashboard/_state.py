@@ -7,7 +7,7 @@ from pymongo import ASCENDING, DESCENDING
 from voluptuous import Optional, Schema, ALLOW_EXTRA
 import traceback
 import typing
-from asyncio import Task
+from asyncio import Task, create_task, ensure_future
 
 
 from ._misc import MsgDirection, timestamp, uuid_
@@ -102,11 +102,21 @@ class _RequestAPI:
         self._emitter = emitter
 
     async def add(self, request: Request) -> str:
+        id_ = uuid_()
+
+        request['dsb_uuid'] = id_
+        request['dsb_add_task'] = ensure_future(
+            self._add(request))
+
+        return id_
+
+    async def _add(self, request: Request) -> str:
         """ Insert new request record into database.
         """
 
-        peername, _ = request.transport.get_extra_info('peername')
         id_ = request['dsb_uuid']
+        host, port = request.transport.get_extra_info(
+            'peername')
 
         await self._database.requests.insert_one({
             'id': id_,
@@ -114,7 +124,7 @@ class _RequestAPI:
             'scheme': request.scheme,
             'method': request.method,
             'path': request.raw_path,
-            'peername': peername,
+            'peername': '{}:{}'.format(host, port),
             'headersrequest': dict(request.headers),
             'timestart': timestamp(),
         })
@@ -137,9 +147,10 @@ class _RequestAPI:
         body = response.text if isinstance(
             response, Response) else None
 
-        id_ = request['dsb_id']
+        id_ = request['dsb_uuid']
 
         # wait for task inserting into db
+        # for details see `add` method
         await request['dsb_add_task']
 
         await self._database.requests.update_one({'id': id_}, {
@@ -223,9 +234,10 @@ class _MessageAPI:
         self._database = database
         self._emitter = emitter
 
-    async def add(self, request_id, direction: MsgDirection,
+    async def add(self, direction: MsgDirection,
                   request: Request, message: str) -> str:
         id_ = uuid_()
+        request_id = request['dsb_uuid']
 
         await self._database.messages.insert_one({
             'id': id_,
@@ -291,9 +303,9 @@ class _ErrorAPI:
         self._database = database
         self._emitter = emitter
 
-    async def add(self, request_id,
-                  request: Request, exception: Exception) -> str:
+    async def add(self, request: Request, exception: Exception) -> str:
         id_ = uuid_()
+        request_id = request['dsb_uuid']
         Error = type(exception)
 
         await self._database.request_errors.insert_one({

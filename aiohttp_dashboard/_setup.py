@@ -67,8 +67,7 @@ async def _add_request_error(request, error):
 async def _on_request(request, handler):
     if _is_sutable_request(request):
         state = request.app[DEBUGGER_KEY]
-        request['dsb_uuid'] = uuid_()
-        request['dsb_add_task'] = ensure_future(
+        ensure_future(
             state.api_request.add(request))
 
         try:

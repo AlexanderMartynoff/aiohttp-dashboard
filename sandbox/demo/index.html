@@ -1,0 +1,149 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Demo application</title>
+    <meta http-equiv="content-type" content="text/html, charset=utf-8" />
+    <script type="text/javascript">
+        function main() {
+            // HTML controll
+            var sendButtonHTML = document.querySelector(
+                '.form-left .send-button')
+            var responseHTML = document.querySelector(
+                '.form-left .response')
+
+            var selectedMethod = document.querySelector(
+                'select[name="method"]')
+
+            sendButtonHTML.addEventListener('click', function (event) {
+                event.preventDefault()
+                event.stopPropagation()
+
+                var xhr = new XMLHttpRequest()
+
+                xhr.open(selectedMethod.value, '/demo-html')
+
+                xhr.onreadystatechange = function (event) {
+                    if (xhr.readyState == 4) {
+                        responseHTML.innerHTML = xhr.response
+                    }
+                }
+
+                xhr.send()
+            })
+
+            // WebSocket controll
+            var connectButtonWS = document.querySelector(
+                '.form-right .content-button')
+            var sendButtonWS = document.querySelector(
+                '.form-right .send-button')
+
+            var websocket = null
+
+            connectButtonWS.addEventListener('click', function (event) {
+                event.preventDefault()
+                event.stopPropagation()
+
+                if (websocket) {
+                    return
+                }
+
+                websocket = new WebSocket(
+                    'ws://localhost:8080/demo-websocket')
+
+                websocket.onopen = function () {
+                    console.log('onopen')
+                }
+
+                websocket.onmessage = function () {
+                    console.log('onmessage')
+                }                
+            })
+
+            sendButtonWS.addEventListener('click', function () {
+                event.preventDefault()
+                event.stopPropagation()
+
+                if (!websocket) {
+                    alert('Open connection before send message')
+                    return
+                }
+
+                websocket.send({})
+            })
+        }
+    </script>
+
+    <style type="text/css">
+        body * {
+            font-family: monospace;
+        }
+        .form {
+            display: flex;
+            flex-direction: row;
+            margin: 0 -10px;
+        }
+
+        .form-left, .form-right {
+            flex: 1;
+            margin: 0 10px
+        }
+
+        .form-left textarea, .form-right textarea {
+            width: 100%;
+            box-sizing: border-box;
+            height: 150px;
+            resize: none;
+        }
+
+        .response {
+            border: solid 1px black;
+            padding: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>
+        Demo application for aiohttp_dashboard
+    </h1>
+
+    <form>
+        <div class="form">
+            <div class="form-left">
+                <h2>Send HTML request</h2>
+                <textarea>Hellow, World!</textarea>
+                <label>Method</label>
+                <select name="method" class="selected-method">
+                    <option>GET</option>
+                    <option>POST</option>
+                    <option>HEAD</option>
+                    <option>DELETE</option>
+                    <option>PATCH</option>
+                </select>
+                <button class="send-button">Send</button>
+                <h2>Reponse</h2>
+                <div class="response">
+                    [NO RESPONSE]
+                </div>
+            </div>
+
+            <div class="form-right">
+                <h2>Send WS message</h2>
+                <textarea>Hellow, World!</textarea>
+                <button class="content-button">Connect</button>
+                <button class="send-button">Send</button>
+                <h2>Responsed message</h2>
+                <div class="response">
+                    [NO RESPONSE]
+                </div>
+            </div>
+        </div>
+    </form>
+    <script type="text/javascript">
+        main()
+    </script>
+</body>
+
+</html>
