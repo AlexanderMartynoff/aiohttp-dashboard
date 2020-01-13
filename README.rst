@@ -5,12 +5,10 @@ Dashboard panel for ``aiohttp`` applications
 Features
 ********
 
-- Realtime user interface
+- Realtime UI build on top WebSocket
 - Viewing HTTP activity
 - Viewing WebSocket activity
-- Mobile frendly
-- Used Vuejs + Bootstrap for building UI
-
+- Responsive and mobile friendly UI build on top bootstrap 4 and vue.js
 
 Install
 *******
@@ -22,15 +20,15 @@ Install
 
 Requirments
 ***********
-- python 3.5.3
-- aiohttp 3.*
-- mongodb 3.6.*
+- python >= 3.5.3
+- aiohttp >= 3.0
+- mongodb >= 3.6.0
 
-Setup
+Usage
 *****
 
 .. code-block:: python
-        
+
     import aiohttp_dashboard
 
     application = create_my_aiohttp_app()
@@ -50,10 +48,33 @@ Setup
     )
 
 
-The dashboard is available at ``/dashboard_prefix``
+The dashboard index page is available at ``/dashboard_prefix``.
 
-
-Screenshots
+Development
 ***********
 
-.. image:: /images/screen-overview.png
+Requirments
+-----------
+- nodejs >= 4.0.0
+- npm >= 3.0.0
+
+Build frontend assets:
+----------------------
+
+.. code-block:: bash
+
+    git clone git@github.com:AlexanderMartynoff/aiohttp-dashboard.git
+
+    cd aohttp-dashboard/aohttp_dashboard/assets
+
+    npm run build
+
+Usage demo application as sandbox
+---------------------------------
+
+.. code-block:: bash
+    cd aohttp-dashboard/aohttp_dashboard
+
+    python sandbox/demo
+
+After build assets and run demo application you can send tests HTPP request and websocket messages with demo site that available on ``/`` path and dashboard UI available on ``/dashboard`` path, for more details see ``aohttp_dashboard/sandbox/demo``.
