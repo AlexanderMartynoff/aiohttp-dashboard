@@ -6,15 +6,14 @@ from setuptools.command.test import test as TestCommand
 import sys
 
 
-__version__ = '0.1.0dev1'
+__version__ = '0.1.0.dev2'
 
 
 class Test(TestCommand):
 
     def run_tests(self):
         subprocess.call([
-            sys.executable, '-m', 'pytest', 'tests',
-            '--exitfirst', '-v', '-s', '--cov=aiohttp_dashboard'
+            sys.executable, '-m', 'pytest', 'tests'
         ])
 
 
@@ -67,7 +66,7 @@ setup(
     },
     include_package_data=True,
     cmdclass={
-        'assets': Asset,
-        'tests': Test
+        'build_assets': Asset,
+        'run_tests': Test
     }
 )
