@@ -1,6 +1,8 @@
 Dashboard panel for ``aiohttp`` applications
 ============================================
 
+.. image:: https://travis-ci.org/AlexanderMartynoff/aiohttp-dashboard.svg?branch=master
+    :target: https://travis-ci.org/AlexanderMartynoff/aiohttp-dashboard
 
 Features
 ********
