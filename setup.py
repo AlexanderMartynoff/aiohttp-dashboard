@@ -42,6 +42,7 @@ prod_requires = [
     'attrs',
     'tortoise',
     'python-rapidjson',
+    'motor',
 ]
 
 dev_requires = prod_requires + [
