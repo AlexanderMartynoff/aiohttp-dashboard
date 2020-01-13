@@ -45,10 +45,7 @@ prod_requires = [
 ]
 
 dev_requires = prod_requires + [
-    'pytest-aiohttp',
     'pytest',
-    'pytest-cov',
-    'coverage'
 ]
 
 setup(
