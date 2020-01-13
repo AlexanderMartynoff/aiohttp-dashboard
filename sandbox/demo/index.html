@@ -3,7 +3,7 @@
 
 <head>
     <title>Demo application</title>
-    <meta http-equiv="content-type" content="text/html, charset=utf-8" />
+    <meta http-equiv="connect-type" connect="text/html, charset=utf-8" />
     <script type="text/javascript">
         function main() {
             // HTML controll
@@ -25,7 +25,7 @@
 
                 xhr.onreadystatechange = function (event) {
                     if (xhr.readyState == 4) {
-                        responseHTML.innerHTML = xhr.response
+                        responseHTML.innerHTML = 'HTML response: ' + xhr.response
                     }
                 }
 
@@ -34,9 +34,13 @@
 
             // WebSocket controll
             var connectButtonWS = document.querySelector(
-                '.form-right .content-button')
+                '.form-right .connect-button')
             var sendButtonWS = document.querySelector(
                 '.form-right .send-button')
+            var responseWS = document.querySelector(
+                '.form-right .response')
+            var contentWS = document.querySelector(
+                '.form-right textarea')
 
             var websocket = null
 
@@ -45,19 +49,19 @@
                 event.stopPropagation()
 
                 if (websocket) {
-                    return
+                    try {
+                        websocket.close()
+                    } catch (error) {}
                 }
 
                 websocket = new WebSocket(
                     'ws://localhost:8080/demo-websocket')
 
-                websocket.onopen = function () {
-                    console.log('onopen')
-                }
+                websocket.onopen = function () {}
 
-                websocket.onmessage = function () {
-                    console.log('onmessage')
-                }                
+                websocket.onmessage = function (message) {
+                    responseWS.innerHTML = 'WebSocket response: ' + message.data
+                }
             })
 
             sendButtonWS.addEventListener('click', function () {
@@ -69,7 +73,7 @@
                     return
                 }
 
-                websocket.send({})
+                websocket.send(contentWS.value)
             })
         }
     </script>
@@ -132,7 +136,7 @@
             <div class="form-right">
                 <h2>Send WS message</h2>
                 <textarea>Hellow, World!</textarea>
-                <button class="content-button">Connect</button>
+                <button class="connect-button">Connect</button>
                 <button class="send-button">Send</button>
                 <h2>Responsed message</h2>
                 <div class="response">

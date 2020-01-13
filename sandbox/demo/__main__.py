@@ -39,7 +39,7 @@ async def websocket(request):
     await websocket.prepare(request)
 
     async for message in websocket:
-        print(message)
+        await websocket.send_str(message.data)
 
     return websocket
 
