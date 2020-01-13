@@ -73,6 +73,7 @@ Usage demo application as sandbox
 ---------------------------------
 
 .. code-block:: bash
+
     cd aohttp-dashboard/aohttp_dashboard
 
     python sandbox/demo
