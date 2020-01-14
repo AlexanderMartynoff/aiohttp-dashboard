@@ -9,5 +9,5 @@ install:
   - pip install .[dev]
 
 script:
-  - python setup.py run_tests
-  - python setup.py build_assets
+  - python setup.py run_tests || travis_terminate 1
+  - python setup.py build_assets || travis_terminate 1
