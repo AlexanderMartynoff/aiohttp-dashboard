@@ -9,4 +9,5 @@ install:
   - pip install .[dev]
 
 script:
-  - pytest ./tests
+  - python setup.py run_tests
+  - python setup.py build_assets
