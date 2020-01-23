@@ -12,9 +12,10 @@ __version__ = '0.1.0.dev2'
 class Test(TestCommand):
 
     def run_tests(self):
-        subprocess.call([
+        process = subprocess.run(args=[
             sys.executable, '-m', 'pytest', 'tests'
         ])
+        process.check_returncode()
 
 
 class Asset(Command):
@@ -25,7 +26,8 @@ class Asset(Command):
         self._run('npm', 'run', 'build')
 
     def _run(self, *args):
-        return subprocess.run(args=args, cwd=r'./assets')
+        process = subprocess.run(args=args, cwd=r'./assets')
+        process.check_returncode()
 
     def initialize_options(self):
         pass
